@@ -1,0 +1,5 @@
+name "irre-tools"
+description "Irre VM"
+authors "xdrie"
+copyright "Copyright © 2020, xdrie"
+license "proprietary"
