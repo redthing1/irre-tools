@@ -4,6 +4,8 @@ import std.stdio;
 import std.getopt;
 import std.file;
 import irre.meta;
+import irre.assembler.lexer;
+import irre.assembler.parser;
 
 string input_file;
 string output_file;
@@ -21,8 +23,24 @@ int main(string[] args) {
     input_file = args[1];
     output_file = args[2];
 
-    auto inf_source = std.file.readText(input_file);
-    // run assembler
+    string inf_source;
+    try {
+        inf_source = std.file.readText(input_file);
+    } catch (FileException e) {
+        writefln("could not read from file: %s\n%s", e.file, e.msg);
+        return 2;
+    }
+
+    try {
+        // - assemble the source
+        auto lexer = new Lexer();
+        auto lexed = lexer.lex(inf_source);
+
+        auto parser = new Parser();
+        auto programAst = parser.parse(lexed);
+    } catch (ParserException e) {
+        writefln("parser error: %s at %s", e.msg, e.info);
+    }
 
     return 0;
 }
