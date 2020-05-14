@@ -1,3 +1,13 @@
+build/
+
+.dub
+
+*.exe
+*.o
+*.obj
+*.lst
+
+
 # Compiled Object files
 *.o
 *.obj
