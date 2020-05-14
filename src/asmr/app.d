@@ -2,10 +2,9 @@ module asmr.app;
 
 import std.stdio;
 
-import libirre.sample;
+import irre.sample;
 
 void main() {
-	writeln("assembler");
 	auto ver = SampleInfo.get_version();
-	writefln("sample v: %s", ver);
+	writefln("assembler sample v: %s", ver);
 }
