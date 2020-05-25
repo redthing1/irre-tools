@@ -1,6 +1,7 @@
 module irre.assembler.lexer;
 
 import std.stdio;
+import std.string;
 import std.array : Appender;
 import std.conv;
 
@@ -32,6 +33,12 @@ represents a token
 struct Token {
     string content;
     CharType kind;
+}
+
+class LexerException : Exception {
+    this(string msg, string file = __FILE__, size_t line = __LINE__) {
+        super(msg, file, line);
+    }
 }
 
 /**
@@ -108,9 +115,10 @@ class Lexer {
             } else if ((c_type & CharType.DIRECTIVE_PREFIX) > 0) {
                 res.tokens ~= read_token_of(CharType.DIRECTIVE);
             } else {
-                stderr.writefln("unrecognized character: %c, [%d:%d]", c, line,
-                        cast(int)(pos - line_start) + 1);
                 take_char(); // eat the character
+                auto message = format("unrecognized character: %c, [%d:%d]", c, line,
+                        cast(int)(pos - line_start) + 1);
+                throw new LexerException(message);
             }
         }
 
