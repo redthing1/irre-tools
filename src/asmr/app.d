@@ -36,6 +36,12 @@ int main(string[] args) {
         auto lexer = new Lexer();
         auto lexed = lexer.lex(inf_source);
 
+        // dump the tokens
+        writeln("== TOKENS ==");
+        foreach (i, token; lexed.tokens) {
+            writefln("%4d TOK: %10s [%3d]\n", i, token.content, cast(int) token.kind);
+        }
+
         auto parser = new Parser();
         auto programAst = parser.parse(lexed);
     } catch (ParserException e) {

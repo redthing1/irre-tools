@@ -20,7 +20,7 @@ class ParserException : Exception {
 }
 
 class Parser {
-    public ProgramAst parse(LexResult lexed) {
+    public ProgramAst parse(Lexer.Result lexed) {
         throw new ParserException("parsing is not yet implemented.");
     }
 }
