@@ -45,6 +45,13 @@ int main(string[] args) {
 
         auto parser = new Parser();
         auto programAst = parser.parse(lexed);
+
+        // dump the ast
+        writeln("== AST ==");
+        foreach (i, node; programAst.statements) {
+            writefln("4%d %s %s %s %s", i, to!string(node.op), to!string(node.a1), to!string(node.a2), to!string(node.a3));
+            
+        }
     } catch (ParserException e) {
         writefln("parser error: %s at %s", e.msg, e.info);
     }

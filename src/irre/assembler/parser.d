@@ -187,7 +187,18 @@ class Parser {
             }
         }
 
-        auto ast = ProgramAst();
+        // check for entry point label
+        auto entry_addr = 0;
+        if (entry_label) {
+            // resolve the label and replace the entry jump
+            auto entry_label_def = resolve_label(entry_label);
+            statements.data[0] = AbstractStatement(OpCode.SET, ValueSource(ValueSource.Kind.IMMEDIATE,
+                    Register.PC), ValueSource(ValueSource.Kind.IMMEDIATE, entry_label_def.offset));
+        }
+        // TODO: resolve everything else
+        // resolve_statements(&src, &st);
+
+        auto ast = ProgramAst(statements.data, entry_addr, data);
         return ast;
     }
 
