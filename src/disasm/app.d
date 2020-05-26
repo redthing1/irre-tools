@@ -2,13 +2,11 @@ module disasm.app;
 
 import std.stdio;
 import std.getopt;
-import std.conv;
 import std.file;
 import irre.meta;
-import irre.assembler.lexer;
 import irre.assembler.parser;
-import irre.encoding.rega;
 import irre.disassembler.dumper;
+import irre.disassembler.reader;
 
 string input_file;
 bool verbose;
@@ -25,6 +23,12 @@ int main(string[] args) {
     input_file = args[1];
 
     auto compiled_data = cast(const(ubyte)[]) std.file.read(input_file);
+
+    auto reader = new Reader();
+    auto programAst = reader.read(compiled_data);
+
+    auto dumper = new Dumper();
+    dumper.dump_statements(programAst.statements);
 
     return 0;
 }

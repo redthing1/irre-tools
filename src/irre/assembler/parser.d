@@ -33,7 +33,7 @@ struct RawStatement {
 struct ProgramAst {
     AbstractStatement[] statements;
     int entry;
-    ubyte[] data;
+    const ubyte[] data;
 }
 
 class ParserException : Exception {
