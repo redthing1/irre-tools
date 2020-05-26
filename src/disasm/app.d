@@ -10,10 +10,14 @@ import irre.disassembler.reader;
 
 string input_file;
 bool verbose;
+bool clean;
 
 int main(string[] args) {
+    auto help = getopt(args, "verbose|v", &verbose, "clean|c", &clean);
+    if (clean) {
+        write("; "); // comment
+    }
     writefln("[IRRE] disassembler v%s", Meta.VERSION);
-    auto help = getopt(args, "verbose|v", &verbose);
 
     if (help.helpWanted || args.length != 2) {
         defaultGetoptPrinter("./irre-disasm [OPTIONS] <input> <output>", help.options);
@@ -27,7 +31,7 @@ int main(string[] args) {
     auto reader = new Reader();
     auto programAst = reader.read(compiled_data);
 
-    auto dumper = new Dumper();
+    auto dumper = new Dumper(clean ? Dumper.Mode.Clean : Dumper.Mode.Detailed);
     dumper.dump_statements(programAst.statements);
 
     return 0;

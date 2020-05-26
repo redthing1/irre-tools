@@ -15,10 +15,26 @@ class DumperException : Exception {
 }
 
 class Dumper {
+    enum Mode {
+        Clean,
+        Detailed
+    }
+
+    private Mode mode;
+
+    this(Mode mode) {
+        this.mode = mode;
+    }
+
     void dump_statements(AbstractStatement[] statements) {
         foreach (i, node; statements) {
             auto offset = i * INSTRUCTION_SIZE;
-            writefln("%04x: %s", offset, format_statement(node));
+            auto builder = appender!string;
+            if (mode == Mode.Detailed) {
+                builder ~= format("%04x: ", offset);
+            }
+            builder ~= format("%s", format_statement(node));
+            writefln(builder.data);
         }
     }
 
@@ -57,16 +73,41 @@ class Dumper {
             a3 = format_reg_arg(node.a3);
         }
         auto builder = appender!string;
-        builder ~= format("%04s", mnem);
+
+        // write one piece of the assembly line, formatted
+        void append_arg(string av, bool first = false) {
+            if (!first) {
+                builder ~= " ";
+            }
+            switch (mode) {
+            case Mode.Clean:
+                builder ~= format("%s", av);
+                break;
+            default:
+                builder ~= format("%04s", av);
+                break;
+            }
+            if (!first) {
+                builder ~= ",";
+            }
+        }
+
+        append_arg(mnem, true);
+
         if ((info.operands & Operands.K_R1) | (info.operands & Operands.K_I1)) {
-            builder ~= format(" %04s", a1);
+            append_arg(a1);
         }
         if ((info.operands & Operands.K_R2) | (info.operands & Operands.K_I2)) {
-            builder ~= format(", %04s", a2);
+            append_arg(a2);
         }
         if ((info.operands & Operands.K_R2) | (info.operands & Operands.K_I3)) {
-            builder ~= format(", %04s", a3);
+            append_arg(a3);
         }
-        return builder.data;
+        auto str = std.string.strip(cast (string) builder.data);
+        // strip trailing comma
+        if (str[$ - 1] == ',') {
+            str.popBack();
+        }
+        return str;
     }
 }
