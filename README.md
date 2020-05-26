@@ -13,4 +13,4 @@ cd build
 ninja
 ```
 
-to use another D compiler, such as `gdc`, set the environment variable ex. `CC=gdc` when running `configure`.
+to use another D compiler, such as `dmd`, set the environment variable ex. `DC=dmd` when running `configure`.
