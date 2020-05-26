@@ -3,7 +3,11 @@ module irre.emulator.hypervisor;
 import irre.emulator.vm;
 import irre.disassembler.reader;
 import irre.disassembler.dumper;
+import irre.encoding.instructions;
 import std.stdio;
+import std.conv;
+
+enum SIMPLE_REGISTER_COUNT = 8;
 
 class Hypervisor {
     public VirtualMachine vm;
@@ -22,13 +26,43 @@ class Hypervisor {
         auto exec_st = true;
         while (exec_st) {
             // pre-instruction
-            // print out the instruction
             auto instr = vm.decode_instruction();
             auto statement = reader.decompile(instr);
-            auto statement_dump = dumper.format_statement(statement);
-            writefln("[EXEC] %s", statement_dump);
+            if (debug_mode) {
+                auto statement_dump = dumper.format_statement(statement);
+                writefln("[EXEC] %s", statement_dump);
+            }
             exec_st = vm.step();
             // post-instruction
+            if (debug_mode) {
+                dump(false); // minidump
+            }
+        }
+        // done.
+
+        if (debug_mode) {
+            writefln("execution halted.");
+            dump(true); // full dump
+        }
+    }
+
+    void dump(bool full) {
+        // dump registers
+        void dump_register(ARG reg_id) {
+            writefln("%5s: $%08x", to!Register(reg_id), vm.reg[reg_id]);
+        }
+
+        auto dump_regs = SIMPLE_REGISTER_COUNT;
+        if (full) {
+            dump_regs = REGISTER_COUNT;
+        }
+        for (ARG i = 0; i < dump_regs; i++) {
+            dump_register(i);
+        }
+        if (!full) { // dump special registers even in a small dump
+            dump_register(Register.RAD);
+            dump_register(Register.RAT);
+            dump_register(Register.RSP);
         }
     }
 }
