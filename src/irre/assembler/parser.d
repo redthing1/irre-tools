@@ -7,26 +7,22 @@ import std.array;
 import std.string;
 import std.conv;
 import std.stdio;
+import std.variant;
 
-struct RefValueSource {
+struct ValueRef {
     string label;
     int offset;
 }
 
-struct ValueSource {
-    enum Kind {
-        IMMEDIATE,
-        REFERENCE
-    }
-
-    Kind kind;
-    int val; /** immediate value */
-    RefValueSource val_ref; /** ref */
+struct ValueImm {
+    int val;
 }
+
+alias ValueArg = Algebraic!(ValueImm, ValueRef);
 
 struct AbstractStatement {
     OpCode op;
-    ValueSource a1, a2, a3;
+    ValueArg a1, a2, a3;
 }
 
 struct RawStatement {
@@ -192,8 +188,9 @@ class Parser {
         if (entry_label) {
             // resolve the label and replace the entry jump
             auto entry_label_def = resolve_label(entry_label);
-            statements.data[0] = AbstractStatement(OpCode.SET, ValueSource(ValueSource.Kind.IMMEDIATE,
-                    Register.PC), ValueSource(ValueSource.Kind.IMMEDIATE, entry_label_def.offset));
+            statements.data[0] = AbstractStatement(OpCode.SET,
+                    cast(ValueArg) ValueImm(Register.PC),
+                    cast(ValueArg) ValueImm(entry_label_def.offset));
         }
         // TODO: resolve everything else
         // resolve_statements(&src, &st);
@@ -230,28 +227,25 @@ class Parser {
             return val;
         }
 
-        ValueSource read_value_arg() {
+        ValueArg read_value_arg() {
             immutable auto next = peek_token();
-            auto vs = ValueSource(ValueSource.Kind.IMMEDIATE, 0);
             if (next.kind == CharType.MARK) {
                 expect_token(CharType.MARK); // eat the mark
                 immutable auto label_ref_tok = expect_token(CharType.IDENTIFIER);
-                vs.kind = ValueSource.Kind.REFERENCE;
-                vs.val_ref = RefValueSource(label_ref_tok.content, 0);
+                auto vs = ValueRef(label_ref_tok.content, 0);
                 immutable auto pk_offset = peek_token();
                 if (pk_offset.kind == CharType.OFFSET) {
                     expect_token(CharType.OFFSET); // eat the offset token
                     auto num_tok = expect_token(CharType.NUMERIC_CONSTANT);
                     immutable auto offset_val = parse_numeric(num_tok.content);
-                    vs.val_ref.offset = offset_val;
+                    vs.offset = offset_val;
                 }
-                return vs;
+                return cast(ValueArg) vs;
             } else if (next.kind == CharType.NUMERIC_CONSTANT) {
                 // interpret numeric token
                 auto num_tok = expect_token(CharType.NUMERIC_CONSTANT);
-                vs.kind = ValueSource.Kind.IMMEDIATE;
-                vs.val = parse_numeric(num_tok.content);
-                return vs;
+                auto vs = ValueImm(parse_numeric(num_tok.content));
+                return cast(ValueArg) vs;
             } else {
                 throw parser_error(format("unrecognized token for value arg:  %s", next.content));
             }
@@ -259,31 +253,28 @@ class Parser {
 
         // read args
         if ((info.operands & Operands.K_R1) > 0) {
-            statement.a1 = ValueSource(ValueSource.Kind.IMMEDIATE,
-                    InstructionEncoding.get_register(a1));
+            statement.a1 = ValueImm(InstructionEncoding.get_register(a1));
         }
         if ((info.operands & Operands.K_R2) > 0) {
-            statement.a2 = ValueSource(ValueSource.Kind.IMMEDIATE,
-                    InstructionEncoding.get_register(a2));
+            statement.a2 = ValueImm(InstructionEncoding.get_register(a2));
         }
         if ((info.operands & Operands.K_R3) > 0) {
-            statement.a3 = ValueSource(ValueSource.Kind.IMMEDIATE,
-                    InstructionEncoding.get_register(a3));
+            statement.a3 = ValueImm(InstructionEncoding.get_register(a3));
         }
 
         if ((info.operands & Operands.K_I1) > 0) {
             if (!a1.empty)
-                statement.a1 = ValueSource(ValueSource.Kind.IMMEDIATE, parse_numeric(a1));
+                statement.a1 = ValueImm(parse_numeric(a1));
             else
                 statement.a1 = read_value_arg();
         } else if ((info.operands & Operands.K_I2) > 0) {
             if (!a2.empty)
-                statement.a2 = ValueSource(ValueSource.Kind.IMMEDIATE, parse_numeric(a2));
+                statement.a2 = ValueImm(parse_numeric(a2));
             else
                 statement.a2 = read_value_arg();
         } else if ((info.operands & Operands.K_I3) > 0) {
             if (!a3.empty)
-                statement.a3 = ValueSource(ValueSource.Kind.IMMEDIATE, parse_numeric(a3));
+                statement.a3 = ValueImm(parse_numeric(a3));
             else
                 statement.a3 = read_value_arg();
         }
