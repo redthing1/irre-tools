@@ -164,6 +164,7 @@ class VirtualMachine {
         auto instruction = decode_instruction();
         // execute the instruction
         execute_instruction(instruction);
+        ticks++;
         return executing; // execution state
     }
 }

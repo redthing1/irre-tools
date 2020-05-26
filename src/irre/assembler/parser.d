@@ -32,7 +32,6 @@ struct RawStatement {
 
 struct ProgramAst {
     AbstractStatement[] statements;
-    int entry;
     const ubyte[] data;
 }
 
@@ -184,18 +183,19 @@ class Parser {
         }
 
         // check for entry point label
-        auto entry_addr = 0;
         if (entry_label) {
             // resolve the label and replace the entry jump
             auto entry_label_def = resolve_label(entry_label);
+            // since all instructions increment PC, we subtract
+            auto entry_addr = entry_label_def.offset - cast(int) INSTRUCTION_SIZE;
             statements.data[0] = AbstractStatement(OpCode.SET,
                     cast(ValueArg) ValueImm(Register.PC),
-                    cast(ValueArg) ValueImm(entry_label_def.offset));
+                    cast(ValueArg) ValueImm(entry_addr));
         }
         // resolve statements, rewriting them
         auto resolved_statements = resolve_statements(statements);
 
-        auto ast = ProgramAst(resolved_statements, entry_addr, data);
+        auto ast = ProgramAst(resolved_statements, data);
         return ast;
     }
 
