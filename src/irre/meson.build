@@ -5,6 +5,8 @@ sources = [
     'assembler/lexer.d',
     'assembler/parser.d',
 
+    'disassembler/dumper.d',
+
     'encoding/instructions.d',
 ]
 
