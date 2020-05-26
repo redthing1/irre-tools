@@ -168,6 +168,9 @@ class Lexer {
     }
 
     private char peek_char() {
+        if (pos >= source.length) {
+            return '\n'; // empty
+        }
         return source[pos];
     }
 
