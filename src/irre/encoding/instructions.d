@@ -66,5 +66,6 @@ class InstructionMetadata {
 
     static Nullable!InstructionInfo get_info(OpCode op) {
         // TODO
+        return Nullable!InstructionInfo.init;
     }
 }
