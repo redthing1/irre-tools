@@ -1,5 +1,6 @@
 sources = [
     'meta.d',
+    'util.d',
     
     'assembler/lexer.d',
     'assembler/parser.d',
