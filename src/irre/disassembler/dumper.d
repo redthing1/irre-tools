@@ -2,6 +2,7 @@ module irre.disassembler.dumper;
 
 import irre.assembler.parser;
 import irre.encoding.instructions;
+import irre.encoding.rega;
 import std.stdio;
 import std.string;
 import std.uni;
@@ -38,7 +39,7 @@ class Dumper {
         }
     }
 
-    private string format_statement(AbstractStatement node) {
+    public string format_statement(AbstractStatement node) {
         // based on operand type, format each arg
         auto maybeInfo = InstructionEncoding.get_info(node.op);
         if (maybeInfo.isNull) {
@@ -102,5 +103,10 @@ class Dumper {
         }
         auto str = std.string.strip(cast (string) builder.data);
         return str;
+    }
+
+    void dump_header(RegaHeader head) {
+        writefln("data size: $%04x", head.data_size);
+        writefln("code size: $%04x", head.code_size);
     }
 }
