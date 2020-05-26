@@ -1,9 +1,11 @@
 module irre.encoding.instructions;
 
 import std.typecons;
+import std.conv;
+import std.uni;
 
 // integral types
-alias BYTE = byte;
+alias BYTE = ubyte;
 alias WORD = int;
 alias UWORD = uint;
 
@@ -12,6 +14,7 @@ alias ARG = BYTE;
 enum INSTRUCTION_SIZE = WORD.sizeof; // 4-byte (WORD) instructions
 
 enum OpCode : ARG {
+    // set 1
     NOP = 0x00,
     ADD = 0x01,
     SUB = 0x02,
@@ -29,6 +32,50 @@ enum OpCode : ARG {
     STW = 0x0e,
     LDB = 0x0f,
     STB = 0x10,
+
+    // set 2
+    HLT = 0xff,
+    INT = 0x71,
+}
+
+enum Register : ARG {
+    R0 = 0x00,
+    PC = 0x00,
+    R1 = 0x01,
+    R2 = 0x02,
+    R3 = 0x03,
+    R4 = 0x04,
+    R5 = 0x05,
+    R6 = 0x06,
+    R7 = 0x07,
+    R8 = 0x08,
+    R9 = 0x09,
+    R10 = 0x0a,
+    R11 = 0x0b,
+    R12 = 0x0c,
+    R13 = 0x0d,
+    R14 = 0x0e,
+    R15 = 0x0f,
+    R16 = 0x10,
+    R17 = 0x11,
+    R18 = 0x12,
+    R19 = 0x13,
+    R20 = 0x14,
+    R21 = 0x15,
+    R22 = 0x16,
+    R23 = 0x17,
+    R24 = 0x18,
+    R25 = 0x19,
+    R26 = 0x1a,
+    R27 = 0x1b,
+    R28 = 0x1c,
+    R29 = 0x1d,
+    RAD = 0x1d,
+    R30 = 0x1e,
+    RAT = 0x1e,
+    R31 = 0x1f,
+    RSP = 0x1f,
+    RX = 0xff,
 }
 
 enum Operands {
@@ -58,14 +105,57 @@ struct InstructionInfo {
     int size; // size (in words)
 }
 
-class InstructionMetadata {
-    static Nullable!InstructionInfo get_info(string mnemonic) {
-        // TODO: parse op from mnemonic
-        return get_info(OpCode.NOP);
+class InstructionEncoding {
+    public static Nullable!InstructionInfo get_info(string mnemonic) {
+        // normalize mnemonic
+        mnemonic = toUpper(mnemonic);
+        // parse op from mnemonic
+        return get_info(to!OpCode(mnemonic));
     }
 
-    static Nullable!InstructionInfo get_info(OpCode op) {
-        // TODO
-        return Nullable!InstructionInfo.init;
+    public static Nullable!InstructionInfo get_info(OpCode op) {
+        auto info = get_info_default(op);
+        if (info.size == 0) {
+            return Nullable!InstructionInfo.init; // no info
+        }
+        return Nullable!InstructionInfo(info);
+    }
+
+    private static get_info_default(OpCode op) {
+        switch (op) {
+            // dfmt off
+            // REGULARVM instruction set
+            case OpCode.NOP: return InstructionInfo(OpCode.NOP, Operands.NONE, 1);
+            case OpCode.ADD: return InstructionInfo(OpCode.ADD, Operands.REG_REG_REG, 1);
+            case OpCode.SUB: return InstructionInfo(OpCode.SUB, Operands.REG_REG_REG, 1);
+            case OpCode.AND: return InstructionInfo(OpCode.AND, Operands.REG_REG_REG, 1);
+            case OpCode.ORR: return InstructionInfo(OpCode.ORR, Operands.REG_REG_REG, 1);
+            case OpCode.XOR: return InstructionInfo(OpCode.XOR, Operands.REG_REG_REG, 1);
+            case OpCode.NOT: return InstructionInfo(OpCode.NOT, Operands.REG_REG, 1);
+            case OpCode.LSH: return InstructionInfo(OpCode.LSH, Operands.REG_REG_REG, 1);
+            case OpCode.ASH: return InstructionInfo(OpCode.ASH, Operands.REG_REG_REG, 1);
+            case OpCode.TCU: return InstructionInfo(OpCode.TCU, Operands.REG_REG_REG, 1);
+            case OpCode.TCS: return InstructionInfo(OpCode.TCS, Operands.REG_REG_REG, 1);
+            case OpCode.SET: return InstructionInfo(OpCode.SET, Operands.REG_IMM, 1);
+            case OpCode.MOV: return InstructionInfo(OpCode.MOV, Operands.REG_REG, 1);
+            case OpCode.LDW: return InstructionInfo(OpCode.LDW, Operands.REG_REG, 1);
+            case OpCode.STW: return InstructionInfo(OpCode.STW, Operands.REG_REG, 1);
+            case OpCode.LDB: return InstructionInfo(OpCode.LDB, Operands.REG_REG, 1);
+            case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG, 1);
+            // REGULAR_AD instruction set
+            case OpCode.HLT: return InstructionInfo(OpCode.HLT, Operands.NONE, 1);
+            case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.REG, 1);
+            // dfmt on
+        default:
+            auto info = InstructionInfo();
+            info.size = 0;
+            return info;
+        }
+    }
+
+    public static Register get_register(string mnemonic) {
+        // normalize mnemonic
+        mnemonic = toUpper(mnemonic);
+        return to!Register(mnemonic);
     }
 }
