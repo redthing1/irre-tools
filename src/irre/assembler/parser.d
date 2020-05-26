@@ -192,11 +192,25 @@ class Parser {
                     cast(ValueArg) ValueImm(Register.PC),
                     cast(ValueArg) ValueImm(entry_label_def.offset));
         }
-        // TODO: resolve everything else
-        // resolve_statements(&src, &st);
+        // resolve statements, rewriting them
+        auto resolved_statements = resolve_statements(statements);
 
-        auto ast = ProgramAst(statements.data, entry_addr, data);
+        auto ast = ProgramAst(resolved_statements, entry_addr, data);
         return ast;
+    }
+
+    AbstractStatement[] resolve_statements(ref const Appender!(AbstractStatement[]) statements) {
+        auto resolved_statements = appender!(AbstractStatement[]);
+        foreach (unresolved; statements.data) {
+            auto statement = AbstractStatement(unresolved.op);
+            // resolve args
+            statement.a1 = resolve_value_arg(unresolved.a1);
+            statement.a2 = resolve_value_arg(unresolved.a2);
+            statement.a3 = resolve_value_arg(unresolved.a3);
+            resolved_statements ~= statement;
+        }
+
+        return resolved_statements.data;
     }
 
     AbstractStatement read_statement(string mnem, string a1, string a2, string a3) {
@@ -280,6 +294,15 @@ class Parser {
         }
 
         return statement;
+    }
+
+    ValueImm resolve_value_arg(const ValueArg arg) {
+        auto val = 0;
+        if (arg.hasValue) {
+            val = arg.visit!((ValueImm imm) => imm.val,
+                    (ValueRef ref_) => resolve_label(ref_.label).offset + offset);
+        }
+        return ValueImm(val);
     }
 
     void define_label(string name) {
