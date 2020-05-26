@@ -2,7 +2,7 @@ module irre.assembler.lexer;
 
 import std.stdio;
 import std.string;
-import std.array : Appender;
+import std.array;
 import std.conv;
 
 /**
@@ -58,7 +58,7 @@ class Lexer {
         /**
         the tokens
         */
-        Appender!(Token[]) tokens;
+        Token[] tokens;
     }
 
     /**
@@ -68,7 +68,7 @@ class Lexer {
         source = program;
         line = 1;
 
-        auto res = Result();
+        auto tokens = appender!(Token[]);
 
         // lexer loop
         while (pos < source.length) {
@@ -86,34 +86,34 @@ class Lexer {
 
             immutable auto c_type = classify_char(c);
             if ((c_type & CharType.ALPHA) > 0) { // start of identifier
-                res.tokens ~= read_token_of(CharType.IDENTIFIER);
+                tokens ~= read_token_of(CharType.IDENTIFIER);
             } else if ((c_type & CharType.NUMERIC) > 0) { // start of num literal
-                res.tokens ~= read_token_of(CharType.NUMERIC);
+                tokens ~= read_token_of(CharType.NUMERIC);
             } else if ((c_type & CharType.ARGSEP) > 0) {
-                res.tokens ~= read_token_of(CharType.ARGSEP);
+                tokens ~= read_token_of(CharType.ARGSEP);
             } else if ((c_type & CharType.MARK) > 0) {
-                res.tokens ~= read_token_of(CharType.MARK);
+                tokens ~= read_token_of(CharType.MARK);
             } else if ((c_type & CharType.QUOT) > 0) {
-                res.tokens ~= read_token_of(CharType.QUOT);
+                tokens ~= read_token_of(CharType.QUOT);
             } else if ((c_type & CharType.BIND) > 0) {
-                res.tokens ~= read_token_of(CharType.BIND);
+                tokens ~= read_token_of(CharType.BIND);
             } else if ((c_type & CharType.OFFSET) > 0) {
-                res.tokens ~= read_token_of(CharType.OFFSET);
+                tokens ~= read_token_of(CharType.OFFSET);
             } else if ((c_type & CharType.NUM_SPECIAL) > 0) {
-                res.tokens ~= read_token_of(CharType.NUMERIC_CONSTANT);
+                tokens ~= read_token_of(CharType.NUMERIC_CONSTANT);
             } else if ((c_type & CharType.PACK_START) > 0) {
                 // start of a pack, read in pack context
-                res.tokens ~= read_token_of(CharType.PACK_START); // add the packstart
+                tokens ~= read_token_of(CharType.PACK_START); // add the packstart
                 // get the escape
                 working.clear();
                 immutable auto pack_type = peek_chartype();
                 if (pack_type == CharType.QUOT) { // \'
-                    res.tokens ~= read_token_of(CharType.QUOT);
+                    tokens ~= read_token_of(CharType.QUOT);
                 } else if (pack_type == CharType.ALPHA) { // \x
-                    res.tokens ~= read_token_of(CharType.ALPHA);
+                    tokens ~= read_token_of(CharType.ALPHA);
                 }
             } else if ((c_type & CharType.DIRECTIVE_PREFIX) > 0) {
-                res.tokens ~= read_token_of(CharType.DIRECTIVE);
+                tokens ~= read_token_of(CharType.DIRECTIVE);
             } else {
                 take_char(); // eat the character
                 auto message = format("unrecognized character: %c, [%d:%d]", c, line,
@@ -122,6 +122,7 @@ class Lexer {
             }
         }
 
+        auto res = Result(tokens.data);
         return res;
     }
 
