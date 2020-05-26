@@ -12,10 +12,11 @@ import irre.disassembler.dumper;
 string input_file;
 string output_file;
 bool verbose;
+bool dump;
 
 int main(string[] args) {
     writefln("[IRRE] assembler v%s", Meta.VERSION);
-    auto help = getopt(args, "verbose|v", &verbose);
+    auto help = getopt(args, "verbose|v", &verbose, "dump", &dump);
 
     if (help.helpWanted || args.length != 3) {
         defaultGetoptPrinter("./irre-asm [OPTIONS] <input> <output>", help.options);
@@ -38,20 +39,24 @@ int main(string[] args) {
         auto lexer = new Lexer();
         auto lexed = lexer.lex(inf_source);
 
-        // dump the tokens
-        writeln("== TOKENS ==");
-        foreach (i, token; lexed.tokens) {
-            writefln("%4d TOK: %10s [%10s]", i, token.content, to!string(token.kind));
+        if (dump) {
+            // dump the tokens
+            writeln("== TOKENS ==");
+            foreach (i, token; lexed.tokens) {
+                writefln("%4d TOK: %10s [%10s]", i, token.content, to!string(token.kind));
+            }
         }
 
         auto parser = new Parser();
         auto programAst = parser.parse(lexed);
 
-        // dump the ast
-        writeln("== AST ==");
-        auto dumper = new Dumper();
-        dumper.dump_statements(programAst.statements);
-        
+        if (dump) {
+            // dump the ast
+            writeln("== AST ==");
+            auto dumper = new Dumper();
+            dumper.dump_statements(programAst.statements);
+        }
+
     } catch (ParserException e) {
         writefln("parser error: %s at %s", e.msg, e.info);
     }
