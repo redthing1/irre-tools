@@ -27,7 +27,7 @@ class Reader {
             statements ~= statement;
         }
 
-        auto ast = ProgramAst(statements.data, head.data_size, program_data);
+        auto ast = ProgramAst(statements.data, program_data);
         return ast;
     }
 
