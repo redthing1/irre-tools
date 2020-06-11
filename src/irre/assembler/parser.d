@@ -26,9 +26,9 @@ struct AbstractStatement {
     ValueArg a1, a2, a3;
 }
 
-struct RawStatement {
+struct SourceStatement {
     string mnem;
-    string a1, a2, a3;
+    Token[] a1, a2, a3;
 }
 
 struct ProgramAst {
@@ -60,7 +60,7 @@ struct MacroArg {
 struct MacroDef {
     string name;
     MacroArg[] args;
-    RawStatement[] statements;
+    SourceStatement[] statements;
 }
 
 class Parser {
@@ -206,27 +206,74 @@ class Parser {
         return resolved_statements.data;
     }
 
-    Nullable!RawStatement take_raw_statement(string mnem) {
+    Nullable!SourceStatement take_raw_statement(string mnem) {
         immutable auto maybeInfo = InstructionEncoding.get_info(mnem);
         string a1, a2, a3;
-        if (maybeInfo.isNull) { // didn't match standard instruction names
-            return Nullable!RawStatement.init;
-        } else { // fill in arguments
-            auto info = maybeInfo.get();
-            if ((info.operands & Operands.K_R1) > 0) {
-                a1 = expect_token(CharType.IDENTIFIER).content;
-            }
-            if ((info.operands & Operands.K_R2) > 0) {
-                a2 = expect_token(CharType.IDENTIFIER).content;
-            }
-            if ((info.operands & Operands.K_R3) > 0) {
-                a3 = expect_token(CharType.IDENTIFIER).content;
-            }
+
+        // get all the tokens that make up the next register arg
+        Token take_register_arg_tokens() {
+            return expect_token(CharType.IDENTIFIER);
         }
-        return Nullable!RawStatement(RawStatement(mnem, a1, a2));
+
+        // get all the tokens that make up the next value arg
+        Token[] take_value_arg_tokens() {
+            auto tokens = Token[].init;
+            immutable auto next = peek_token();
+            switch (next.kind) {
+            case CharType.MARK: {
+                    // this is a label reference
+                    expect_token(CharType.MARK); // eat the mark
+                    immutable auto label_token = expect_token(CharType.IDENTIFIER);
+                    tokens ~= label_token;
+                    immutable auto offset_token = peek_token();
+                    if (offset_token.kind == CharType.OFFSET) {
+                        // there is an offset token
+                        expect_token(CharType.OFFSET);
+                        tokens ~= expect_token(CharType.NUMERIC_CONSTANT);
+                    }
+                    // will consist of: [IDENTIFIER, NUMERIC_CONSTANT]
+                    break;
+                }
+            case CharType.NUMERIC_CONSTANT: {
+                    // this is a numeric token
+                    tokens ~= expect_token(CharType.NUMERIC_CONSTANT);
+                    // will consist of: [NUMERIC_CONSTANT]
+                    break;
+                }
+            default:
+                throw parser_error(format("unrecognized token for value arg:  %s", next.content));
+            }
+            return tokens;
+        }
+
+        if (maybeInfo.isNull) { // didn't match standard instruction names
+            return Nullable!SourceStatement.init;
+        } // fill in arguments
+        auto statement = SourceStatement(mnem);
+        auto info = maybeInfo.get();
+
+        // read tokens for arguments
+        if ((info.operands & Operands.K_R1) > 0) {
+            statement.a1 ~= take_register_arg_tokens();
+        } else if ((info.operands & Operands.K_I1) > 0) {
+            statement.a1 ~= take_value_arg_tokens();
+        }
+        if ((info.operands & Operands.K_R2) > 0) {
+            statement.a2 ~= take_register_arg_tokens();
+        } else if ((info.operands & Operands.K_I2) > 0) {
+            statement.a2 ~= take_value_arg_tokens();
+        }
+        if ((info.operands & Operands.K_R3) > 0) {
+            statement.a3 ~= take_register_arg_tokens();
+        } else if ((info.operands & Operands.K_I3) > 0) {
+            statement.a3 ~= take_value_arg_tokens();
+        }
+
+        // completed source statement
+        return Nullable!SourceStatement(statement);
     }
 
-    AbstractStatement parse_statement(RawStatement raw_statement) {
+    AbstractStatement parse_statement(SourceStatement raw_statement) {
         auto maybeInfo = InstructionEncoding.get_info(raw_statement.mnem);
         auto info = maybeInfo.get();
         auto statement = AbstractStatement(info.op);
@@ -254,56 +301,55 @@ class Parser {
             return val;
         }
 
-        ValueArg read_value_arg() {
-            immutable auto next = peek_token();
-            if (next.kind == CharType.MARK) {
-                expect_token(CharType.MARK); // eat the mark
-                immutable auto label_ref_tok = expect_token(CharType.IDENTIFIER);
-                auto vs = ValueRef(label_ref_tok.content, 0);
-                immutable auto pk_offset = peek_token();
-                if (pk_offset.kind == CharType.OFFSET) {
-                    expect_token(CharType.OFFSET); // eat the offset token
-                    auto num_tok = expect_token(CharType.NUMERIC_CONSTANT);
-                    immutable auto offset_val = parse_numeric(num_tok.content);
-                    vs.offset = offset_val;
+        ValueImm read_register_arg(Token[] tokens) {
+            auto register_token = tokens[0];
+            return ValueImm(InstructionEncoding.get_register(register_token.content));
+        }
+
+        // read a special value arg
+        ValueArg read_value_arg(Token[] tokens) {
+            auto pos = 0;
+            immutable auto next = tokens[pos];
+
+            switch (next.kind) {
+            case CharType.IDENTIFIER: {
+                    // this is a label reference
+                    immutable auto label_token = next;
+                    pos++; // move to next token
+                    auto offset = 0;
+                    if (tokens.length > 1) {
+                        // there is an offset
+                        auto offset_token = tokens[pos];
+                        offset = parse_numeric(offset_token.content);
+                    }
+                    return cast(ValueArg) ValueRef(label_token.content, offset);
                 }
-                return cast(ValueArg) vs;
-            } else if (next.kind == CharType.NUMERIC_CONSTANT) {
-                // interpret numeric token
-                immutable auto num_tok = expect_token(CharType.NUMERIC_CONSTANT);
-                auto vs = ValueImm(parse_numeric(num_tok.content));
-                return cast(ValueArg) vs;
-            } else {
-                throw parser_error(format("unrecognized token for value arg:  %s", next.content));
+            case CharType.NUMERIC_CONSTANT: {
+                    immutable auto num_token = next;
+                    auto num = parse_numeric(num_token.content);
+                    return cast(ValueArg) ValueImm(num);
+                }
+            default:
+                throw parser_error(format("unrecognized token (%s) for value arg:  %s",
+                        to!string(next.kind), next.content));
             }
         }
 
-        // read args
+        // read in args from tokens
         if ((info.operands & Operands.K_R1) > 0) {
-            statement.a1 = ValueImm(InstructionEncoding.get_register(raw_statement.a1));
+            statement.a1 = read_register_arg(raw_statement.a1);
+        } else if ((info.operands & Operands.K_I1) > 0) {
+            statement.a1 ~= read_value_arg(raw_statement.a1);
         }
         if ((info.operands & Operands.K_R2) > 0) {
-            statement.a2 = ValueImm(InstructionEncoding.get_register(raw_statement.a2));
+            statement.a2 = read_register_arg(raw_statement.a2);
+        } else if ((info.operands & Operands.K_I2) > 0) {
+            statement.a2 ~= read_value_arg(raw_statement.a2);
         }
         if ((info.operands & Operands.K_R3) > 0) {
-            statement.a3 = ValueImm(InstructionEncoding.get_register(raw_statement.a3));
-        }
-
-        if ((info.operands & Operands.K_I1) > 0) {
-            if (!raw_statement.a1.empty)
-                statement.a1 = ValueImm(parse_numeric(raw_statement.a1));
-            else
-                statement.a1 = read_value_arg();
-        } else if ((info.operands & Operands.K_I2) > 0) {
-            if (!raw_statement.a2.empty)
-                statement.a2 = ValueImm(parse_numeric(raw_statement.a2));
-            else
-                statement.a2 = read_value_arg();
+            statement.a3 = read_register_arg(raw_statement.a3);
         } else if ((info.operands & Operands.K_I3) > 0) {
-            if (!raw_statement.a3.empty)
-                statement.a3 = ValueImm(parse_numeric(raw_statement.a3));
-            else
-                statement.a3 = read_value_arg();
+            statement.a3 ~= read_value_arg(raw_statement.a3);
         }
 
         return statement;
@@ -383,10 +429,10 @@ class Parser {
         //             a3 = take_token(st).cont;
         //         }
         //     }
-        //     RawStatement raw_stmt = (RawStatement) {
+        //     SourceStatement raw_stmt = (SourceStatement) {
         //         .mnem = mnem, .a1 = a1, .a2 = a2, .a3 = a3
         //     };
-        //     buf_push_RawStatement(&def.statements, raw_stmt);
+        //     buf_push_SourceStatement(&def.statements, raw_stmt);
         // }
     }
 
