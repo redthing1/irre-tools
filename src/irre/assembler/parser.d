@@ -207,7 +207,7 @@ class Parser {
         switch (next.kind) {
         case CharType.MARK: {
                 // this is a label reference
-                expect_token(CharType.MARK); // eat the mark
+                tokens ~= expect_token(CharType.MARK); // label ref mark
                 immutable auto label_token = expect_token(CharType.IDENTIFIER);
                 tokens ~= label_token;
                 immutable auto offset_token = peek_token();
@@ -340,10 +340,9 @@ class Parser {
         immutable auto next = tokens[pos];
 
         switch (next.kind) {
-        case CharType.IDENTIFIER: {
+        case CharType.MARK: {
                 // this is a label reference
-                immutable auto label_token = next;
-                pos++; // move to next token
+                immutable auto label_token = tokens[++pos];
                 auto offset = 0;
                 if (tokens.length > 1) {
                     // there is an offset
