@@ -149,7 +149,6 @@ class Parser {
                         // instruction
                         immutable auto mnem_token = iden;
                         immutable auto mnem = mnem_token.content;
-                        writefln("read mnem %s", mnem);
                         auto maybe_raw_statement = take_raw_statement(mnem);
                         if (!maybe_raw_statement.isNull) {
                             // standard instruction
@@ -301,13 +300,13 @@ class Parser {
     }
 
     /** parse a special register arg from tokens */
-    ValueImm read_register_arg(Token[] tokens) {
+    ValueImm parse_register_arg(Token[] tokens) {
         auto register_token = tokens[0];
         return ValueImm(InstructionEncoding.get_register(register_token.content));
     }
 
     /** parse a special value arg from tokens */
-    ValueArg read_value_arg(Token[] tokens) {
+    ValueArg parse_value_arg(Token[] tokens) {
         auto pos = 0;
         immutable auto next = tokens[pos];
 
@@ -342,19 +341,19 @@ class Parser {
 
         // read in args from tokens
         if ((info.operands & Operands.K_R1) > 0) {
-            statement.a1 = read_register_arg(raw_statement.a1);
+            statement.a1 = parse_register_arg(raw_statement.a1);
         } else if ((info.operands & Operands.K_I1) > 0) {
-            statement.a1 = read_value_arg(raw_statement.a1);
+            statement.a1 = parse_value_arg(raw_statement.a1);
         }
         if ((info.operands & Operands.K_R2) > 0) {
-            statement.a2 = read_register_arg(raw_statement.a2);
+            statement.a2 = parse_register_arg(raw_statement.a2);
         } else if ((info.operands & Operands.K_I2) > 0) {
-            statement.a2 = read_value_arg(raw_statement.a2);
+            statement.a2 = parse_value_arg(raw_statement.a2);
         }
         if ((info.operands & Operands.K_R3) > 0) {
-            statement.a3 = read_register_arg(raw_statement.a3);
+            statement.a3 = parse_register_arg(raw_statement.a3);
         } else if ((info.operands & Operands.K_I3) > 0) {
-            statement.a3 = read_value_arg(raw_statement.a3);
+            statement.a3 = parse_value_arg(raw_statement.a3);
         }
 
         return statement;
@@ -421,7 +420,6 @@ class Parser {
             // for now, just add the instruction
 
             if (!maybe_raw_statement.isNull) {
-                writefln("ate statement %s", mnem_token.content);
                 statements ~= maybe_raw_statement.get();
             } else {
                 // unrecognized mnemonic
@@ -448,15 +446,19 @@ class Parser {
 
         // TODO: properly unroll the macro
 
-        auto given_args = appender!(Token[][]);
+        auto given_args = appender!(ValueArg[]);
         // get the given args
-        foreach (arg; def.args) {
-            switch (arg.type) {
+        foreach (def_arg; def.args) {
+            switch (def_arg.type) {
             case MacroArg.Type.VALUE:
-                given_args ~= take_value_arg_tokens();
+                auto arg_tokens = take_value_arg_tokens();
+                auto arg = cast(ValueArg) parse_value_arg(arg_tokens);
+                given_args ~= arg;
                 break;
             case MacroArg.Type.REGISTER:
-                given_args ~= take_register_arg_tokens();
+                auto arg_tokens = take_register_arg_tokens();
+                auto arg = cast(ValueArg) parse_register_arg(arg_tokens);
+                given_args ~= arg;
                 break;
             default:
                 assert(0);
