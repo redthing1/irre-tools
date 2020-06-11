@@ -135,34 +135,27 @@ class Parser {
                     break;
                 }
             case CharType.IDENTIFIER: {
-                    immutable auto iden = expect_token(CharType.IDENTIFIER);
-                    immutable auto iden_next = peek_token();
-                    if (iden_next.kind == CharType.MARK && iden_next.content == ":") { // label def (only if single mark)
+                    // immutable auto peek_iden = peek_token();
+                    immutable auto peek_iden_succ = peek_token(1);
+                    if (peek_iden_succ.kind == CharType.MARK && peek_iden_succ.content == ":") {
+                        // label definition (only if single mark)
+                        auto label_name = expect_token(CharType.IDENTIFIER);
                         expect_token(CharType.MARK); // eat the mark
-                        define_label(iden.content); // create label
+                        define_label(label_name.content); // create label
                         break;
-                    } else if (iden_next.kind == CharType.BIND) { // macro def
+                    } else if (peek_iden_succ.kind == CharType.BIND) {
+                        // macro definition
+                        auto macro_name = expect_token(CharType.IDENTIFIER);
                         expect_token(CharType.BIND); // eat the bind
-                        define_macro(iden.content); // define the macro
+                        define_macro(macro_name.content); // define the macro
                         break;
                     } else {
-                        // instruction
-                        immutable auto mnem_token = iden;
-                        immutable auto mnem = mnem_token.content;
-                        auto maybe_raw_statement = take_raw_statement(mnem);
-                        if (!maybe_raw_statement.isNull) {
-                            // standard instruction
-                            auto statement = parse_statement(maybe_raw_statement.get());
-                            statements ~= statement; // push statement
-                            offset += INSTRUCTION_SIZE; // update code offset
-                        } else {
-                            // it was not an instruction, perhaps it's a macro
-                            auto md = resolve_macro(mnem);
-                            // expand the macro
-                            auto unrolled_macro = expand_macro(md);
-                            statements ~= unrolled_macro;
-                            offset += INSTRUCTION_SIZE * unrolled_macro.length;
-                        }
+                        // this is an instruction
+                        auto next_statements = walk_statements();
+                        statements ~= next_statements;
+                        // we can get away with updating offset later
+                        // because macros aren't legal in these blocks
+                        offset += next_statements.length * INSTRUCTION_SIZE;
                     }
                     break;
                 }
@@ -244,14 +237,38 @@ class Parser {
         return tokens;
     }
 
-    Nullable!SourceStatement take_raw_statement(string mnem) {
-        immutable auto maybeInfo = InstructionEncoding.get_info(mnem);
+    /** walk through the tokens, parsing statements. could be a single statement or an unrolled macro. */
+    AbstractStatement[] walk_statements() {
+        auto statements = appender!(AbstractStatement[]);
+        auto maybe_raw_statement = take_raw_statement();
+        if (!maybe_raw_statement.isNull) {
+            // standard instruction
+            auto statement = parse_statement(maybe_raw_statement.get());
+            statements ~= statement; // push statement
+        } else {
+            // it was not an instruction, perhaps it's a macro
+            auto macro_ref_token = expect_token(CharType.IDENTIFIER);
+            auto md = resolve_macro(macro_ref_token.content);
+            // expand the macro
+            auto unrolled_macro = expand_macro(md);
+            statements ~= unrolled_macro;
+        }
+        return statements.data;
+    }
+
+    Nullable!SourceStatement take_raw_statement() {
+        immutable auto mnem_token = peek_token();
+        immutable auto maybeInfo = InstructionEncoding.get_info(mnem_token.content);
         string a1, a2, a3;
 
         if (maybeInfo.isNull) { // didn't match standard instruction names
             return Nullable!SourceStatement.init;
-        } // fill in arguments
-        auto statement = SourceStatement(mnem);
+        }
+
+        expect_token(CharType.IDENTIFIER); // eat the mnemonic token
+        
+        // fill in arguments
+        auto statement = SourceStatement(mnem_token.content);
         auto info = maybeInfo.get();
 
         // read tokens for arguments
@@ -383,7 +400,7 @@ class Parser {
     }
 
     void define_macro(string name) {
-        writefln("DEFINE_MACRO %s", name);
+        // writefln("DEFINE_MACRO %s", name);
         auto def = MacroDef(name);
         while (peek_token().kind != CharType.MARK) { // MARK terminates arg list
             immutable auto arg_name = expect_token(CharType.IDENTIFIER);
@@ -413,18 +430,17 @@ class Parser {
                 break;
             }
             // otherwise, we should have instruction statements
-            auto mnem_token = expect_token(CharType.IDENTIFIER);
-            auto maybe_raw_statement = take_raw_statement(mnem_token.content);
+            auto maybe_raw_statement = take_raw_statement();
             // TODO: consolidate this with the standard statement reader
             // to allow calling macros from macros
-            // for now, just add the instruction
+            // difficult because walk_statements() returns AbstractStatement
 
             if (!maybe_raw_statement.isNull) {
                 statements ~= maybe_raw_statement.get();
             } else {
                 // unrecognized mnemonic
-                throw parser_error_token(format("unrecognized mnemonic within macro '%s'",
-                        name), mnem_token);
+                auto mnem_token = expect_token(CharType.IDENTIFIER);
+                throw parser_error_token(format("unrecognized mnemonic within macro '%s'", name), mnem_token);
             }
         }
         def.statements = statements.data;
@@ -462,7 +478,8 @@ class Parser {
         }
 
         Token[] resolve_identifiers(Token[] tokens) {
-            if (tokens.length < 1) return tokens;
+            if (tokens.length < 1)
+                return tokens;
             // check first token, if it's an identifier
             auto first_token = tokens[0];
             if (first_token.kind == CharType.IDENTIFIER) {
@@ -490,12 +507,12 @@ class Parser {
         return statements.data;
     }
 
-    private Token peek_token() {
+    private Token peek_token(int offset = 0) {
         // if at end, unknown
-        if (token_pos >= lexed.tokens.length) {
+        if (token_pos + offset >= lexed.tokens.length) {
             return Token(string.init, CharType.UNKNOWN);
         }
-        return lexed.tokens[token_pos];
+        return lexed.tokens[token_pos + offset];
     }
 
     private Token take_token() {
