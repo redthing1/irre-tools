@@ -428,7 +428,7 @@ class Parser {
                 statements ~= maybe_raw_statement.get();
             } else {
                 // unrecognized mnemonic
-                throw parser_error_token(format("unrecognized mnemonic"), mnem_token);
+                throw parser_error_token(format("unrecognized mnemonic within macro '%s'", name), mnem_token);
             }
         }
         def.statements = statements.data;
@@ -484,7 +484,7 @@ class Parser {
     }
 
     private ParserException parser_error_token(string message, Token token) {
-        return new ParserException(format("%s on line %d at token %s", message,
+        return new ParserException(format("%s on line %d at token '%s'", message,
                 token.line, token.content));
     }
 }
