@@ -33,6 +33,8 @@ represents a token
 struct Token {
     string content;
     CharType kind;
+
+    /** just an informative line position indicator useful for giving more useful errors. */
     int line;
 }
 
