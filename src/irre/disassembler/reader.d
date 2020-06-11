@@ -1,6 +1,6 @@
 module irre.disassembler.reader;
 
-import irre.assembler.parser;
+import irre.assembler.ast;
 import irre.encoding.rega;
 import irre.encoding.instructions;
 import std.array;
