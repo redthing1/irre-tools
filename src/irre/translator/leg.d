@@ -61,11 +61,17 @@ class LegTranslator {
 
     string rewrite_instruction(string raw_instruction) {
 
-        void remap_instructions(Token[] tokens) {
+        /** remap instruction mnemonics */
+        void remap_instructions(ref Token[] tokens) {
             auto mnem = tokens[0].content;
             switch (mnem) {
             case "b_to":
                 mnem = "jmi";
+                break;
+            case "cmp":
+                mnem = "tcu";
+                // we rewrite CMP rA rB -> TCU ad rA rB
+                tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
                 break;
             default:
                 break;
@@ -77,7 +83,7 @@ class LegTranslator {
         }
 
         /** remap register names */
-        void remap_registers(Token[] tokens) {
+        void remap_registers(ref Token[] tokens) {
             if (tokens.length > 0 && (tokens[0].kind & CharType.IDENTIFIER) > 0) {
                 auto reg = tokens[0].content;
                 // rewrite rules
@@ -119,8 +125,9 @@ class LegTranslator {
                 source_statement.mnem = "sbi";
             }
             break;
-        case "b_to":
-            source_statement.mnem = "jmi";
+        case "tcu":
+            // check if this is a CMP-style TCU
+            // tcu R R rather than tcu R R R
             break;
         default:
             break; // we don't care
