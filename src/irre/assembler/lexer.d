@@ -19,7 +19,7 @@ enum CharType {
     QUOT = 1 << 6, // '''
     BIND = 1 << 7, // '@'
     OFFSET = 1 << 8, // '^'
-    DIRECTIVE_PREFIX = 1 << 9, // '#'
+    DIRECTIVE_PREFIX = 1 << 9, // '%'
     NUMERIC_HEX = 1 << 10, // beef
     PACK_START = 1 << 11, // '\'
     IDENTIFIER = ALPHA | NUMERIC,
@@ -141,12 +141,12 @@ class Lexer {
             return CharType.BIND;
         case '^':
             return CharType.OFFSET;
-        case '#':
+        case '%':
             return CharType.DIRECTIVE_PREFIX;
         case '\\':
             return CharType.PACK_START;
         case '$':
-        case '.':
+        case '#':
             return CharType.NUM_SPECIAL;
         case ' ':
         case '\t':

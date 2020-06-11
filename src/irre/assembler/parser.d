@@ -44,12 +44,13 @@ class Parser {
             switch (next.kind) {
             case CharType.DIRECTIVE: {
                     immutable auto dir = expect_token(CharType.DIRECTIVE);
-                    if (dir.content == "#entry") { // entrypoint directive
+                    auto dir_type = dir.content[1..$];
+                    if (dir_type == "entry") { // entrypoint directive
                         // following label has the entry point
                         expect_token(CharType.MARK);
                         immutable auto label_ref = expect_token(CharType.IDENTIFIER);
                         entry_label = label_ref.content; // store entry label
-                    } else if (dir.content == "#d") { // data directive
+                    } else if (dir_type == "d") { // data directive
                         expect_token(CharType.PACK_START); // eat pack start
                         // check pack type indicator
                         immutable auto pack_type_indicator = expect_token(
@@ -260,7 +261,7 @@ class Parser {
                 val = to!int(num_str, 16);
                 break;
             }
-        case '.': {
+        case '#': {
                 // interpret as base-10
                 val = to!int(num_str);
                 break;

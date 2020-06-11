@@ -1,6 +1,6 @@
 ; test more features
 
-#entry :test1
+%entry :test1
 
 end:
     hlt
