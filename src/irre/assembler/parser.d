@@ -100,7 +100,7 @@ class Parser {
                         auto pack_len = 0uL; // size of packed data
 
                         switch (pack_type_indicator.kind) {
-                        case CharType.ALPHA: { // byte pack
+                        case CharType.ALPHA: { // byte pack (x)
                                 auto pack = expect_token(CharType.NUMERIC_CONSTANT);
                                 pack_len = pack.content.length;
                                 if (pack_len % 2 != 0) {
@@ -113,7 +113,7 @@ class Parser {
                                 data ~= pack_data;
                                 break;
                             }
-                        case CharType.QUOT: { // data string
+                        case CharType.QUOT: { // data string (')
                                 auto pack = take_token(); // any following token is valid
                                 pack_len = pack.content.length;
                                 // copy string from token to data
@@ -362,8 +362,8 @@ class Parser {
             // expected token found
             return take_token();
         } else {
-            throw parser_error(format("expected %s but got %s",
-                    to!string(type), to!string(token.kind)));
+            throw parser_error(format("expected %s but got %s, which is %s",
+                    to!string(type), token.content, to!string(token.kind)));
         }
     }
 
