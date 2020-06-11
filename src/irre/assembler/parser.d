@@ -444,25 +444,47 @@ class Parser {
     AbstractStatement[] expand_macro(ref MacroDef def) {
         auto statements = appender!(AbstractStatement[]);
 
-        // TODO: properly unroll the macro
-
-        auto given_args = appender!(ValueArg[]);
+        Token[][string] given_args;
         // get the given args
         foreach (def_arg; def.args) {
             switch (def_arg.type) {
             case MacroArg.Type.VALUE:
                 auto arg_tokens = take_value_arg_tokens();
-                auto arg = cast(ValueArg) parse_value_arg(arg_tokens);
-                given_args ~= arg;
+                given_args[def_arg.name] = arg_tokens;
                 break;
             case MacroArg.Type.REGISTER:
                 auto arg_tokens = take_register_arg_tokens();
-                auto arg = cast(ValueArg) parse_register_arg(arg_tokens);
-                given_args ~= arg;
+                given_args[def_arg.name] = arg_tokens;
                 break;
             default:
                 assert(0);
             }
+        }
+
+        Token[] resolve_identifiers(Token[] tokens) {
+            if (tokens.length < 1) return tokens;
+            // check first token, if it's an identifier
+            auto first_token = tokens[0];
+            if (first_token.kind == CharType.IDENTIFIER) {
+                // match name to args
+                if (first_token.content in given_args) {
+                    // the token references an argument that was passed to the macro
+                    auto arg_name = first_token.content;
+                    return given_args[arg_name];
+                }
+            }
+            // untouched
+            return tokens;
+        }
+
+        // iterate through statements, replacing arguments then parsing the statements
+        foreach (def_statement; def.statements) {
+            // resolve all identifiers
+            auto resolved_statement = SourceStatement(def_statement.mnem, resolve_identifiers(def_statement.a1),
+                    resolve_identifiers(def_statement.a2), resolve_identifiers(def_statement.a3));
+            // parse the statement
+            auto parsed_statement = parse_statement(resolved_statement);
+            statements ~= parsed_statement;
         }
 
         return statements.data;

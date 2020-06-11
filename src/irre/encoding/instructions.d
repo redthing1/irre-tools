@@ -74,11 +74,11 @@ enum Register : ARG {
     R27 = 0x1b,
     R28 = 0x1c,
     // R29 = 0x1d,
-    RAD = 0x1d,
+    AD = 0x1d,
     // R30 = 0x1e,
-    RAT = 0x1e,
+    AT = 0x1e,
     // R31 = 0x1f,
-    RSP = 0x1f,
+    SP = 0x1f,
     RX = 0xff,
 }
 
