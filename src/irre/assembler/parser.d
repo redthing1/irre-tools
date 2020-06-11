@@ -281,6 +281,17 @@ class Parser {
         return val;
     }
 
+    public bool is_register_arg(Token[] tokens) {
+        immutable auto next = tokens[0];
+        if (next.kind != CharType.IDENTIFIER) return false;
+        try {
+            auto reg = to!Register(next.content);
+            return true;
+        } catch (ConvException) {
+            return false;
+        }
+    }
+
     /** parse a special register arg from tokens */
     private ValueImm parse_register_arg(Token[] tokens) {
         auto register_token = tokens[0];

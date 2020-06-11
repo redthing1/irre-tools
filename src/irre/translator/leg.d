@@ -2,6 +2,7 @@ module irre.translator.leg;
 
 import std.stdio;
 import std.algorithm.searching;
+import std.string;
 import std.range;
 import std.array;
 import irre.meta;
@@ -51,7 +52,7 @@ class LegTranslator {
                 conv_line = cast(string) label;
             }
 
-            out_lines ~= conv_line;
+            out_lines ~= strip(conv_line, "", " ");
         }
 
         return out_lines.data;
@@ -69,13 +70,20 @@ class LegTranslator {
         auto source_statement = maybe_source_statement.get();
         writefln("  OP %s", source_statement.mnem);
         switch (source_statement.mnem) {
-            case "add":
-            case "sub":
-                // rewrite to 'adi' and 'sbi' when A3 is imm
-
-                break;
-            default:
-                break; // we don't care
+        case "add":
+            // rewrite to 'adi' when A3 is imm
+            if (!parser.is_register_arg(source_statement.a3)) {
+                source_statement.mnem = "adi";
+            }
+            break;
+        case "sub":
+            // rewrite to 'sbi' when A3 is imm
+            if (!parser.is_register_arg(source_statement.a3)) {
+                source_statement.mnem = "sbi";
+            }
+            break;
+        default:
+            break; // we don't care
         }
 
         auto rewritten = source_statement.dump();
