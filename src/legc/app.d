@@ -4,6 +4,8 @@ import std.stdio;
 import std.getopt;
 import std.conv;
 import std.file;
+import std.algorithm.searching;
+import std.range;
 import irre.meta;
 import irre.assembler.lexer;
 import irre.assembler.parser;
@@ -33,7 +35,28 @@ int main(string[] args) {
         auto in_lines = in_file.byLine();
         foreach (line; in_lines) {
             // convert the line
-            auto conv_line = line;
+            char[] conv_line;
+            // check if starts with tab
+            if (line.startsWith('\t')) {
+                // statement
+                // if starts with ".", it's a directive
+                auto statement = line.drop(1);
+                writefln("STATEMENT: %s", statement);
+                if (statement.startsWith('.')) {
+                    conv_line = "; " ~ statement;
+                } else {
+                    // instruction statement
+                    conv_line = statement;
+                }
+                // re-add the tab
+                conv_line = '\t' ~ conv_line;
+            } else {
+                // label
+                auto label = line;
+                writefln("LABEL: %s", label);
+                conv_line = label;
+            }
+
             ou_file.writeln(conv_line);
         }
     } catch (FileException e) {

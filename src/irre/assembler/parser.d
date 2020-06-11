@@ -116,8 +116,9 @@ class Parser {
                     break;
                 }
             default:
+                CharType unexpected_type = next.kind;
                 throw parser_error_token(format("unexpected of type: %s",
-                        to!string(next.kind)), next);
+                        to!string(unexpected_type)), next);
 
             }
         }
