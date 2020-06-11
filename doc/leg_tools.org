@@ -39,7 +39,8 @@ information/documentation on the LEG architecture comes from these two presentat
   + return value stored in ~r0~
 + returns to the caller using ~b~ (branch)
   + ~lr~ contains the return address
- 
+
+the function:
 #+begin_src c
 int add(int a, int b) {
     int result = a + b;
@@ -47,11 +48,65 @@ int add(int a, int b) {
 }
 #+end_src
 
-translates to
+translates to:
 #+begin_src asm
 .add:
     add r0, r0, r1  
     b lr
+#+end_src
+*** memory function
++ a function that loads a value, adds a constant, and stores result
+  + ~ldr~ loads a value from memory
+  + ~mov~ copies an imm to a register
+  + ~str~ stores the value to memory
+  
+sample code:
+#+begin_src c
+void ex7(int *src, int *dst) {
+    int x = src[0];
+    int reuslt = x + 42;
+    dst[0] = result; 
+}
+#+end_src
+
+compiles to:
+#+begin_src asm
+ex7:
+    ldr r0, [r0]
+    mov r2, #42
+    add r0, r0, r2
+    bx lr
+#+end_src
+*** branching function
++ function that either adds or subtracts two integers
++ the result depends on which argument is greater
+  + ~cmp~ compares the arguments
+  + ~b~ branches to the ~if_else~ basic block, using:
+    + the ~le~ predicate
+    + the implicit condition flag register set by ~cmp~
+  + fall through to ~if_then~ if the predicate doesn't match
+  
+this example code:
+#+begin_src c
+int ex6(int a, int b) {
+    if (a > b) {
+        return a + b;
+    } else {
+        return a - b;
+}
+#+end_src
+
+compiles to assembly:
+#+begin_src asm
+.ex6:
+    cmp r0, r1
+    ble .if_else
+.if_then:
+    add r0, r0, r1
+    bx lr
+.if_else
+    sub r0, r0, r1
+    bx lr
 #+end_src
 
 * building leg
