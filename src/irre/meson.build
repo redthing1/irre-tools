@@ -14,6 +14,8 @@ sources = [
 
     'encoding/instructions.d',
     'encoding/rega.d',
+
+    'translator/leg.d',
 ]
 
 libirre = shared_library('irre', sources,
