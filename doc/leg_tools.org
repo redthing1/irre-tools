@@ -143,5 +143,30 @@ to compile C source to ~.s~ LEG assembly:
 ./build/bin/clang -cc1 -triple leg-unknown-unknown -S -o ex1.s docs/Codeplay/examples/ex1/ex1.c
 #+end_src
 
+sample output (contents of ~ex1.s~):
+#+begin_src asm
+	.text	.file	"docs/Codeplay/examples/ex1/ex1.c"
+	.globl	foo
+	.type	foo,@function
+foo:
+	sub sp, sp, #20
+	mov r2, r1
+	mov r3, r0
+	str r0, [sp, #16]
+	str r1, [sp, #12]
+	ldr r0, [sp, #16]
+	add r0, r0, r1
+	str r0, [sp, #8]
+	str r2, [sp, #4]
+	str r3, [sp]
+	add sp, sp, #20
+	bx lr
+.Lfunc_end0:
+	.size	foo, .Lfunc_end0-foo
+
+
+	.ident	"clang version 3.8.1 (https://github.com/frasercrmck/clang-leg.git 43d93776c0f686e0097b8e3c96768b716ccd0a88) (https://github.com/frasercrmck/llvm-leg.git 639b36ab242152752905edfea54ea571682b6f81)"
+	.section	".note.GNU-stack","",@progbits
+#+end_src
 
 
