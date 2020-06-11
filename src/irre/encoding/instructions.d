@@ -71,7 +71,8 @@ enum Register : ARG {
     R24 = 0x18,
     R25 = 0x19,
     R26 = 0x1a,
-    R27 = 0x1b,
+    // R27 = 0x1b,
+    RV = 0x1b, // return value
     // R28 = 0x1c,
     LR = 0x1c, // return address
     // R29 = 0x1d,

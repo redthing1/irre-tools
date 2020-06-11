@@ -35,6 +35,36 @@ class Parser {
         // this.offset = 0;
     }
 
+    private void define_builtins() {
+        auto macro_adi = MacroDef("adi", [
+                MacroArg(MacroArg.Type.REGISTER, "rA"),
+                MacroArg(MacroArg.Type.REGISTER, "rB"),
+                MacroArg(MacroArg.Type.VALUE, "v0")
+                ], [
+                SourceStatement("set", [Token("at", CharType.IDENTIFIER)],
+                    [Token("v0", CharType.IDENTIFIER)]),
+                SourceStatement("add", [Token("rA", CharType.IDENTIFIER)],
+                    [Token("rB", CharType.IDENTIFIER)], [
+                        Token("at", CharType.IDENTIFIER)
+                    ]),
+                ]);
+        macros ~= macro_adi;
+        auto macro_sbi = MacroDef("sbi", [
+                MacroArg(MacroArg.Type.REGISTER, "rA"),
+                MacroArg(MacroArg.Type.REGISTER, "rB"),
+                MacroArg(MacroArg.Type.VALUE, "v0")
+                ], [
+                SourceStatement("set", [Token("at", CharType.IDENTIFIER)],
+                    [Token("v0", CharType.IDENTIFIER)]),
+                SourceStatement("sub", [Token("rA", CharType.IDENTIFIER)],
+                    [Token("rB", CharType.IDENTIFIER)], [
+                        Token("at", CharType.IDENTIFIER)
+                    ]),
+                ]);
+        macros ~= macro_adi;
+        macros ~= macro_sbi;
+    }
+
     /** given a lexer result, parse tokens into a program ast */
     public ProgramAst parse() {
         string entry_label;
@@ -45,13 +75,16 @@ class Parser {
         statements ~= AbstractStatement(OpCode.NOP);
         offset += INSTRUCTION_SIZE;
 
+        // define builtins
+        define_builtins();
+
         // parse lex result into instruction list
         while (token_pos < lexed.tokens.length) {
             immutable auto next = peek_token();
             switch (next.kind) {
             case CharType.DIRECTIVE: {
                     immutable auto dir = expect_token(CharType.DIRECTIVE);
-                    auto dir_type = dir.content[1..$];
+                    auto dir_type = dir.content[1 .. $];
                     if (dir_type == "entry") { // entrypoint directive
                         // following label has the entry point
                         expect_token(CharType.MARK);
@@ -147,7 +180,8 @@ class Parser {
     }
 
     /** convert all value references in instructions to immediate values (compute all offsets, replacing symbols) */
-    private AbstractStatement[] resolve_statements(ref const Appender!(AbstractStatement[]) statements) {
+    private AbstractStatement[] resolve_statements(
+            ref const Appender!(AbstractStatement[]) statements) {
         auto resolved_statements = appender!(AbstractStatement[]);
         foreach (unresolved; statements.data) {
             auto statement = AbstractStatement(unresolved.op);
@@ -282,10 +316,12 @@ class Parser {
     }
 
     public bool is_register_arg(Token[] tokens) {
+        if (tokens.length < 1) return false;
         immutable auto next = tokens[0];
-        if (next.kind != CharType.IDENTIFIER) return false;
+        if ((next.kind & CharType.IDENTIFIER) == 0)
+            return false;
         try {
-            auto reg = to!Register(next.content);
+            auto reg = InstructionEncoding.get_register(next.content);
             return true;
         } catch (ConvException) {
             return false;
@@ -466,7 +502,7 @@ class Parser {
                 return tokens;
             // check first token, if it's an identifier
             auto first_token = tokens[0];
-            if (first_token.kind == CharType.IDENTIFIER) {
+            if ((first_token.kind & CharType.IDENTIFIER) > 0) {
                 // match name to args
                 if (first_token.content in given_args) {
                     // the token references an argument that was passed to the macro
