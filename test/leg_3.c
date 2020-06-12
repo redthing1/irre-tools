@@ -1,8 +1,9 @@
 
 int main() {
     int c = 0;
-    for (int i = 0; i < 4; i++) {
+    #pragma nounroll
+    for (int i = 0; i < 1; i++) {
         c += 0x10;
     }
-    return 42;
+    return c;
 }
