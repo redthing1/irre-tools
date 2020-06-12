@@ -56,7 +56,7 @@ int main(string[] args) {
             // dump the ast
             writeln("== AST ==");
             auto dumper = new Dumper(Dumper.Mode.Detailed);
-            dumper.dump_statements(programAst.statements);
+            dumper.dump_statements(programAst);
         }
 
         auto encoder = new RegaEncoder();

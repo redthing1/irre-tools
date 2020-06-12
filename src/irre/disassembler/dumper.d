@@ -27,9 +27,10 @@ class Dumper {
         this.mode = mode;
     }
 
-    void dump_statements(AbstractStatement[] statements) {
-        foreach (i, node; statements) {
-            auto offset = i * INSTRUCTION_SIZE;
+    void dump_statements(ProgramAst ast) {
+        auto data_offset = ast.data.length;
+        foreach (i, node; ast.statements) {
+            auto offset = data_offset + i * INSTRUCTION_SIZE;
             auto builder = appender!string;
             if (mode == Mode.Detailed) {
                 builder ~= format("%04x: ", offset);
