@@ -22,7 +22,7 @@ class VirtualMachine {
         mem = new BYTE[MEMORY_SIZE];
 
         // set SP to last word
-        reg[Register.SP] = MEMORY_SIZE - WORD.sizeof;
+        reg[Register.SP] = MEMORY_SIZE;
 
         // reset stats
         ticks = 0;

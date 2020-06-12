@@ -6,6 +6,7 @@ import irre.disassembler.dumper;
 import irre.encoding.instructions;
 import std.stdio;
 import std.conv;
+import std.string;
 
 enum SIMPLE_REGISTER_COUNT = 6;
 
@@ -35,23 +36,28 @@ class Hypervisor {
             exec_st = vm.step();
             // post-instruction
             if (debug_mode) {
-                dump(false); // minidump
+                dump_registers(false); // minidump
             }
-            if (onestep_mode) {
+            while (onestep_mode) {
                 // pause
                 write("[emu]$ ");
-                auto input = readln();
+                auto command = readln().strip();
+                if (command.length > 0) {
+                    run_command(command);
+                } else {
+                    break;
+                }
             }
         }
         // done.
 
         if (debug_mode) {
             writefln("execution halted after %d cycles.", vm.ticks);
-            dump(true); // full dump
+            dump_registers(true); // full dump
         }
     }
 
-    void dump(bool full) {
+    void dump_registers(bool full) {
         // dump registers
         void dump_register(ARG reg_id) {
             writefln("%5s: $%08x", to!Register(reg_id), vm.reg[reg_id]);
@@ -70,6 +76,28 @@ class Hypervisor {
             dump_register(Register.AD);
             dump_register(Register.AT);
             dump_register(Register.SP);
+        }
+    }
+
+    void dump_stack() {
+        writefln("== stack dump ==");
+        immutable UWORD sp = vm.reg[Register.SP];
+        for (UWORD addr = sp; addr < vm.mem.length; addr += UWORD.sizeof) {
+            immutable UWORD data = vm.mem[addr + 0] << 0 | vm.mem[addr + 1] << 8
+                | vm.mem[addr + 2] << 16 | vm.mem[addr + 3] << 24;
+            writef("$%04x ", data);
+        }
+        writefln("\n=== === ===");
+    }
+
+    void run_command(string command) {
+        switch (command) {
+        case "stk":
+            dump_stack();
+            break;
+        default:
+            writefln("command '%s' not recognized.", command);
+            break;
         }
     }
 }
