@@ -310,7 +310,7 @@ class Parser {
             }
         default:
             // invalid numeric type (by prefix)
-            throw parser_error(format("invalid numeric prefix: %c", pfx));
+            throw parser_error(format("invalid numeric prefix: '%c'", pfx));
         }
         return val;
     }
@@ -344,7 +344,7 @@ class Parser {
                 // this is a label reference
                 immutable auto label_token = tokens[++pos];
                 auto offset = 0;
-                if (tokens.length > 1) {
+                if (tokens.length > 2) {
                     // there is an offset
                     auto offset_token = tokens[pos];
                     offset = parse_numeric(offset_token.content);
