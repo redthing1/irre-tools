@@ -21,7 +21,7 @@ class Parser {
     private Lexer.Result lexed;
     private int token_pos;
     private int char_pos;
-    private int offset;
+    private int global_offset;
     private ubyte[] data;
     private Appender!(MacroDef[]) macros;
     private Appender!(LabelDef[]) labels;
@@ -73,7 +73,7 @@ class Parser {
 
         // emit entry jump
         statements ~= AbstractStatement(OpCode.NOP);
-        offset += INSTRUCTION_SIZE;
+        global_offset += INSTRUCTION_SIZE;
 
         // define builtins
         define_builtins();
@@ -125,7 +125,7 @@ class Parser {
                         }
 
                         // update offset
-                        offset += pack_len;
+                        global_offset += pack_len;
                         // printf("data block, len: $%04x\n", cast(UWORD) pack_len);
                     }
                     break;
@@ -151,7 +151,7 @@ class Parser {
                         statements ~= next_statements;
                         // we can get away with updating offset later
                         // because macros aren't legal in these blocks
-                        offset += next_statements.length * INSTRUCTION_SIZE;
+                        global_offset += next_statements.length * INSTRUCTION_SIZE;
                     }
                     break;
                 }
@@ -400,7 +400,7 @@ class Parser {
 
     /** define a label */
     private void define_label(string name) {
-        labels ~= LabelDef(name, offset);
+        labels ~= LabelDef(name, global_offset);
     }
 
     /** resolve a label */
