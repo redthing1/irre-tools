@@ -55,6 +55,7 @@ class VirtualMachine {
     }
 
     void execute_instruction(Instruction ins) {
+        bool branched = false;
         switch (ins.op) {
         case OpCode.NOP:
             // literally do nothing
@@ -144,6 +145,36 @@ class VirtualMachine {
                 mem[addr + 3] = (reg[ins.a2] >> 24) & 0xff;
                 break;
             }
+        case OpCode.JMI: {
+                immutable UWORD addr = ins.a1;
+                reg[Register.PC] = addr;
+                branched = true;
+                break;
+            }
+        case OpCode.JMP: {
+                immutable UWORD addr = reg[ins.a1];
+                reg[Register.PC] = addr;
+                branched = true;
+                break;
+            }
+        case OpCode.BIF: {
+                immutable UWORD addr = ins.a2;
+                // branch to vB if rA == vC
+                immutable UWORD tc = reg[ins.a1];
+                if (tc == ins.a3) {
+                    reg[Register.PC] = addr;
+                    branched = true;
+                }
+                break;
+            }
+        case OpCode.CAL: {
+                immutable UWORD addr = reg[ins.a1];
+                // store next instruction in LR
+                reg[Register.LR] = reg[Register.PC] + cast(uint) INSTRUCTION_SIZE;
+                reg[Register.PC] = addr;
+                branched = true;
+                break;
+            }
         case OpCode.INT: {
                 UWORD code = reg[ins.a1];
                 interrupt(code);
@@ -156,8 +187,9 @@ class VirtualMachine {
             // unhandled op
             break;
         }
-
-        reg[cast(int) Register.PC] += INSTRUCTION_SIZE; // increment PC
+        if (!branched) {
+            reg[cast(int) Register.PC] += cast(uint) INSTRUCTION_SIZE; // increment PC
+        }
     }
 
     bool step() {
