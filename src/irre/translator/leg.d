@@ -116,7 +116,7 @@ class LegTranslator {
             if (tokens.length > 0 && (tokens[0].kind & CharType.IDENTIFIER) > 0) {
                 auto reg = tokens[0].content;
                 // rewrite rules
-                reg = reg.replace("r0", "rv");
+                // reg = reg.replace("r0", "rv");
                 if (reg != tokens[0].content) {
                     writefln("      rewrote REG: %s -> %s", tokens[0].content, reg);
                 }

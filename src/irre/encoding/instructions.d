@@ -49,8 +49,7 @@ enum OpCode : ARG {
 }
 
 enum Register : ARG {
-    // R0 = 0x00,
-    PC = 0x00,
+    R0 = 0x00,
     R1 = 0x01,
     R2 = 0x02,
     R3 = 0x03,
@@ -77,15 +76,10 @@ enum Register : ARG {
     R24 = 0x18,
     R25 = 0x19,
     R26 = 0x1a,
-    // R27 = 0x1b,
-    RV = 0x1b, // return value
-    // R28 = 0x1c,
+    PC = 0x1b, // program counter
     LR = 0x1c, // return address
-    // R29 = 0x1d,
     AD = 0x1d, // control flow temp
-    // R30 = 0x1e,
     AT = 0x1e, // asm temp
-    // R31 = 0x1f,
     SP = 0x1f, // stack pointer
 }
 
