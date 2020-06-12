@@ -37,6 +37,8 @@ class VirtualMachine {
         auto program_slice = compiled_data[RegaHeader.OFFSET .. RegaHeader.OFFSET + copy_size];
         program_slice.copy(mem); // copy everything after the header
 
+        reg[Register.PC] = head.data_size; // jump to code section
+
         return head;
     }
 
