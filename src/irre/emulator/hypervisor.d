@@ -55,6 +55,7 @@ class Hypervisor {
             writefln("execution halted after %d cycles.", vm.ticks);
             dump_registers(true); // full dump
         }
+        writefln("program halted with code $%04x", vm.reg[Register.R0]);
     }
 
     void dump_registers(bool full) {
@@ -62,6 +63,8 @@ class Hypervisor {
         void dump_register(ARG reg_id) {
             writefln("%5s: $%08x", to!Register(reg_id), vm.reg[reg_id]);
         }
+
+        dump_register(Register.PC);
 
         auto dump_regs = SIMPLE_REGISTER_COUNT;
         if (full) {
@@ -71,7 +74,6 @@ class Hypervisor {
             dump_register(i);
         }
         if (!full) { // dump special registers even in a small dump
-            dump_register(Register.RV);
             dump_register(Register.LR);
             dump_register(Register.AD);
             dump_register(Register.AT);
