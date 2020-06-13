@@ -33,7 +33,7 @@ main:
     cal r4
 
     ; labels can be accessed with positive offsets
-    set r3 ::data1^$4 ; pointer to "hello" string
+    set r3 ::data1 ; pointer to "hello" string
 
     hlt
 
