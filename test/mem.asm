@@ -1,6 +1,6 @@
 ; test memory instructions
 
-#entry :main
+%entry :main
 
 test1:
     int r3

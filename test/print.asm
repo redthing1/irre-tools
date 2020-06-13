@@ -1,9 +1,9 @@
 ; try printing to terminal device
 
-#entry :main
+%entry :main
 
 data0:
-    #d \68656c6c6f20776f726c642100000000 ; "hello, world!\0\0\0\0"
+    %d \68656c6c6f20776f726c642100000000 ; "hello, world!\0\0\0\0"
 
 write_str: ; write_str(char* str, void* addr)
     ret
