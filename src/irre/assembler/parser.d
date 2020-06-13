@@ -22,6 +22,7 @@ class Parser {
     private int token_pos;
     private int char_pos;
     private int global_offset;
+    // private DataBlock[] data_blocks;
     private ubyte[] data;
     private Appender!(MacroDef[]) macros;
     private Appender!(LabelDef[]) labels;
@@ -65,6 +66,58 @@ class Parser {
         macros ~= macro_sbi;
     }
 
+    ubyte[] take_data_declaration() {
+        ubyte[] packed_data;
+        expect_token(CharType.PACK_START); // eat pack start
+        // check pack type indicator
+        immutable auto pack_type_indicator = expect_token(CharType.ALPHA | CharType.QUOT);
+
+        switch (pack_type_indicator.kind) {
+        case CharType.ALPHA: { // byte pack
+                // check indicator content
+                switch (pack_type_indicator.content) {
+                case "x": {
+                        auto pack_token = expect_token(CharType.NUMERIC_CONSTANT);
+                        auto pack_len = pack_token.content.length;
+                        if (pack_len % 2 != 0) {
+                            // odd number of half-bytes, invalid
+                            throw parser_error_token("invalid data (must be an even size)",
+                                    pack_token);
+                        }
+                        pack_len = pack_len / 2; // divide by two because 0xff = 1 byte
+                        auto pack_data = datahex(pack_token.content); // convert data from hex
+                        // copy the pack data
+                        packed_data ~= pack_data;
+                        break;
+                    }
+                case "z": {
+                        auto pack_token = expect_token(CharType.NUMERIC_CONSTANT);
+                        auto byte_count = to!int(pack_token.content);
+                        auto pack_data = new ubyte[byte_count];
+                        packed_data ~= pack_data;
+                        break;
+                    }
+                default: {
+                        throw parser_error_token(format("unrecognized data pack type specifier '%s'",
+                                pack_type_indicator.content), pack_type_indicator);
+                    }
+                }
+                break;
+            }
+        case CharType.QUOT: { // data string (')
+                auto pack = take_token(); // any following token is valid
+                // copy string from token to data
+                packed_data ~= cast(ubyte[]) pack.content;
+                break;
+            }
+        default:
+            throw parser_error_token(format("unrecognized pack type %s",
+                    pack_type_indicator.content), pack_type_indicator);
+        }
+
+        return packed_data;
+    }
+
     /** given a lexer result, parse tokens into a program ast */
     public ProgramAst parse() {
         string entry_label;
@@ -90,43 +143,11 @@ class Parser {
                         expect_token(CharType.MARK);
                         immutable auto label_ref = expect_token(CharType.IDENTIFIER);
                         entry_label = label_ref.content; // store entry label
-                    } else if (dir_type == "d") { // data directive
-                        expect_token(CharType.PACK_START); // eat pack start
-                        // check pack type indicator
-                        immutable auto pack_type_indicator = expect_token(
-                                CharType.ALPHA | CharType.QUOT);
-                        auto pack_len = 0uL; // size of packed data
-
-                        switch (pack_type_indicator.kind) {
-                        case CharType.ALPHA: { // byte pack (x)
-                                auto pack_token = expect_token(CharType.NUMERIC_CONSTANT);
-                                pack_len = pack_token.content.length;
-                                if (pack_len % 2 != 0) {
-                                    // odd number of half-bytes, invalid
-                                    throw parser_error_token("invalid data (must be an even size)",
-                                            pack_token);
-                                }
-                                pack_len = pack_len / 2; // divide by two because 0xff = 1 byte
-                                auto pack_data = datahex(pack_token.content); // convert data from hex
-                                // write the pack data to the binary
-                                data ~= pack_data;
-                                break;
-                            }
-                        case CharType.QUOT: { // data string (')
-                                auto pack = take_token(); // any following token is valid
-                                pack_len = pack.content.length;
-                                // copy string from token to data
-                                data ~= cast(ubyte[]) pack.content;
-                                break;
-                            }
-                        default:
-                            throw parser_error_token(format("unrecognized pack type %s",
-                                    pack_type_indicator.content), pack_type_indicator);
-                        }
-
-                        // update offset
-                        global_offset += pack_len;
-                        // printf("data block, len: $%04x\n", cast(UWORD) pack_len);
+                    } else if (dir_type == "d") {
+                        // data directive
+                        auto packed_data = take_data_declaration();
+                        // data_blocks ~= DataBlock(global_offset, packed_data);
+                        data ~= packed_data;
                     }
                     break;
                 }
@@ -173,7 +194,7 @@ class Parser {
         // resolve statements, rewriting them
         auto resolved_statements = resolve_statements(statements);
 
-        auto ast = ProgramAst(resolved_statements, data);
+        auto ast = ProgramAst(resolved_statements, data_blocks);
         return ast;
     }
 
@@ -314,7 +335,8 @@ class Parser {
     }
 
     public bool is_register_arg(Token[] tokens) {
-        if (tokens.length < 1) return false;
+        if (tokens.length < 1)
+            return false;
         immutable auto next = tokens[0];
         if ((next.kind & CharType.IDENTIFIER) == 0)
             return false;
