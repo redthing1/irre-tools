@@ -5,8 +5,9 @@ import std.algorithm.searching;
 import std.string;
 import std.conv;
 import std.range;
+import std.regex;
 import std.array;
-import irre.meta;
+import irre.util;
 import irre.assembler.lexer;
 import irre.assembler.parser;
 import irre.assembler.ast;
@@ -29,15 +30,12 @@ class LegTranslator {
             if (line.startsWith('\t')) {
                 // statement
                 // if starts with ".", it's a directive
-                auto statement = line.drop(1);
-                writefln("STATEMENT: %s", statement);
+                auto statement = line.drop(1); // skip the tab at the beginning
+                log_put(format("STATEMENT: %s", statement));
                 if (statement.startsWith('.')) {
                     auto directive = cast(string) statement;
-                    auto prefix = "; ";
-                    if (directive.startsWith(".size\tmain")) {
-                        prefix = "hlt ;";
-                    }
-                    conv_line = prefix ~ directive;
+                    auto rewritten_directive = rewrite_directive(directive);
+                    conv_line = rewritten_directive;
                 } else {
                     // instruction statement
                     auto instruction = cast(string) statement;
@@ -48,7 +46,7 @@ class LegTranslator {
                     instruction = instruction.replace("::#", "#");
 
                     auto rewritten_instruction = rewrite_instruction(instruction);
-                    writefln("  T %s", rewritten_instruction);
+                    log_put(format("  T %s", rewritten_instruction));
 
                     conv_line = rewritten_instruction;
                 }
@@ -57,7 +55,7 @@ class LegTranslator {
             } else {
                 // label
                 auto label = line;
-                writefln("LABEL: %s", label);
+                log_put(format("LABEL: %s", label));
                 conv_line = cast(string) label;
             }
 
@@ -109,7 +107,7 @@ class LegTranslator {
                 break;
             }
             if (mnem != tokens[0].content) {
-                writefln("      rewrote MNEM: %s -> %s", tokens[0].content, mnem);
+                log_put(format("      rewrote MNEM: %s -> %s", tokens[0].content, mnem));
             }
             tokens[0].content = mnem;
         }
@@ -121,7 +119,7 @@ class LegTranslator {
                 // rewrite rules
                 // reg = reg.replace("r0", "rv");
                 if (reg != tokens[0].content) {
-                    writefln("      rewrote REG: %s -> %s", tokens[0].content, reg);
+                    log_put(format("      rewrote REG: %s -> %s", tokens[0].content, reg));
                 }
                 tokens[0].content = reg;
             }
@@ -133,7 +131,7 @@ class LegTranslator {
         parser.load_lex(lexed);
         auto maybe_source_statement = parser.take_raw_statement();
         if (maybe_source_statement.isNull) {
-            writefln("  unimplemented instruction");
+            log_put(format("  unimplemented instruction"));
             return "; UNIMPLEMENTED: " ~ raw_instruction;
         }
         auto source_statement = maybe_source_statement.get();
@@ -142,7 +140,7 @@ class LegTranslator {
         remap_registers(source_statement.a2);
         remap_registers(source_statement.a3);
 
-        writefln("  OP %s", source_statement.mnem);
+        log_put(format("  OP %s", source_statement.mnem));
 
         switch (source_statement.mnem) {
         case "add":
@@ -167,5 +165,22 @@ class LegTranslator {
 
         auto rewritten = source_statement.dump();
         return rewritten;
+    }
+
+    string rewrite_directive(string directive) {
+        auto result = format("; %s", directive);
+        // fixed rewrite rules
+        if (directive.startsWith(".size\tmain")) {
+            result = "hlt ;" ~ directive;
+        } else if (directive.startsWith(".size\t")) {
+            // generic .size directives
+            auto groups = matchFirst(directive, regex(`(?:.size\W)(?P<name>\w+),\W(?P<len>[0-9]+)`));
+            auto name = groups["name"];
+            auto size_str = groups["len"];
+            auto block_size = to!int(size_str);
+            result = format("%%d \\z %d ; %s", block_size, directive);
+            log_put(format("    inserted data block [%d] for '%s'", block_size, name));
+        }
+        return result;
     }
 }
