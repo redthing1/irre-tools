@@ -3,6 +3,7 @@ module disasm.app;
 import std.stdio;
 import std.getopt;
 import std.file;
+import irre.util;
 import irre.meta;
 import irre.assembler.parser;
 import irre.disassembler.dumper;
@@ -23,6 +24,7 @@ int main(string[] args) {
         defaultGetoptPrinter("./irre-disasm [OPTIONS] <input>", help.options);
         return 1;
     }
+    IRRE_TOOLS_VERBOSE = verbose;
 
     input_file = args[1];
 
