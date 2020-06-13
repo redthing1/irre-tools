@@ -28,9 +28,9 @@ class Dumper {
     }
 
     void dump_statements(ProgramAst ast) {
-        auto data_offset = ast.data.length;
+        auto global_offset = 0;
         foreach (i, node; ast.statements) {
-            auto offset = data_offset + i * INSTRUCTION_SIZE;
+            auto offset = global_offset + i * INSTRUCTION_SIZE;
             auto builder = appender!string;
             if (mode == Mode.Detailed) {
                 builder ~= format("%04x: ", offset);
@@ -107,7 +107,6 @@ class Dumper {
     }
 
     void dump_header(RegaHeader head) {
-        writefln("data size: $%04x", head.data_size);
-        writefln("code size: $%04x", head.code_size);
+        writefln("program size: $%04x", head.program_size);
     }
 }

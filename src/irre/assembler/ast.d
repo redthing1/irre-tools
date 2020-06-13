@@ -43,9 +43,14 @@ struct SourceStatement {
     }
 }
 
+struct DataBlock {
+    int offset;
+    ubyte[] data;
+}
+
 struct ProgramAst {
     AbstractStatement[] statements;
-    const ubyte[] data;
+    DataBlock[] data_blocks;
 }
 
 struct LabelDef {

@@ -13,24 +13,24 @@ import std.bitmanip;
 enum REGA_MAGIC = "rg";
 
 struct RegaHeader {
-    ushort code_size;
-    ushort data_size;
+    ushort program_size;
 
-    enum OFFSET = 6;
+    enum OFFSET = 4;
 }
 
 class RegaEncoder {
     ubyte[] write(ProgramAst ast) {
         auto wr = appender!(ubyte[]);
+        auto data_block_size = 0;
+        foreach (data_block; ast.data_blocks) {
+            data_block_size += data_block.data.length;
+        }
         // write header
-        auto head = RegaHeader(cast(ushort)(ast.statements.length * INSTRUCTION_SIZE),
-                cast(ushort)(ast.data.length));
+        auto head = RegaHeader(cast(ushort)(data_block_size + ast.statements.length * INSTRUCTION_SIZE));
         wr ~= write_header(head);
 
-        // write data
-        wr ~= ast.data;
-
-        // write code
+        // write program (code and data blocks
+        // TODO: data block support
         auto code_offset = 0u;
         foreach (statement; ast.statements) {
             auto instruction = compile(statement);
@@ -60,8 +60,7 @@ class RegaEncoder {
     ubyte[] write_header(RegaHeader head) {
         auto wr = appender!(ubyte[]);
         wr ~= cast(ubyte[]) REGA_MAGIC; // magic
-        wr ~= cast(ubyte[]) nativeToLittleEndian(head.code_size);
-        wr ~= cast(ubyte[]) nativeToLittleEndian(head.data_size);
+        wr ~= cast(ubyte[]) nativeToLittleEndian(head.program_size);
         return wr.data;
     }
 }
@@ -70,10 +69,8 @@ class RegaDecoder {
     RegaHeader read_header(const ubyte[] data) {
         auto magic = cast(string) data[0 .. 2];
         assert(magic == REGA_MAGIC); // check magic
-        auto code_size_bytes = cast(ubyte[2]) data[2 .. 4];
-        auto data_size_bytes = cast(ubyte[2]) data[4 .. 6];
-        auto head = RegaHeader(littleEndianToNative!ushort(code_size_bytes),
-                littleEndianToNative!ushort(data_size_bytes));
+        auto program_size_bytes = cast(ubyte[2]) data[2 .. 4];
+        auto head = RegaHeader(littleEndianToNative!ushort(program_size_bytes));
         return head;
     }
 
