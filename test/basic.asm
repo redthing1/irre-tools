@@ -4,8 +4,7 @@
 
 main:
     nop
-    set r1 $10
-    set r2 #10
-    add r1 r1 r2
-    set r3 $0
+    set r1 #10
+    set r2 #-5
+    add r0 r1 r2 ; return
     hlt
