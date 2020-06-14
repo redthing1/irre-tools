@@ -167,7 +167,7 @@ class Lexer {
         }
         if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
             type |= CharType.ALPHA;
-        } else if (c >= '0' && c <= '9') {
+        } else if (c == '-' || (c >= '0' && c <= '9')) {
             type |= CharType.NUMERIC;
         } else if (c == '_' || c == '.') {
             type |= CharType.IDENTIFIER_SPECIAL;
