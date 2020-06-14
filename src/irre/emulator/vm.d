@@ -123,8 +123,9 @@ class VirtualMachine {
                 break;
             }
         case OpCode.SET: {
-                immutable WORD signed_val = cast(WORD)(ins.a2 | (ins.a3 << 8));
-                reg[ins.a1] = signed_val;
+                immutable short signed_val = cast(short)(ins.a2 | (ins.a3 << 8));
+                immutable WORD signext_imm = signed_val;
+                reg[ins.a1] = signext_imm;
                 break;
             }
         case OpCode.MOV: {
