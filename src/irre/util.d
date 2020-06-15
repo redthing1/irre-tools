@@ -1,5 +1,6 @@
 module irre.util;
 
+public import std.string;
 import std.stdio;
 import std.array;
 import std.conv;

@@ -202,14 +202,15 @@ class VirtualMachine {
                 break;
             }
         case OpCode.SND: {
-                immutable UWORD device_id = reg[ins.a1];
-                immutable UWORD device_command = reg[ins.a2];
-                immutable UWORD device_send_data = reg[ins.a3];
+                immutable UWORD device_data = reg[ins.a1];
+                immutable UWORD device_id = reg[ins.a2];
+                immutable UWORD device_command = reg[ins.a3];
 
                 // get matching device
                 if (device_id in devices) {
                     auto device = devices[device_id];
-                    device.recieve(device_command, device_send_data);
+                    immutable WORD result = device.recieve(device_command, device_data);
+                    reg[ins.a1] = result;
                 } else {
                     // requested a device that was not found
                     // TODO: UNK_DEVICE interrupt
@@ -243,11 +244,18 @@ class VirtualMachine {
         return executing; // execution state
     }
 
-    public void read_words(UWORD addr, UWORD[] buffer, size_t words) {
-        for (int i = 0; i < words; i += 1) {
-            auto mem_i = addr + i * UWORD.sizeof;
+    public void read_words(UWORD addr, WORD[] buffer, size_t count) {
+        for (int i = 0; i < count; i += 1) {
+            auto mem_i = addr + i * WORD.sizeof;
             buffer[i] = mem[mem_i + 0] << 0 | mem[mem_i + 1] << 8 | mem[mem_i + 2]
                 << 16 | mem[mem_i + 3] << 24;
+        }
+    }
+
+    public void read_bytes(UWORD addr, ubyte[] buffer, size_t count) {
+        for (int i = 0; i < count; i += 1) {
+            auto mem_i = addr + i;
+            buffer[i] = mem[mem_i];
         }
     }
 }
