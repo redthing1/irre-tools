@@ -43,8 +43,12 @@ class Dumper {
     public string format_statement(AbstractStatement node) {
         // based on operand type, format each arg
 
+        int imm_arg_val(ValueArg arg) {
+            return arg.peek!(ValueImm).val;
+        }
+
         string format_imm_arg(ValueArg arg) {
-            auto v = arg.peek!(ValueImm).val;
+            auto v = imm_arg_val(arg);
             return format("$%02x", v);
         }
 
@@ -55,7 +59,8 @@ class Dumper {
 
         auto maybeInfo = InstructionEncoding.get_info(node.op);
         if (maybeInfo.isNull) {
-            return format("?? [$%02x %s %s %s]", to!ubyte(node.op), format_imm_arg(node.a1), format_imm_arg(node.a2), format_imm_arg(node.a3));
+            return format("?? [$%02x %s %s %s]", to!ubyte(node.op),
+                    format_imm_arg(node.a1), format_imm_arg(node.a2), format_imm_arg(node.a3));
             // throw new DumperException(format("could not format statement with unknown op: %s",
             //         to!string(node.op)));
         }
@@ -88,22 +93,48 @@ class Dumper {
                 builder ~= format("%s", av);
                 break;
             default:
-                builder ~= format("%04s", av);
+                builder ~= format("%-4s", av);
                 break;
             }
         }
 
         append_arg(mnem, true);
 
-        if ((info.operands & Operands.K_R1) | (info.operands & Operands.K_I1)) {
+        // R-args
+        if ((info.operands & Operands.K_R1) > 0) {
             append_arg(a1);
         }
-        if ((info.operands & Operands.K_R2) | (info.operands & Operands.K_I2)) {
+        if ((info.operands & Operands.K_R2) > 0) {
             append_arg(a2);
         }
-        if ((info.operands & Operands.K_R2) | (info.operands & Operands.K_I3)) {
+        if ((info.operands & Operands.K_R3) > 0) {
             append_arg(a3);
         }
+        // I-args
+        // LARGE IMMs
+        bool fst_imm = (info.operands & Operands.K_I1) > 0;
+        bool snd_imm = (info.operands & Operands.K_I2) > 0;
+        bool trd_imm = (info.operands & Operands.K_I3) > 0;
+        bool big_imm16 = snd_imm && !trd_imm;
+        bool big_imm24 = fst_imm && !snd_imm && !trd_imm;
+        if (big_imm24) {
+            auto val = imm_arg_val(node.a1) | imm_arg_val(node.a2) << 8 | imm_arg_val(node.a3) << 16;
+            append_arg(format("$%06x", val));
+        } else {
+            if (fst_imm) {
+                append_arg(a1);
+            }
+            if (big_imm16) {
+                auto val = imm_arg_val(node.a1) | imm_arg_val(node.a2) << 8;
+                append_arg(format("$%04x", val));
+            } else {
+                append_arg(a2);
+                if (trd_imm) {
+                    append_arg(a3);
+                }
+            }
+        }
+
         auto str = std.string.strip(cast(string) builder.data);
         return str;
     }
