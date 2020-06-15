@@ -53,8 +53,8 @@ class RegaEncoder {
 
         foreach (statement; ast.statements) {
             write_next_data_blocks();
-            auto instruction = compile(statement);
-            auto info = InstructionEncoding.get_info(instruction.op).get();
+            auto info = InstructionEncoding.get_info(statement.op).get();
+            auto instruction = compile(statement, info);
 
             // write instruction word
             wr ~= instruction.op;
@@ -80,11 +80,31 @@ class RegaEncoder {
         return wr.data;
     }
 
-    Instruction compile(ref AbstractStatement statement) {
+    Instruction compile(ref AbstractStatement statement, ref InstructionInfo info) {
         auto op = statement.op;
-        auto a1 = cast(ARG) statement.a1.peek!(ValueImm).val;
-        auto a2 = cast(ARG) statement.a2.peek!(ValueImm).val;
-        auto a3 = cast(ARG) statement.a3.peek!(ValueImm).val;
+        auto arg1 = statement.a1.peek!(ValueImm).val;
+        auto arg2 = statement.a2.peek!(ValueImm).val;
+        auto arg3 = statement.a3.peek!(ValueImm).val;
+
+        auto a1 = cast(ARG) arg1;
+        auto a2 = cast(ARG) arg2;
+        auto a3 = cast(ARG) arg3;
+
+        // LARGE IMMs
+        bool fst_imm = (info.operands & Operands.K_I1) > 0;
+        bool snd_imm = (info.operands & Operands.K_I2) > 0;
+        bool trd_imm = (info.operands & Operands.K_I3) > 0;
+        bool can_imm16 = snd_imm && !trd_imm;
+        bool can_imm24 = fst_imm && !snd_imm && !trd_imm;
+
+        if (can_imm24) {
+            a1 = cast(ARG)((arg1 >> 0) & 0xff);
+            a2 = cast(ARG)((arg1 >> 8) & 0xff);
+            a3 = cast(ARG)((arg1 >> 16) & 0xff);
+        } else if (can_imm16) {
+            a2 = cast(ARG)((arg2 >> 0) & 0xff);
+            a3 = cast(ARG)((arg2 >> 8) & 0xff);
+        }
 
         return Instruction(op, a1, a2, a3);
     }
