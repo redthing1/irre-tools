@@ -191,9 +191,9 @@ class Parser {
             // resolve the label and replace the entry jump
             immutable auto entry_label_def = resolve_label(entry_label);
             immutable auto entry_addr = entry_label_def.offset;
-            immutable ubyte entry_addr_l8 = cast(ubyte) ((entry_addr >> 0) & 0xff);
-            immutable ubyte entry_addr_m8 = cast(ubyte) ((entry_addr >> 8) & 0xff);
-            immutable ubyte entry_addr_h8 = cast(ubyte) ((entry_addr >> 16) & 0xff);
+            immutable ubyte entry_addr_l8 = cast(ubyte)((entry_addr >> 0) & 0xff);
+            immutable ubyte entry_addr_m8 = cast(ubyte)((entry_addr >> 8) & 0xff);
+            immutable ubyte entry_addr_h8 = cast(ubyte)((entry_addr >> 16) & 0xff);
             statements.data[0] = AbstractStatement(OpCode.JMI,
                     cast(ValueArg) ValueImm(entry_addr_l8), cast(ValueArg) ValueImm(entry_addr_m8),
                     cast(ValueArg) ValueImm(entry_addr_h8));
@@ -401,6 +401,22 @@ class Parser {
             statement.a1 = parse_register_arg(raw_statement.a1);
         } else if ((info.operands & Operands.K_I1) > 0) {
             statement.a1 = parse_value_arg(raw_statement.a1);
+            // sometimes, imm's can be encoded as 24-bit.
+            // when CONST and I1 but (not I2) AND (not I3)
+            if ((imm_val !is null) && (info.operands & Operands.K_I2) == 0
+                    && (info.operands & Operands.K_I3) == 0) {
+                // 24-bit imm
+                auto imm24 = cast(short) imm_val.val;
+                auto s0 = cast(ARG)((imm16 >> 0) & 0xff);
+                auto s1 = cast(ARG)((imm16 >> 8) & 0xff);
+                auto s2 = cast(ARG)((imm16 >> 16) & 0xff);
+                statement.a1 = cast(ValueArg) ValueImm(s0);
+                statement.a2 = cast(ValueArg) ValueImm(s1);
+                statement.a3 = cast(ValueArg) ValueImm(s2);
+            } else {
+                // 8-bit imm
+                statement.a1 = imm_arg;
+            }
         }
         if ((info.operands & Operands.K_R2) > 0) {
             statement.a2 = parse_register_arg(raw_statement.a2);
@@ -425,6 +441,28 @@ class Parser {
             statement.a3 = parse_register_arg(raw_statement.a3);
         } else if ((info.operands & Operands.K_I3) > 0) {
             statement.a3 = parse_value_arg(raw_statement.a3);
+        }
+
+        // LARGE IMMs
+        bool fst_imm = (info.operands & Operands.K_I1) > 0;
+        bool snd_imm = (info.operands & Operands.K_I2) > 0;
+        bool trd_imm = (info.operands & Operands.K_I3) > 0;
+        bool can_imm16 = snd_imm && !trd_imm;
+        bool can_imm24 = first_imm && !snd_imm && !trd_imm;
+        bool can_big_imm = can_imm16 || can_imm24;
+        if (can_big_imm) {
+            auto imm_arg = can_imm24 ? statement.a1 : statement.a2;
+            auto imm_val = imm_arg.peek!ValueImm;
+            auto big_imm = cast(int)(imm_val.val & 0xffffff); // 24 bits
+            auto imm_s0 = cast(ARG)((big_imm >> 0) & 0xff);
+            auto imm_s1 = cast(ARG)((big_imm >> 8) & 0xff);
+            auto imm_s2 = cast(ARG)((big_imm >> 16) & 0xff);
+
+            if (can_imm24) {
+                // encode imm24
+            } else if (can_imm16) {
+                // encode imm16
+            }
         }
 
         return statement;
