@@ -191,12 +191,13 @@ class Parser {
             // resolve the label and replace the entry jump
             immutable auto entry_label_def = resolve_label(entry_label);
             immutable auto entry_addr = entry_label_def.offset;
-            immutable ubyte entry_addr_l8 = cast(ubyte)((entry_addr >> 0) & 0xff);
-            immutable ubyte entry_addr_m8 = cast(ubyte)((entry_addr >> 8) & 0xff);
-            immutable ubyte entry_addr_h8 = cast(ubyte)((entry_addr >> 16) & 0xff);
-            statements.data[0] = AbstractStatement(OpCode.JMI,
-                    cast(ValueArg) ValueImm(entry_addr_l8), cast(ValueArg) ValueImm(entry_addr_m8),
-                    cast(ValueArg) ValueImm(entry_addr_h8));
+            statements.data[0] = AbstractStatement(OpCode.JMI, cast(ValueArg) ValueImm(entry_addr));
+            // immutable ubyte entry_addr_l8 = cast(ubyte)((entry_addr >> 0) & 0xff);
+            // immutable ubyte entry_addr_m8 = cast(ubyte)((entry_addr >> 8) & 0xff);
+            // immutable ubyte entry_addr_h8 = cast(ubyte)((entry_addr >> 16) & 0xff);
+            // statements.data[0] = AbstractStatement(OpCode.JMI,
+            //         cast(ValueArg) ValueImm(entry_addr_l8), cast(ValueArg) ValueImm(entry_addr_m8),
+            //         cast(ValueArg) ValueImm(entry_addr_h8));
         }
         // resolve statements, rewriting them
         auto resolved_statements = resolve_statements(statements);
