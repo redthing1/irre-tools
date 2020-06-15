@@ -82,6 +82,10 @@ class LegTranslator {
                 // we rewrite CMP rA rB -> TCU ad rA rB
                 tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
                 break;
+            case "b_gt":
+                mnem = "yeet";
+                tokens = [tokens[0]];
+                break;
                 // case "b_eq":
                 //     // rewrite B_EQ v0 to BIF ad v0 #0
                 //     mnem = "bif";
@@ -134,7 +138,7 @@ class LegTranslator {
             // maybe it's a macro?
             if (lexed.tokens.length > 0) {
                 immutable auto macro_name = lexed.tokens[0].content;
-                immutable auto maybe_macro = parser.resolve_macro(macro_name);
+                auto maybe_macro = parser.resolve_macro(macro_name);
                 if (!maybe_macro.isNull) {
                     log_put(format("  MACRO %s", macro_name));
                     return raw_instruction;
