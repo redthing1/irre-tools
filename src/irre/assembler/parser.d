@@ -148,7 +148,8 @@ class Parser {
                         auto block = DataBlock(global_offset, packed_data);
                         global_offset += packed_data.length;
                         data_blocks ~= block;
-                        log_put(format("data block[%d] at offset %d", block.data.length, block.offset));
+                        log_put(format("data block[%d] at offset %d",
+                                block.data.length, block.offset));
                     }
                     break;
                 }
@@ -189,8 +190,12 @@ class Parser {
         if (entry_label) {
             // resolve the label and replace the entry jump
             immutable auto entry_label_def = resolve_label(entry_label);
-            auto entry_addr = entry_label_def.offset;
-            statements.data[0] = AbstractStatement(OpCode.JMI, cast(ValueArg) ValueImm(entry_addr));
+            immutable auto entry_addr = entry_label_def.offset - INSTRUCTION_SIZE;
+            immutable ubyte entry_addr_lo = entry_addr & 0xff;
+            immutable ubyte entry_addr_hi = cast(ubyte) (entry_addr >> 8);
+            statements.data[0] = AbstractStatement(OpCode.SET,
+                    cast(ValueArg) ValueImm(Register.PC), cast(ValueArg) ValueImm(entry_addr_lo),
+                    cast(ValueArg) ValueImm(entry_addr_hi));
         }
         // resolve statements, rewriting them
         auto resolved_statements = resolve_statements(statements);
@@ -406,8 +411,8 @@ class Parser {
             if ((imm_val !is null) && (info.operands & Operands.K_I3) == 0) {
                 // 16-bit imm
                 auto imm16 = cast(short) imm_val.val;
-                auto s0 = cast(ARG) (imm16);
-                auto s1 = cast(ARG) (imm16 >> 8);
+                auto s0 = cast(ARG)(imm16);
+                auto s1 = cast(ARG)(imm16 >> 8);
                 statement.a2 = cast(ValueArg) ValueImm(s0);
                 statement.a3 = cast(ValueArg) ValueImm(s1);
             } else {
