@@ -44,6 +44,9 @@ int main(string[] args) {
     hyp.debug_mode = debug_mode;
     hyp.onestep_mode = step_mode;
 
+    // add basic IO support
+    hyp.add_default_devices();
+
     // start the emulator
     hyp.run();
 

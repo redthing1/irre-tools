@@ -46,6 +46,9 @@ enum OpCode : ARG {
     BIF = 0x12, // branch-if
     CAL = 0x13, // branch, link in LR
     RET = 0x14, // jump to LR
+
+    // regular-ext device api
+    SND = 0xfd,
 }
 
 enum Register : ARG {
@@ -167,6 +170,8 @@ class InstructionEncoding {
             case OpCode.BIF: return InstructionInfo(OpCode.BIF, Operands.REG_IMM_IMM, 1);
             case OpCode.CAL: return InstructionInfo(OpCode.CAL, Operands.REG, 1);
             case OpCode.RET: return InstructionInfo(OpCode.RET, Operands.NONE, 1);
+            // REGULAR_EXT device api
+            case OpCode.SND: return InstructionInfo(OpCode.SND, Operands.REG_REG_REG, 1);
             // dfmt on
         default:
             auto info = InstructionInfo();
