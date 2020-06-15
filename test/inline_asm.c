@@ -1,11 +1,14 @@
 
 // test inline assembly
 
+int asm_add(int a, int b) {
+    asm("nop\n\
+    mov r14 r0\n\
+    mov r15 r1\n\
+    add r0 r14 r15");
+}
+
 int main()
 {
-    int a = 2;
-    int b = 3;
-    register int *c asm ("r4");
-    asm("nop");
-    return *c;
+    return asm_add(2, 3);
 }
