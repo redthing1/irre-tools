@@ -82,27 +82,34 @@ class LegTranslator {
                 // we rewrite CMP rA rB -> TCU ad rA rB
                 tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
                 break;
-            case "b_eq":
-                // rewrite B_EQ v0 to BIF ad v0 #0
-                mnem = "bif";
-                auto tc_val = 0;
-                tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
-                tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
-                break;
-            case "b_lt":
-                // rewrite B_LT v0 to BIF ad v0 #-1
-                mnem = "bif";
-                auto tc_val = -1;
-                tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
-                tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
-                break;
-            case "b_gt":
-                // rewrite B_LT v0 to BIF ad v0 #1
-                mnem = "bif";
-                auto tc_val = 1;
-                tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
-                tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
-                break;
+            // case "b_eq":
+            //     // rewrite B_EQ v0 to BIF ad v0 #0
+            //     mnem = "bif";
+            //     auto tc_val = 0;
+            //     tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
+            //     tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
+            //     break;
+            // case "b_lt":
+            //     // rewrite B_LT v0 to BIF ad v0 #-1
+            //     mnem = "bif";
+            //     auto tc_val = -1;
+            //     tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
+            //     tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
+            //     break;
+            // case "b_gt":
+            //     // rewrite B_LT v0 to BIF ad v0 #1
+            //     mnem = "bif";
+            //     auto tc_val = 1;
+            //     tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
+            //     tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
+            //     break;
+            // case "b_gt":
+            //     // rewrite B_LT v0 to BIF ad v0 #1
+            //     mnem = "bif";
+            //     auto tc_val = 1;
+            //     tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
+            //     tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
+            //     break;
             default:
                 break;
             }
