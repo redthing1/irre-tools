@@ -79,11 +79,17 @@ enum Register : ARG {
     R24 = 0x18,
     R25 = 0x19,
     R26 = 0x1a,
-    PC = 0x1b, // program counter
-    LR = 0x1c, // return address
-    AD = 0x1d, // control flow temp
-    AT = 0x1e, // asm temp
-    SP = 0x1f, // stack pointer
+    R27 = 0x1b,
+    R28 = 0x1c,
+    R29 = 0x1d,
+    R30 = 0x1e,
+    R31 = 0x1f,
+    // - special registers
+    PC = 0x20, // program counter
+    LR = 0x21, // return address
+    AD = 0x22, // control flow temp
+    AT = 0x23, // asm temp
+    SP = 0x24, // stack pointer
 }
 
 enum Operands {
