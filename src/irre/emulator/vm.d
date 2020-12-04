@@ -192,6 +192,28 @@ class VirtualMachine {
                 }
                 break;
             }
+        case OpCode.BEQ: {
+                immutable UWORD addr = reg[ins.a1];
+                // branch to @rA if rB == rC
+                immutable WORD a = reg[ins.a2];
+                immutable WORD b = reg[ins.a3];
+                if (a == b) {
+                    reg[Register.PC] = addr;
+                    branched = true;
+                }
+                break;
+            }
+        case OpCode.BNE: {
+                immutable UWORD addr = reg[ins.a1];
+                // branch to @rA if rB != rC
+                immutable WORD a = reg[ins.a2];
+                immutable WORD b = reg[ins.a3];
+                if (a != b) {
+                    reg[Register.PC] = addr;
+                    branched = true;
+                }
+                break;
+            }
         case OpCode.CAL: {
                 immutable UWORD addr = reg[ins.a1];
                 // store next instruction in LR
