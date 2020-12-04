@@ -26,6 +26,7 @@ to use another D compiler, such as `dmd`, set the environment variable ex. `DC=d
 build the custom vbcc port for IRRE:
 ```sh
 cd tools/vbcc
+make # don't worry if it fails
 make TARGET=irre bin/vbccirre # press enter for default answers
 export VBCC=$(pwd)
 ```
