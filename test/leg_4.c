@@ -1,6 +1,6 @@
 
-int nums[4] = {};
-int the_value = 0;
+int nums[4];
+int the_value;
 
 int main() {
     nums[0] = 6;
