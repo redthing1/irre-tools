@@ -1,5 +1,6 @@
 # irre-tools
-continuation of regularvm
+
+toy handwritten assembler, emulator, compiler, toolchain for a lightweight RISC architecture 
 
 ## build
 
