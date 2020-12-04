@@ -37,6 +37,13 @@ class Parser {
         macros ~= builtins.MACRO_ADI;
         macros ~= builtins.MACRO_SBI;
         macros ~= builtins.MACRO_YEET;
+        macros ~= builtins.MACRO_CMP;
+        macros ~= builtins.MACRO_BEQ;
+        macros ~= builtins.MACRO_BNE;
+        macros ~= builtins.MACRO_BLT;
+        macros ~= builtins.MACRO_BGE;
+        macros ~= builtins.MACRO_BGT;
+        macros ~= builtins.MACRO_BLE;
     }
 
     public void load_lex(Lexer.Result lexed) {
