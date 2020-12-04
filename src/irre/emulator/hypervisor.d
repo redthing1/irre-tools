@@ -137,6 +137,12 @@ class Hypervisor {
         case "stk":
             dump_stack();
             break;
+        case "s1":
+            onestep_mode = true;
+            break;
+        case "s0":
+            onestep_mode = false;
+            break;
         default:
             writefln("command '%s' not recognized.", command);
             break;
