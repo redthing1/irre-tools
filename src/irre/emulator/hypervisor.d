@@ -9,6 +9,7 @@ import irre.emulator.devices.terminal;
 import std.stdio;
 import std.conv;
 import std.string;
+import std.functional : toDelegate;
 
 enum SIMPLE_REGISTER_COUNT = 6;
 
@@ -18,6 +19,10 @@ class Hypervisor {
     public bool onestep_mode;
     public Reader reader;
     public Dumper dumper;
+
+    public enum DebugInterrupts {
+        BREAK = 0xa0,
+    }
 
     this(VirtualMachine vm) {
         this.vm = vm;
@@ -32,6 +37,37 @@ class Hypervisor {
         vm.attach_device(new TerminalDevice());
     }
 
+    void add_debug_interrupt_handlers() {
+        vm.custom_interrupt_handler = &interrupt;
+    }
+
+    void interrupt(UWORD code) {
+        switch (code) {
+        case DebugInterrupts.BREAK:
+            writefln("[int] BREAK");
+            dump_registers(false); // minidump
+            while (onestep_prompt()) {
+            }
+            break;
+        default: {
+                writefln("[int] unhandled interrupt %d", code);
+                break;
+            }
+        }
+    }
+
+    bool onestep_prompt() {
+        // pause
+        write("[emu]$ ");
+        auto command = readln().strip();
+        if (command.length > 0) {
+            run_command(command);
+        } else {
+            return false; // stop looping
+        }
+        return true; // loop again
+    }
+
     void run() {
         auto exec_st = true;
         while (exec_st) {
@@ -40,21 +76,26 @@ class Hypervisor {
             auto statement = reader.decompile(instr);
             if (debug_mode) {
                 auto statement_dump = dumper.format_statement(statement);
-                writefln("[EXEC] %s", statement_dump);
+                writefln("[exec] %s", statement_dump);
             }
             exec_st = vm.step();
             // post-instruction
             if (debug_mode) {
+                // print branch state
+                switch (vm.last_branch_status) {
+                case VirtualMachine.BranchStatus.TAKEN:
+                    writefln("[dbg] branch TAKEN");
+                    break;
+                case VirtualMachine.BranchStatus.NOT_TAKEN:
+                    writefln("[dbg] branch NOT TAKEN");
+                    break;
+                default:
+                    break;
+                }
                 dump_registers(false); // minidump
             }
-            while (onestep_mode) {
-                // pause
-                write("[emu]$ ");
-                auto command = readln().strip();
-                if (command.length > 0) {
-                    run_command(command);
-                } else {
-                    break;
+            if (onestep_mode) {
+                while (onestep_prompt()) {
                 }
             }
         }
@@ -105,8 +146,17 @@ class Hypervisor {
         case "stk":
             dump_stack();
             break;
+        case "s1":
+            writefln("[cmd] ONESTEP = 1, DEBUG = 1");
+            onestep_mode = true;
+            debug_mode = true;
+            break;
+        case "s0":
+            writefln("[cmd] ONESTEP = 0");
+            onestep_mode = false;
+            break;
         default:
-            writefln("command '%s' not recognized.", command);
+            writefln("[cmd] command '%s' not recognized.", command);
             break;
         }
     }

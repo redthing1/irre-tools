@@ -37,6 +37,13 @@ class Parser {
         macros ~= builtins.MACRO_ADI;
         macros ~= builtins.MACRO_SBI;
         macros ~= builtins.MACRO_YEET;
+        macros ~= builtins.MACRO_CMP;
+        macros ~= builtins.MACRO_BEQ;
+        macros ~= builtins.MACRO_BNE;
+        macros ~= builtins.MACRO_BLT;
+        macros ~= builtins.MACRO_BGE;
+        macros ~= builtins.MACRO_BGT;
+        macros ~= builtins.MACRO_BLE;
     }
 
     public void load_lex(Lexer.Result lexed) {
@@ -360,7 +367,7 @@ class Parser {
                 auto offset = 0;
                 if (tokens.length > 2) {
                     // there is an offset
-                    auto offset_token = tokens[pos];
+                    auto offset_token = tokens[++pos];
                     offset = parse_numeric(offset_token.content);
                 }
                 return cast(ValueArg) ValueRef(label_token.content, offset);

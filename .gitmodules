@@ -1,0 +1,3 @@
+[submodule "tools/vbcc"]
+	path = tools/vbcc
+	url = https://github.com/xdrie/vbcc.git

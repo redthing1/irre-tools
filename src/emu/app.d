@@ -46,6 +46,7 @@ int main(string[] args) {
 
     // add basic IO support
     hyp.add_default_devices();
+    hyp.add_debug_interrupt_handlers();
 
     // start the emulator
     hyp.run();
