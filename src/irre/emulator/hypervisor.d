@@ -9,6 +9,7 @@ import irre.emulator.devices.terminal;
 import std.stdio;
 import std.conv;
 import std.string;
+import std.functional : toDelegate;
 
 enum SIMPLE_REGISTER_COUNT = 6;
 
@@ -18,6 +19,10 @@ class Hypervisor {
     public bool onestep_mode;
     public Reader reader;
     public Dumper dumper;
+
+    public enum DebugInterrupts {
+        BREAK = 0xa0,
+    }
 
     this(VirtualMachine vm) {
         this.vm = vm;
@@ -30,6 +35,34 @@ class Hypervisor {
         vm.attach_device(new PingDevice());
         // terminal
         vm.attach_device(new TerminalDevice());
+    }
+
+    void add_debug_interrupt_handlers() {
+        vm.custom_interrupt_handler = &interrupt;
+    }
+
+    void interrupt(UWORD code) {
+        switch (code) {
+        case DebugInterrupts.BREAK:
+            onestep_prompt();
+            break;
+        default: {
+                writefln("[DBG] unhandled interrupt %d", code);
+                break;
+            }
+        }
+    }
+
+    bool onestep_prompt() {
+        // pause
+        write("[emu]$ ");
+        auto command = readln().strip();
+        if (command.length > 0) {
+            run_command(command);
+        } else {
+            return false; // stop looping
+        }
+        return true; // loop again
     }
 
     void run() {
@@ -50,15 +83,7 @@ class Hypervisor {
                 }
                 dump_registers(false); // minidump
             }
-            while (onestep_mode) {
-                // pause
-                write("[emu]$ ");
-                auto command = readln().strip();
-                if (command.length > 0) {
-                    run_command(command);
-                } else {
-                    break;
-                }
+            while (onestep_prompt()) {
             }
         }
         // done.
