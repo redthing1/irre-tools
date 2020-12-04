@@ -48,7 +48,7 @@ int main() {
 
 ```
 
-build to a `.s` file with VBCC-IRRE:
+build to an assembly file with VBCC-IRRE:
 ```sh
 $VBCC/bin/vbccirre -c99 -default-main -o=my_prog.asm my_prog.c
 ```
