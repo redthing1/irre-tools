@@ -171,6 +171,12 @@ class VirtualMachine {
                 branched = true;
                 break;
             }
+        case OpCode.JMP: {
+                immutable UWORD addr = reg[ins.a1];
+                reg[Register.PC] = addr;
+                branched = true;
+                break;
+            }
         case OpCode.BIF: {
                 immutable UWORD addr = cast(UWORD) (ins.a2);
                 // branch to vB if rA == vC
