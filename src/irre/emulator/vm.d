@@ -12,6 +12,7 @@ class VirtualMachine {
     public UWORD[REGISTER_COUNT] reg;
     public BYTE[] mem;
     public bool executing = true;
+    public bool took_branch = false; // whether the last instruction took a branch
     public ulong ticks;
     public Device[int] devices;
     private int device_id_counter = 0;
@@ -71,7 +72,7 @@ class VirtualMachine {
         // TODO: handle interrupt
     }
 
-    public void execute_instruction(Instruction ins) {
+    public bool execute_instruction(Instruction ins) {
         bool branched = false;
         switch (ins.op) {
         case OpCode.NOP:
@@ -266,13 +267,14 @@ class VirtualMachine {
         if (!branched) {
             reg[cast(int) Register.PC] += cast(uint) INSTRUCTION_SIZE; // increment PC
         }
+        return branched;
     }
 
     public bool step() {
         // fetch instruction
         auto instruction = decode_instruction();
         // execute the instruction
-        execute_instruction(instruction);
+        took_branch = execute_instruction(instruction);
         ticks++;
         return executing; // execution state
     }

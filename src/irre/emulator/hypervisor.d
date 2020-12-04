@@ -45,6 +45,9 @@ class Hypervisor {
             exec_st = vm.step();
             // post-instruction
             if (debug_mode) {
+                if (vm.took_branch) {
+                    writefln("[DBG] took branch");
+                }
                 dump_registers(false); // minidump
             }
             while (onestep_mode) {
