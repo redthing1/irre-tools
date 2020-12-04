@@ -81,8 +81,16 @@ class Hypervisor {
             exec_st = vm.step();
             // post-instruction
             if (debug_mode) {
-                if (vm.took_branch) {
-                    writefln("[dbg] took branch");
+                // print branch state
+                switch (vm.last_branch_status) {
+                case VirtualMachine.BranchStatus.TAKEN:
+                    writefln("[dbg] branch TAKEN");
+                    break;
+                case VirtualMachine.BranchStatus.NOT_TAKEN:
+                    writefln("[dbg] branch NOT TAKEN");
+                    break;
+                default:
+                    break;
                 }
                 dump_registers(false); // minidump
             }

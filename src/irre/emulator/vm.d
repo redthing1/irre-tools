@@ -12,11 +12,17 @@ class VirtualMachine {
     public UWORD[REGISTER_COUNT] reg;
     public BYTE[] mem;
     public bool executing = true;
-    public bool took_branch = false; // whether the last instruction took a branch
+    public BranchStatus last_branch_status = BranchStatus.NO_BRANCH; // whether the last instruction took a branch
     public ulong ticks;
     public Device[int] devices;
     private int device_id_counter = 0;
     public void delegate(UWORD) custom_interrupt_handler;
+
+    enum BranchStatus {
+        NO_BRANCH,
+        NOT_TAKEN,
+        TAKEN,
+    }
 
     public void initialize() {
         // allocate memory buffer
@@ -74,8 +80,8 @@ class VirtualMachine {
         custom_interrupt_handler(code);
     }
 
-    public bool execute_instruction(Instruction ins) {
-        bool branched = false;
+    public void execute_instruction(Instruction ins) {
+        last_branch_status = BranchStatus.NO_BRANCH; // default, no branch
         switch (ins.op) {
         case OpCode.NOP:
             // literally do nothing
@@ -171,13 +177,13 @@ class VirtualMachine {
         case OpCode.JMI: {
                 immutable UWORD addr = cast(UWORD) ((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
                 reg[Register.PC] = addr;
-                branched = true;
+                last_branch_status = BranchStatus.TAKEN;
                 break;
             }
         case OpCode.JMP: {
                 immutable UWORD addr = reg[ins.a1];
                 reg[Register.PC] = addr;
-                branched = true;
+                last_branch_status = BranchStatus.TAKEN;
                 break;
             }
         case OpCode.BIF: {
@@ -191,7 +197,9 @@ class VirtualMachine {
                 if (check == 0) cond = tc == 0;
                 if (cond) {
                     reg[Register.PC] = addr;
-                    branched = true;
+                    last_branch_status = BranchStatus.TAKEN;
+                } else {
+                    last_branch_status = BranchStatus.NOT_TAKEN;
                 }
                 break;
             }
@@ -202,7 +210,9 @@ class VirtualMachine {
                 immutable byte b = ins.a3;
                 if (a == b) {
                     reg[Register.PC] = addr;
-                    branched = true;
+                    last_branch_status = BranchStatus.TAKEN;
+                } else {
+                    last_branch_status = BranchStatus.NOT_TAKEN;
                 }
                 break;
             }
@@ -213,7 +223,9 @@ class VirtualMachine {
                 immutable byte b = ins.a3;
                 if (a != b) {
                     reg[Register.PC] = addr;
-                    branched = true;
+                    last_branch_status = BranchStatus.TAKEN;
+                } else {
+                    last_branch_status = BranchStatus.NOT_TAKEN;
                 }
                 break;
             }
@@ -222,7 +234,7 @@ class VirtualMachine {
                 // store next instruction in LR
                 reg[Register.LR] = reg[Register.PC] + cast(uint) INSTRUCTION_SIZE;
                 reg[Register.PC] = addr;
-                branched = true;
+                last_branch_status = BranchStatus.TAKEN;
                 break;
             }
         case OpCode.RET: {
@@ -233,7 +245,7 @@ class VirtualMachine {
                     executing = false;
                 }
                 reg[Register.PC] = addr;
-                branched = true;
+                last_branch_status = BranchStatus.TAKEN;
                 reg[Register.LR] = 0; // clear LR
                 break;
             }
@@ -266,17 +278,17 @@ class VirtualMachine {
             // unhandled op
             break;
         }
-        if (!branched) {
+        if (last_branch_status != BranchStatus.TAKEN) {
+            // as long as we didn't take a branch, we can increment as normal
             reg[cast(int) Register.PC] += cast(uint) INSTRUCTION_SIZE; // increment PC
         }
-        return branched;
     }
 
     public bool step() {
         // fetch instruction
         auto instruction = decode_instruction();
         // execute the instruction
-        took_branch = execute_instruction(instruction);
+        execute_instruction(instruction);
         ticks++;
         return executing; // execution state
     }
