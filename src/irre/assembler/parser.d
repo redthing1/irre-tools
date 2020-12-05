@@ -120,7 +120,7 @@ class Parser {
 
         auto statements = appender!(AbstractStatement[]);
 
-        // emit entry jump
+        // emit entry instruction (padding that may be replaced)
         statements ~= AbstractStatement(OpCode.NOP);
         global_offset += INSTRUCTION_SIZE;
 
@@ -180,19 +180,14 @@ class Parser {
             }
         }
 
-        // check for entry point label
+        // check if an entry point label was defined
         if (entry_label) {
-            // resolve the label and replace the entry jump
+            // resolve the label specified as entry
             immutable auto entry_label_def = resolve_label(entry_label);
             immutable auto entry_addr = entry_label_def.offset;
             log_put(format("entry point: (%s) %06x", entry_label, entry_addr));
+            // replace the padding instruction with a jump to entry point
             statements.data[0] = AbstractStatement(OpCode.JMI, cast(ValueArg) ValueImm(entry_addr));
-            // immutable ubyte entry_addr_l8 = cast(ubyte)((entry_addr >> 0) & 0xff);
-            // immutable ubyte entry_addr_m8 = cast(ubyte)((entry_addr >> 8) & 0xff);
-            // immutable ubyte entry_addr_h8 = cast(ubyte)((entry_addr >> 16) & 0xff);
-            // statements.data[0] = AbstractStatement(OpCode.JMI,
-            //         cast(ValueArg) ValueImm(entry_addr_l8), cast(ValueArg) ValueImm(entry_addr_m8),
-            //         cast(ValueArg) ValueImm(entry_addr_h8));
         }
         // resolve statements, rewriting them
         auto resolved_statements = resolve_statements(statements);
