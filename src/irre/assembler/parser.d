@@ -81,7 +81,7 @@ class Parser {
                     }
                 case "z": {
                         auto pack_token = expect_token(CharType.NUMERIC_CONSTANT);
-                        auto byte_count = to!int(pack_token.content);
+                        auto byte_count = parse_numeric(pack_token.content);
                         auto pack_data = new ubyte[byte_count];
                         packed_data ~= pack_data;
                         break;
