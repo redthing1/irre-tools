@@ -98,11 +98,22 @@ int main(string[] args) {
 
     log_put(format("output mode: %s", mode));
     // write file in specified format
-    if (mode == Mode.exe) {
-        auto encoder = new RegaEncoder();
-        auto compiled_data = encoder.encode_exe(programAst);
+    switch (mode) {
+    case Mode.exe: {
+            // EXE encode
+            auto encoder = new RegaEncoder();
+            auto compiled_data = encoder.encode_exe(programAst);
 
-        std.file.write(output_file, compiled_data);
+            std.file.write(output_file, compiled_data);
+            break;
+        }
+    case Mode.obj: {
+            // TODO: OBJ encode
+            log_put("todo: obj encode");
+            break;
+        }
+    default:
+        assert(0, "unrecognized mode");
     }
 
     return 0;
