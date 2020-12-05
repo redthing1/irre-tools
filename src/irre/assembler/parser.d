@@ -67,14 +67,21 @@ class Parser {
                 switch (pack_type_indicator.content) {
                 case "x": {
                         auto pack_token = expect_token(CharType.NUMERIC_CONSTANT);
-                        auto pack_len = pack_token.content.length;
+                        // strip off the first char and assert that it's '$'
+                        auto hex_token = pack_token.content;
+                        if (hex_token[0] != '$') {
+                            throw parser_error_token("invalid pack data (must be hex constant, preceded by $)",
+                                    pack_token);
+                        }
+                        auto hex_pack = hex_token[1 .. $];
+                        auto pack_len = hex_pack.length;
                         if (pack_len % 2 != 0) {
                             // odd number of half-bytes, invalid
                             throw parser_error_token("invalid data (must be an even size)",
                                     pack_token);
                         }
                         pack_len = pack_len / 2; // divide by two because 0xff = 1 byte
-                        auto pack_data = datahex(pack_token.content); // convert data from hex
+                        auto pack_data = datahex(hex_pack); // convert data from hex
                         // copy the pack data
                         packed_data ~= pack_data;
                         break;
@@ -264,7 +271,8 @@ class Parser {
             auto macro_ref_token = expect_token(CharType.IDENTIFIER);
             auto maybe_md = resolve_macro(macro_ref_token.content);
             if (maybe_md.isNull) {
-                throw parser_error_token(format("macro could not be resolved: %s", macro_ref_token.content), macro_ref_token);
+                throw parser_error_token(format("macro could not be resolved: %s",
+                        macro_ref_token.content), macro_ref_token);
             }
             auto md = maybe_md.get();
             // expand the macro
