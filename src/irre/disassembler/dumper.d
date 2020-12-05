@@ -31,14 +31,29 @@ class Dumper {
 
     void dump_statements(ProgramAst ast) {
         auto global_offset = 0;
+        auto label_index = 0;
+        auto offset = global_offset;
+
+        /** write any pending labels that begin at this offset */
+        bool write_next_labels() {
+            if (label_index < ast.labels.length && offset >= ast.labels[label_index].offset) {
+                auto label = ast.labels[label_index];
+                writefln(format("%s:", label.name));
+                label_index++;
+                return true;
+            }
+            return false; // no data written
+        }
+
         foreach (i, node; ast.statements) {
-            auto offset = global_offset + i * INSTRUCTION_SIZE;
+            write_next_labels();
             auto builder = appender!string;
             if (mode == Mode.Detailed) {
                 builder ~= format("%04x: ", offset);
             }
-            builder ~= format("%s", format_statement(node));
+            builder ~= format("\t%s", format_statement(node));
             writefln(builder.data);
+            offset += INSTRUCTION_SIZE;
         }
     }
 
