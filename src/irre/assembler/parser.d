@@ -3,6 +3,7 @@ module irre.assembler.parser;
 import irre.util;
 import irre.assembler.lexer;
 public import irre.assembler.ast;
+import irre.assembler.astbuilder;
 import irre.assembler.builtins;
 import irre.encoding.instructions;
 import std.array;
@@ -26,6 +27,7 @@ class Parser {
     private DataBlock[] data_blocks;
     private MacroDef[] macros;
     private Appender!(LabelDef[]) labels;
+    private AstBuilder ast_builder;
 
     this() {
         // define builtins
