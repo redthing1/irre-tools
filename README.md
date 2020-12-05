@@ -2,6 +2,10 @@
 
 toy handwritten assembler, emulator, compiler, toolchain for a lightweight RISC architecture 
 
+## documentation
+
+documentation and specifications ([arch](doc/arch.md), [asm](doc.asm.md)) are available in [doc](doc/).
+
 ## build
 
 grab submodules:
