@@ -15,10 +15,16 @@ string input_file;
 string output_file;
 bool verbose;
 bool dump;
+Mode mode;
+
+enum Mode {
+    Exe,
+    Obj
+}
 
 int main(string[] args) {
     writefln("[IRRE] assembler v%s", Meta.VERSION);
-    auto help = getopt(args, "verbose|v", &verbose, "dump|d", &dump);
+    auto help = getopt(args, "verbose|v", &verbose, "dump|d", &dump, "mode|m", &mode);
 
     if (help.helpWanted || args.length != 3) {
         defaultGetoptPrinter("./irre-asm [OPTIONS] <input> <output>", help.options);
