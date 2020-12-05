@@ -1,3 +1,6 @@
+
+![icon](doc/icon.png)
+
 # irre-tools
 
 toy handwritten assembler, emulator, compiler, toolchain for a lightweight RISC architecture 
