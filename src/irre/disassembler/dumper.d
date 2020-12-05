@@ -1,5 +1,6 @@
 module irre.disassembler.dumper;
 
+import irre.util;
 import irre.assembler.ast;
 import irre.encoding.instructions;
 import irre.encoding.rega;
