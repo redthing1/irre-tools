@@ -1,5 +1,5 @@
 
-# IRRE architecture documentation
+# IRRE architecture
 
 this defines the `IRRE` (v1.3) specification.
 
