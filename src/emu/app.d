@@ -18,7 +18,7 @@ bool step_mode;
 
 int main(string[] args) {
     writefln("[IRRE] emulator v%s", Meta.VERSION);
-    auto help = getopt(args, "verbose|v", &verbose, "debug", &debug_mode, "step", &step_mode);
+    auto help = getopt(args, "verbose|v", &verbose, "debug|g", &debug_mode, "step|s", &step_mode);
 
     if (help.helpWanted || args.length != 2) {
         defaultGetoptPrinter("./irre-emu [OPTIONS] <input>", help.options);
