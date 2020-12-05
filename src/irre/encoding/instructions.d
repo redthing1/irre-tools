@@ -34,8 +34,8 @@ enum OpCode : ARG {
     MOV = 0x0c,
     LDW = 0x0d,
     STW = 0x0e,
-    // LDB = 0x0f,
-    // STB = 0x10,
+    // LDB = 0x0f, [deprecated]
+    // STB = 0x10, [deprecated]
 
     // set 2
     HLT = 0xff,
@@ -44,7 +44,7 @@ enum OpCode : ARG {
     // set 3
     JMI = 0x10, // unconditional jump (imm)
     JMP = 0x11, // unconditional jump (reg)
-    // BIF = 0x13, // branch if equal (imm)
+    // BIF = 0x13, // branch if equal (imm) [deprecated]
     BVE = 0x14, // branch if value-equal (reg)
     BVN = 0x15, // branch if value-not-equal (reg)
     CAL = 0x1a, // branch, link in LR
