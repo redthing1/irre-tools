@@ -4,6 +4,7 @@ import std.stdio;
 import std.getopt;
 import std.conv;
 import std.file;
+import std.string;
 import irre.meta;
 import irre.util;
 import irre.assembler.lexer;
@@ -95,10 +96,14 @@ int main(string[] args) {
         return 3;
     }
 
-    auto encoder = new RegaEncoder();
-    auto compiled_data = encoder.write(programAst);
+    log_put(format("output mode: %s", mode));
+    // write file in specified format
+    if (mode == Mode.exe) {
+        auto encoder = new RegaEncoder();
+        auto compiled_data = encoder.encode_exe(programAst);
 
-    std.file.write(output_file, compiled_data);
+        std.file.write(output_file, compiled_data);
+    }
 
     return 0;
 }
