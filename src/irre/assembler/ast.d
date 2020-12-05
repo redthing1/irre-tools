@@ -51,6 +51,9 @@ struct DataBlock {
 struct ProgramAst {
     AbstractStatement[] statements;
     DataBlock[] data_blocks;
+    MacroDef[] macros;
+    LabelDef[] labels;
+    string entry_point_label;
 }
 
 struct LabelDef {
