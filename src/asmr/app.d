@@ -67,10 +67,18 @@ int main(string[] args) {
     ProgramAst programAst;
 
     try {
-        // build an ast
+        // parse the tokens
         parser = new Parser();
         parser.load_lex(lexed);
-        programAst = parser.parse();
+        parser.parse();
+
+        // if executable mode, then freeze symbols
+        if (mode == Mode.exe) {
+            parser.freeze_all_symbols();
+        }
+
+        // create an ast
+        programAst = parser.to_ast();
 
         if (dump) {
             // dump the ast

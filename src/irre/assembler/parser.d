@@ -54,7 +54,7 @@ class Parser {
     }
 
     /** given a lexer result, parse tokens into a program ast. this should only ever be called once. */
-    public ProgramAst parse() {
+    public void parse() {
         // emit entry instruction (padding that may be replaced)
         ast_builder.push_statement(AbstractStatement(OpCode.NOP));
 
@@ -114,20 +114,13 @@ class Parser {
 
             }
         }
+    }
 
-        // // check if an entry point label was defined
-        // if (entry_label) {
-        //     // resolve the label specified as entry
-        //     immutable auto entry_label_def = resolve_label(entry_label);
-        //     immutable auto entry_addr = entry_label_def.offset;
-        //     log_put(format("entry point: (%s) %06x", entry_label, entry_addr));
-        //     // replace the padding instruction with a jump to entry point
-        //     statements.data[0] = AbstractStatement(OpCode.JMI, cast(ValueArg) ValueImm(entry_addr));
-        // }
+    public void freeze_all_symbols() {
+        ast_builder.freeze_references();
+    }
 
-        // // resolve statements, rewriting them
-        // auto resolved_statements = resolve_statements(statements);
-
+    public ProgramAst to_ast() {
         return ast_builder.build();
     }
 
