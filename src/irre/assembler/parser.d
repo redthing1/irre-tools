@@ -130,7 +130,7 @@ class Parser {
             switch (next.kind) {
             case CharType.DIRECTIVE: {
                     immutable auto dir = expect_token(CharType.DIRECTIVE);
-                    auto dir_type = dir.content[1 .. $];
+                    immutable auto dir_type = dir.content[1 .. $];
                     if (dir_type == "entry") { // entrypoint directive
                         // following label has the entry point
                         expect_token(CharType.MARK);
