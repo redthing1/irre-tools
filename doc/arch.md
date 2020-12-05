@@ -5,7 +5,9 @@ this defines the `IRRE` (v1.3) specification.
 
 ## introduction
 
-The Irrelevant Utility Architecture (IRRE) is a capable, general-purpose machine with a minimalist design that is easy to work with while also being well suited for a variety of computational tasks.
+The Irrelevant Utility Architecture (**IRRE**) is a capable, general-purpose machine with a minimalist design that is easy to work with while also being well suited for a variety of computational tasks.
+
+It derives many aspects of its architecture design from the [REGULAR](https://github.com/regular-vm/specification) architecture, notably most of its registers and instruction encoding, and some of its instruction set. However, IRRE contains many breaking changes to the REGULAR specification and is neither forwards nor backwards compatible with REGULAR. Despite that, since both architectures share many aspects, porting from REGULAR to IRRE should be fairly straightforward.
 
 The little-endian, 32-bit architecture boasts 37 scalar registers, of which 32 (all but 5 special registers) are available for general purpose use. The instruction set is cleanly designed to simplify unambiguous decoding, and it is kept deliberately minimal to facilitate different programming styles, reduce implementation complexity, and allow for expansion in the future.
 
