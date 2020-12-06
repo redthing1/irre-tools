@@ -10,6 +10,8 @@ import std.uni;
 import std.conv;
 import std.array;
 import std.variant;
+import std.algorithm;
+import std.range;
 
 class DumperException : Exception {
     this(string msg, string file = __FILE__, size_t line = __LINE__) {
@@ -35,9 +37,10 @@ class Dumper {
         auto offset = global_offset;
 
         /** write any pending labels that begin at this offset */
+        auto code_labels = ast.labels.filter!(x => x.section == SectionId.Code).array();
         bool write_next_labels() {
-            if (label_index < ast.labels.length && offset >= ast.labels[label_index].offset) {
-                auto label = ast.labels[label_index];
+            if (label_index < code_labels.length && offset >= code_labels[label_index].offset) {
+                auto label = code_labels[label_index];
                 writefln(format("%s:", label.name));
                 label_index++;
                 return true;
