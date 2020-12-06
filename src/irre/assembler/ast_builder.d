@@ -15,21 +15,31 @@ class AstBuilderException : Exception {
 
 class AstBuilder {
     private ProgramAst ast;
-    private int global_offset;
+
+    this() {
+        // create section entries
+        ast.sections ~= SectionInfo(SectionId.Code, 0);
+        ast.sections ~= SectionInfo(SectionId.Data, 0);
+    }
 
     public ProgramAst build() {
         return ast;
     }
 
+    private SectionInfo* get_section_info(SectionId section) {
+        return &ast.sections[cast(int) section];
+    }
+
     public void push_statement(AbstractStatement statement) {
         ast.statements ~= statement;
-        global_offset += INSTRUCTION_SIZE;
+        (*get_section_info(SectionId.Code)).length += INSTRUCTION_SIZE;
     }
 
     public void push_data_block(DataBlock block) {
-        block.offset = global_offset;
+        auto data_section_info = *get_section_info(SectionId.Data);
+        block.offset = data_section_info.length;
         ast.data_blocks ~= block;
-        global_offset += block.data.length;
+        data_section_info.length += block.data.length;
     }
 
     public void push_macro(MacroDef macro_def) {
@@ -76,8 +86,8 @@ class AstBuilder {
     }
 
     /** define a label */
-    public void define_label(string name) {
-        ast.labels ~= LabelDef(name, global_offset);
+    public void define_label(SectionId section, string name) {
+        ast.labels ~= LabelDef(section, name, (*get_section_info(section)).length);
     }
 
     /** resolve a macro */
