@@ -1,5 +1,6 @@
 module irre.disassembler.dumper;
 
+import irre.util;
 import irre.assembler.ast;
 import irre.encoding.instructions;
 import irre.encoding.rega;
@@ -8,6 +9,9 @@ import std.string;
 import std.uni;
 import std.conv;
 import std.array;
+import std.variant;
+import std.algorithm;
+import std.range;
 
 class DumperException : Exception {
     this(string msg, string file = __FILE__, size_t line = __LINE__) {
@@ -16,27 +20,70 @@ class DumperException : Exception {
 }
 
 class Dumper {
-    enum Mode {
+    enum DumpStyle {
         Clean,
         Detailed
     }
 
-    private Mode mode;
+    private DumpStyle dump_style;
 
-    this(Mode mode) {
-        this.mode = mode;
+    this(DumpStyle dump_style) {
+        this.dump_style = dump_style;
     }
 
     void dump_statements(ProgramAst ast) {
-        auto global_offset = 0;
+        auto offset = ast.get_section_offset(SectionId.Code);
+        auto label_index = 0;
+
+        /** write any pending labels that begin at this offset */
+        auto code_labels = ast.labels.filter!(x => x.section == SectionId.Code).array();
+        bool write_next_labels() {
+            if (label_index < code_labels.length && offset >= code_labels[label_index].offset) {
+                auto label = code_labels[label_index];
+                writefln(format("%s:", label.name));
+                label_index++;
+                return true;
+            }
+            return false; // no data written
+        }
+
         foreach (i, node; ast.statements) {
-            auto offset = global_offset + i * INSTRUCTION_SIZE;
+            write_next_labels();
             auto builder = appender!string;
-            if (mode == Mode.Detailed) {
+            if (dump_style == dump_style.Detailed) {
                 builder ~= format("%04x: ", offset);
             }
-            builder ~= format("%s", format_statement(node));
+            builder ~= format("\t%s", format_statement(node));
             writefln(builder.data);
+            offset += INSTRUCTION_SIZE;
+        }
+    }
+
+    void dump_data(ProgramAst ast) {
+        auto offset = ast.get_section_offset(SectionId.Data);
+        auto label_index = 0;
+
+        /** write any pending labels that begin at this offset */
+        auto data_labels = ast.labels.filter!(x => x.section == SectionId.Data).array();
+        bool write_next_labels() {
+            if (label_index < data_labels.length && offset >= data_labels[label_index].offset) {
+                auto label = data_labels[label_index];
+                writefln(format("%s:", label.name));
+                label_index++;
+                return true;
+            }
+            return false; // no data written
+        }
+
+        foreach (i, block; ast.data_blocks) {
+            write_next_labels();
+            auto builder = appender!string;
+            if (dump_style == dump_style.Detailed) {
+                builder ~= format("%04x: ", offset);
+            }
+            builder ~= format("\t%s", format_data_block(block));
+            writefln(builder.data);
+            offset += block.data.length;
         }
     }
 
@@ -44,12 +91,26 @@ class Dumper {
         // based on operand type, format each arg
 
         int imm_arg_val(ValueArg arg) {
-            return arg.peek!(ValueImm).val;
+            if (arg.hasValue) {
+                return arg.peek!(ValueImm).val;
+            } else {
+                return 0;
+            }
+        }
+
+        bool imm_arg_has_val(ValueArg arg) {
+            return arg.peek!(ValueImm) !is null;
         }
 
         string format_imm_arg(ValueArg arg) {
-            auto v = imm_arg_val(arg);
-            return format("$%02x", v);
+            string fmt;
+            if (arg.hasValue) {
+                fmt = arg.visit!((ValueImm imm) => format("$%02x", imm.val),
+                        (ValueRef ref_) => format("::%s", ref_.label));
+            } else {
+                fmt = format("$%02x", 0); // no value here
+            }
+            return fmt;
         }
 
         string format_reg_arg(ValueArg arg) {
@@ -88,8 +149,8 @@ class Dumper {
             if (!first) {
                 builder ~= " ";
             }
-            switch (mode) {
-            case Mode.Clean:
+            switch (dump_style) {
+            case dump_style.Clean:
                 builder ~= format("%s", av);
                 break;
             default:
@@ -117,14 +178,14 @@ class Dumper {
         bool trd_imm = (info.operands & Operands.K_I3) > 0;
         bool big_imm16 = snd_imm && !trd_imm;
         bool big_imm24 = fst_imm && !snd_imm && !trd_imm;
-        if (big_imm24) {
+        if (imm_arg_has_val(node.a1) && big_imm24) {
             auto val = imm_arg_val(node.a1) | imm_arg_val(node.a2) << 8 | imm_arg_val(node.a3) << 16;
             append_arg(format("$%06x", val));
         } else {
             if (fst_imm) {
                 append_arg(a1);
             }
-            if (big_imm16) {
+            if (imm_arg_has_val(node.a2) && big_imm16) {
                 auto val = imm_arg_val(node.a2) | imm_arg_val(node.a3) << 8;
                 append_arg(format("$%04x", val));
             } else {
@@ -139,6 +200,10 @@ class Dumper {
 
         auto str = std.string.strip(cast(string) builder.data);
         return str;
+    }
+
+    public string format_data_block(DataBlock block) {
+        return format("data[%d]", block.data.length);
     }
 
     void dump_header(RegaHeader head) {

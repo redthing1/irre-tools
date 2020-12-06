@@ -112,6 +112,7 @@ enum Operands {
     REG_REG_REG = REG_REG | K_R3,
 }
 
+/** binary-packed representation of an instruction word */
 struct Instruction {
     OpCode op;
     ARG a1, a2, a3;
