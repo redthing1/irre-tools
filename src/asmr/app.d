@@ -55,7 +55,7 @@ int main(string[] args) {
 
         if (dump) {
             // dump the tokens
-            writeln("== TOKENS ==");
+            writeln("======== TOKENS ========");
             foreach (i, token; lexed.tokens) {
                 writefln("%4d TOK: %10s [%10s]", i, token.content, to!string(token.kind));
             }
@@ -87,9 +87,12 @@ int main(string[] args) {
 
         if (dump) {
             // dump the ast
-            writeln("== AST ==");
-            auto dumper = new Dumper(Dumper.Mode.Detailed);
+            writeln("======== AST ========");
+            auto dumper = new Dumper(Dumper.DumpStyle.Detailed);
+            writeln(".code --------");
             dumper.dump_statements(programAst);
+            writeln(".data --------");
+            dumper.dump_data(programAst);
         }
 
     } catch (ParserException e) {

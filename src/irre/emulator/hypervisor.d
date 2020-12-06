@@ -27,7 +27,7 @@ class Hypervisor {
     this(VirtualMachine vm) {
         this.vm = vm;
         reader = new Reader();
-        dumper = new Dumper(Dumper.Mode.Detailed);
+        dumper = new Dumper(Dumper.DumpStyle.Detailed);
     }
 
     void add_default_devices() {

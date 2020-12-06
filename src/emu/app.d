@@ -36,7 +36,7 @@ int main(string[] args) {
     // load the program
     auto header = vm.load(compiled_data);
     // dump the header
-    auto dumper = new Dumper(Dumper.Mode.Detailed);
+    auto dumper = new Dumper(Dumper.DumpStyle.Detailed);
     dumper.dump_header(header);
 
     // create a hypervisor

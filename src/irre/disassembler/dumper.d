@@ -20,21 +20,20 @@ class DumperException : Exception {
 }
 
 class Dumper {
-    enum Mode {
+    enum DumpStyle {
         Clean,
         Detailed
     }
 
-    private Mode mode;
+    private DumpStyle dump_style;
 
-    this(Mode mode) {
-        this.mode = mode;
+    this(DumpStyle dump_style) {
+        this.dump_style = dump_style;
     }
 
     void dump_statements(ProgramAst ast) {
-        auto global_offset = 0;
+        auto offset = ast.get_section_offset(SectionId.Code);
         auto label_index = 0;
-        auto offset = global_offset;
 
         /** write any pending labels that begin at this offset */
         auto code_labels = ast.labels.filter!(x => x.section == SectionId.Code).array();
@@ -51,12 +50,40 @@ class Dumper {
         foreach (i, node; ast.statements) {
             write_next_labels();
             auto builder = appender!string;
-            if (mode == Mode.Detailed) {
+            if (dump_style == dump_style.Detailed) {
                 builder ~= format("%04x: ", offset);
             }
             builder ~= format("\t%s", format_statement(node));
             writefln(builder.data);
             offset += INSTRUCTION_SIZE;
+        }
+    }
+
+    void dump_data(ProgramAst ast) {
+        auto offset = ast.get_section_offset(SectionId.Data);
+        auto label_index = 0;
+
+        /** write any pending labels that begin at this offset */
+        auto data_labels = ast.labels.filter!(x => x.section == SectionId.Data).array();
+        bool write_next_labels() {
+            if (label_index < data_labels.length && offset >= data_labels[label_index].offset) {
+                auto label = data_labels[label_index];
+                writefln(format("%s:", label.name));
+                label_index++;
+                return true;
+            }
+            return false; // no data written
+        }
+
+        foreach (i, block; ast.data_blocks) {
+            write_next_labels();
+            auto builder = appender!string;
+            if (dump_style == dump_style.Detailed) {
+                builder ~= format("%04x: ", offset);
+            }
+            builder ~= format("\t%s", format_data_block(block));
+            writefln(builder.data);
+            offset += block.data.length;
         }
     }
 
@@ -122,8 +149,8 @@ class Dumper {
             if (!first) {
                 builder ~= " ";
             }
-            switch (mode) {
-            case Mode.Clean:
+            switch (dump_style) {
+            case dump_style.Clean:
                 builder ~= format("%s", av);
                 break;
             default:
@@ -173,6 +200,10 @@ class Dumper {
 
         auto str = std.string.strip(cast(string) builder.data);
         return str;
+    }
+
+    public string format_data_block(DataBlock block) {
+        return format("data[%d]", block.data.length);
     }
 
     void dump_header(RegaHeader head) {
