@@ -61,9 +61,9 @@ build to an assembly file with VBCC-IRRE:
 $VBCC/bin/vbccirre -c99 -default-main -o=my_prog.asm my_prog.c
 ```
 
-run `irre-asm` to assemble IRRE to bin:
+run `irre-asm` to assemble IRRE assembly to executable object:
 ```sh
-./build/meson-out/irre-asm --dump-ast my_prog.asm my_prog.bin
+./build/meson-out/irre-asm -m exe --dump-ast my_prog.asm my_prog.bin
 ```
 
 run `irre-emu` to run in the emulator:
