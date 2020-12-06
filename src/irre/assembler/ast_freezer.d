@@ -52,41 +52,13 @@ class AstFreezer {
     private ValueImm resolve_value_arg(const ValueArg arg) {
         auto val = 0;
         if (arg.hasValue) {
-            val = arg.visit!((ValueImm imm) => imm.val,
-                    (ValueRef ref_) => resolve_labelref_offset(ref_));
+            auto maybe_val = arg.visit!((ValueImm imm) => Nullable!int(imm.val),
+                    (ValueRef vref) => source_ast.get_label_global_offset(vref));
+            if (maybe_val.isNull) {
+                throw new AstFreezerException(format("value arg %s could not be resolved", arg));
+            }
+            val = maybe_val.get;
         }
         return ValueImm(val);
-    }
-
-    /** resolve a label */
-    private LabelDef resolve_label(string name) {
-        // find the label
-        foreach (label; source_ast.labels) {
-            if (label.name == name) {
-                return label;
-            }
-        }
-        throw new AstFreezerException(format("label could not be resolved: %s", name));
-    }
-
-    /** calculate the global offset pointed to by a label reference */
-    private int resolve_labelref_offset(ValueRef label_ref) {
-        auto label_def = resolve_label(label_ref.label); // get the label definition
-        // calculate label offset within section
-        auto local_label_offset = label_def.offset + label_ref.ref_offset;
-        // get the offset of section start
-        auto section_offset = get_section_offset(label_def.section);
-        // global offset is [SECTION_OFFSET] + [LOCAL_OFFSET]
-        return section_offset + local_label_offset;
-    }
-
-    /** get offset of start of section */
-    private int get_section_offset(SectionId section) {
-        int section_index = cast(int) section;
-        int offset_above = 0;
-        for (int i = 0; i < section_index; i++) {
-            offset_above += source_ast.sections[i].length;
-        }
-        return offset_above;
     }
 }
