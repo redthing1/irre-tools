@@ -39,7 +39,7 @@ class AstBuilder {
 
     /** add a data block to the DATA section */
     public void push_data_block(DataBlock block) {
-        auto data_section_info = *get_section_info(SectionId.Data);
+        auto data_section_info = get_section_info(SectionId.Data);
         block.offset = data_section_info.length;
         ast.data_blocks ~= block;
         data_section_info.length += block.data.length;

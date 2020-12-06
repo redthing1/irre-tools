@@ -16,23 +16,29 @@ import irre.disassembler.dumper;
 string input_file;
 string output_file;
 bool verbose;
-bool dump;
+bool dump_all;
+bool dump_ast;
+bool dump_lex;
 Mode mode;
 
 enum Mode {
     exe,
-    obj
+    obj,
 }
 
 int main(string[] args) {
     writefln("[IRRE] assembler v%s", Meta.VERSION);
-    auto help = getopt(args, "verbose|v", &verbose, "dump|d", &dump, "mode|m", &mode);
+    auto help = getopt(args, "verbose|v", &verbose, "dump-all|d", &dump_all,
+            "dump-ast", &dump_ast, "dump-lex", &dump_lex, "mode|m", &mode);
 
     if (help.helpWanted || args.length != 3) {
         defaultGetoptPrinter("./irre-asm [OPTIONS] <input> <output>", help.options);
         return 1;
     }
     IRRE_TOOLS_VERBOSE = verbose;
+    if (dump_all) {
+        dump_lex = dump_ast = true;
+    }
 
     input_file = args[1];
     output_file = args[2];
@@ -53,7 +59,7 @@ int main(string[] args) {
         lexer = new Lexer();
         lexed = lexer.lex(inf_source);
 
-        if (dump) {
+        if (dump_lex) {
             // dump the tokens
             writeln("======== TOKENS ========");
             foreach (i, token; lexed.tokens) {
@@ -85,14 +91,15 @@ int main(string[] args) {
             programAst = freezer.get_frozen_ast();
         }
 
-        if (dump) {
+        if (dump_ast) {
             // dump the ast
-            writeln("======== AST ========");
+            writeln("\n======== AST ========");
             auto dumper = new Dumper(Dumper.DumpStyle.Detailed);
             writeln(".code --------");
             dumper.dump_statements(programAst);
             writeln(".data --------");
             dumper.dump_data(programAst);
+            writeln("=====================\n");
         }
 
     } catch (ParserException e) {
