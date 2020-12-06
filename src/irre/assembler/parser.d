@@ -152,10 +152,6 @@ class Parser {
         }
     }
 
-    public void freeze_all_symbols() {
-        ast_builder.freeze_references();
-    }
-
     public ProgramAst to_ast() {
         return ast_builder.build();
     }

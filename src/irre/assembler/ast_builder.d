@@ -72,47 +72,4 @@ class AstBuilder {
         return new AstBuilderException(format("%s", message));
     }
 
-    /** convert all value references in instructions to immediate values (compute all offsets, replacing symbols) */
-    public void freeze_references() {
-        auto unresolved_statements = ast.statements;
-        auto resolved_statements = rewrite_statements_resolved(unresolved_statements);
-        // clear statements from ast and add new ones
-        ast.statements = [];
-        ast.statements ~= resolved_statements;
-    }
-
-    private AbstractStatement[] rewrite_statements_resolved(AbstractStatement[] statements) {
-        auto resolved_statements = appender!(AbstractStatement[]);
-        foreach (unresolved; statements) {
-            auto statement = AbstractStatement(unresolved.op);
-            // resolve args
-            statement.a1 = resolve_value_arg(unresolved.a1);
-            statement.a2 = resolve_value_arg(unresolved.a2);
-            statement.a3 = resolve_value_arg(unresolved.a3);
-            resolved_statements ~= statement;
-        }
-
-        return resolved_statements.data;
-    }
-
-    /** resolve any references in this arg and convert it to an immediate */
-    private ValueImm resolve_value_arg(const ValueArg arg) {
-        auto val = 0;
-        if (arg.hasValue) {
-            val = arg.visit!((ValueImm imm) => imm.val,
-                    (ValueRef ref_) => resolve_label(ref_.label).offset + ref_.offset);
-        }
-        return ValueImm(val);
-    }
-
-    /** resolve a label */
-    private LabelDef resolve_label(string name) {
-        // find the label
-        foreach (label; ast.labels) {
-            if (label.name == name) {
-                return label;
-            }
-        }
-        throw ast_builder_error(format("label could not be resolved: %s", name));
-    }
 }
