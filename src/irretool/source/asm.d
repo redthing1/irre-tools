@@ -1,4 +1,4 @@
-module asmr.app;
+module asm;
 
 import std.stdio;
 import std.getopt;
