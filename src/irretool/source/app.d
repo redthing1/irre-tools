@@ -19,6 +19,7 @@ import irre.disassembler.reader;
 import irre.encoding.rega;
 import irre.emulator.vm;
 import irre.emulator.hypervisor;
+import irre.analysis.ift;
 
 enum AssemblerMode {
     exe,
@@ -49,7 +50,8 @@ void main(string[] raw_args) {
                 .add(new Argument("input", "input file"))
                 .add(new Flag("d", "debug", "debug mode"))
                 .add(new Flag("s", "step", "step mode"))
-                .add(new Flag("c", "commitlog", "enable commit log").full("commit-log"))
+                .add(new Flag(null, "commitlog", "enable commit log").full("commit-log"))
+                .add(new Flag(null, "ift", "enable ift analysis"))
         )
         .parse(raw_args);
 
@@ -191,6 +193,7 @@ int cmd_emu(ProgramArgs args) {
     auto debug_mode = args.flag("debug");
     auto step_mode = args.flag("step");
     auto log_commits = args.flag("commitlog");
+    auto enable_ift = args.flag("ift");
 
     writefln("[IRRE] emulator v%s", Meta.VERSION);
 
@@ -224,13 +227,13 @@ int cmd_emu(ProgramArgs args) {
 
     // dump commits
     if (log_commits) {
-        if (hyp.vm.commit_trace.commits.length > 0) {
-            writeln("\ncommit log");
-            foreach (i, commit; hyp.vm.commit_trace.commits) {
-                writefln("%6d %s", i, commit);
-            }
-        } else {
-            writeln("no commits");
+        auto ift_analyzer = new IFTAnalyzer(hyp.vm.commit_trace);
+        writeln("\ncommit log");
+        ift_analyzer.dump_commits();
+        if (enable_ift) {
+            writeln("\nift analysis");
+            ift_analyzer.analyze();
+            ift_analyzer.dump_analysis();
         }
     }
 
