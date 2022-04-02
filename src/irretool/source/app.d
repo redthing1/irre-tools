@@ -225,9 +225,9 @@ int cmd_emu(ProgramArgs args) {
     // dump commits
     if (log_commits) {
         if (hyp.vm.commit_trace.commits.length > 0) {
-            writeln("\n======== COMMIT LOG ========");
+            writeln("\ncommit log");
             foreach (i, commit; hyp.vm.commit_trace.commits) {
-                writefln("%4d %s", i, commit);
+                writefln("%6d %s", i, commit);
             }
         } else {
             writeln("no commits");

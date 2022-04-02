@@ -39,6 +39,19 @@ struct Commit {
         c.mem_value = mem_value;
         return c;
     }
+
+    string toString() const {
+        import std.string : format;
+        import std.conv : to;
+
+        auto type_str = type == Type.Register ? "reg" : "mem";
+        if (type == Type.Register) {
+            auto reg_id_show = reg_id.to!Register;
+            return format("%s %04s <- %04x", type_str, reg_id_show, reg_value);
+        } else {
+            return format("%s mem[%04x] <- %04x", type_str, mem_addr, mem_value);
+        }
+    }
 }
 
 struct CommitTrace {
