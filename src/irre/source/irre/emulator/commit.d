@@ -8,6 +8,13 @@ import irre.emulator.device;
 struct Snapshot {
     public UWORD[REGISTER_COUNT] reg;
     public BYTE[] mem;
+
+    static Snapshot from(UWORD[REGISTER_COUNT] reg, BYTE[] mem) {
+        Snapshot snapshot;
+        snapshot.reg = reg.dup[0..REGISTER_COUNT];
+        snapshot.mem = mem.dup;
+        return snapshot;
+    }
 }
 
 struct Commit {
