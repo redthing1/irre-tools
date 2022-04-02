@@ -91,6 +91,7 @@ class VirtualMachine {
             break;
         case OpCode.ADD: {
                 reg[ins.a1] = (cast(WORD) reg[ins.a2]) + (cast(WORD) reg[ins.a3]);
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.SUB: {
