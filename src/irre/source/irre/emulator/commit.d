@@ -11,7 +11,7 @@ struct Snapshot {
 
     static Snapshot from(UWORD[REGISTER_COUNT] reg, BYTE[] mem) {
         Snapshot snapshot;
-        snapshot.reg = reg.dup[0..REGISTER_COUNT];
+        snapshot.reg = reg.dup[0 .. REGISTER_COUNT];
         snapshot.mem = mem.dup;
         return snapshot;
     }
@@ -25,6 +25,13 @@ struct Commit {
         Memory,
         Immediate,
     }
+
+    private enum string[Type] _type_abbreviations = [
+        Type.Combined: "cmb",
+        Type.Register: "reg",
+        Type.Memory: "mem",
+        Type.Immediate: "imm",
+    ];
 
     struct Source {
         public Type type; // register or memory source?
@@ -66,24 +73,7 @@ struct Commit {
         import std.conv : to;
         import std.array : appender, array;
 
-        // auto type_str = type == Type.Register ? "reg" : "mem";
-        string type_str;
-        switch (type) {
-        case Type.Register:
-            type_str = "reg";
-            break;
-        case Type.Memory:
-            type_str = "mem";
-            break;
-        case Type.Combined:
-            type_str = "comb";
-            break;
-        case Type.Immediate:
-            type_str = "imm";
-            break;
-        default:
-            assert(0);
-        }
+        string type_str = _type_abbreviations[type];
 
         auto sb = appender!string;
 
@@ -109,6 +99,27 @@ struct Commit {
                 sb ~= format(" mem[%04x] <- %04x", addr, value);
             }
         }
+
+        // commit sources
+        sb ~= format(" <source: ");
+        for (auto i = 0; i < sources.length; i++) {
+            auto source = sources[i];
+            string source_type_str = _type_abbreviations[source.type];
+            switch (source.type) {
+            case Type.Register:
+                sb ~= format(" %s=%04x", source.data.to!Register, source.value);
+                break;
+            case Type.Memory:
+                sb ~= format(" mem[%04x]=%04x", source.data, source.value);
+                break;
+            case Type.Immediate:
+                sb ~= format(" i=%04x", source.value);
+                break;
+            default:
+                assert(0);
+            }
+        }
+        sb ~= format(">");
 
         // commit description
         sb ~= format(" (%s)", description);
