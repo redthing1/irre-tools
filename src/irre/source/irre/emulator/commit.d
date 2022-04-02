@@ -25,12 +25,19 @@ struct Commit {
         Memory
     }
 
+    struct Source {
+        public Type type; // register or memory source?
+        public UWORD data; // can be register id or memory address
+        public UWORD value; // can be register value or memory value
+    }
+
     Type type;
     UWORD[] reg_ids;
     UWORD[] reg_values;
     UWORD[] mem_addrs;
     BYTE[] mem_values;
     UWORD pc;
+    Source[] sources;
     string description;
 
     static Commit from_regs(UWORD[] reg_ids, UWORD[] reg_values) {
