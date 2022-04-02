@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-meson build --warnlevel 3
