@@ -1,0 +1,7 @@
+{
+	"fileVersion": 1,
+	"versions": {
+		"commandr": "0.2.0",
+		"irre": {"path":"../irre"}
+	}
+}
