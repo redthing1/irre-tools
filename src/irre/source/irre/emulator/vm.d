@@ -356,11 +356,11 @@ class VirtualMachine {
         commit_trace.commits ~= commit;
     }
 
-    public void commit_mem(UWORD mem_addr, UWORD mem_val) {
+    public void commit_mem(UWORD[] mem_addrs, BYTE[] mem_values) {
         if (!log_commits)
             return;
 
-        auto commit = Commit.from_mem(mem_addr, mem_val);
+        auto commit = Commit.from_mem(mem_addrs, mem_values);
         commit_set_state(commit);
         commit_trace.commits ~= commit;
     }

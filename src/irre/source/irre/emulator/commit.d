@@ -20,8 +20,8 @@ struct Commit {
     Type type;
     UWORD reg_id;
     UWORD reg_value;
-    UWORD mem_addr;
-    UWORD mem_value;
+    UWORD[] mem_addrs;
+    BYTE[] mem_values;
     UWORD pc;
     string description;
 
@@ -33,11 +33,11 @@ struct Commit {
         return c;
     }
 
-    static Commit from_mem(UWORD mem_addr, UWORD mem_value) {
+    static Commit from_mem(UWORD[] mem_addrs, BYTE[] mem_values) {
         Commit c;
         c.type = Type.Memory;
-        c.mem_addr = mem_addr;
-        c.mem_value = mem_value;
+        c.mem_addrs = mem_addrs;
+        c.mem_values = mem_values;
         return c;
     }
 
@@ -59,7 +59,11 @@ struct Commit {
             auto reg_id_show = reg_id.to!Register;
             sb ~= format(" %04s <- %04x", reg_id_show, reg_value);
         } else {
-            sb ~= format(" mem[%04x] <- %04x", mem_addr, mem_value);
+            for (auto i = 0; i < mem_addrs.length; i++) {
+                auto addr = mem_addrs[i];
+                auto value = mem_values[i];
+                sb ~= format(" mem[%04x] <- %04x", addr, value);
+            }
         }
 
         // commit description
