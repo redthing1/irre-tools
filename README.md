@@ -63,31 +63,10 @@ int main() {
 
 ```
 
-build to an assembly file with VBCC-IRRE:
+now build and run:
 ```sh
-$VBCC/bin/vbccirre -c99 -default-main -o=my_prog.asm my_prog.c
+# build (creates my_prog.bin)
+./script/irre_cc.sh my_prog.c my_prog
+# run
+$IRRE/irretool -v emu my_prog.bin
 ```
-
-run `irre-asm` to assemble IRRE assembly to executable object:
-```sh
-./build/meson-out/irre-asm -m exe --dump-ast my_prog.asm my_prog.bin
-```
-
-run `irre-emu` to run in the emulator:
-```sh
-./build/meson-out/irre-emu --debug my_prog.bin
-```
-
-which should output something like:
-
-```
-... long register dump ...
-   PC: $00000000
-   LR: $00000000
-   AD: $00000000
-   AT: $00000014
-   SP: $00010000
-program halted with code $0007
-```
-
-that's all she wrote, folks.
