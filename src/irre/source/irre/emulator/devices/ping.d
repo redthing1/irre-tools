@@ -3,6 +3,7 @@ module irre.emulator.devices.ping;
 import irre.emulator.device;
 import std.string;
 import std.stdio;
+import irre.util;
 
 class PingDevice : Device {
     enum Command : WORD {
@@ -10,7 +11,7 @@ class PingDevice : Device {
     }
 
     override WORD recieve(WORD command, WORD data) {
-        writefln("[PING] recieved (command: %d, data: %d)", command, data);
+        log_put(format("[PING] recieved (command: %d, data: %d)", command, data));
         return 0; // success
     }
 }
