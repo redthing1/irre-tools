@@ -1,4 +1,4 @@
-set -e
+# set -e
 
 # 0. preparations
 git submodule update --init --recursive
