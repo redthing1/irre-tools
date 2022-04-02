@@ -49,7 +49,7 @@ void main(string[] raw_args) {
                 .add(new Argument("input", "input file"))
                 .add(new Flag("d", "debug", "debug mode"))
                 .add(new Flag("s", "step", "step mode"))
-                .add(new Flag("c", "commitlog", "enable commit log"))
+                .add(new Flag("c", "commitlog", "enable commit log").full("commit-log"))
         )
         .parse(raw_args);
 
