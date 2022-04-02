@@ -22,7 +22,8 @@ struct Commit {
     enum Type {
         Combined,
         Register,
-        Memory
+        Memory,
+        Immediate,
     }
 
     struct Source {
@@ -76,6 +77,9 @@ struct Commit {
             break;
         case Type.Combined:
             type_str = "comb";
+            break;
+        case Type.Immediate:
+            type_str = "imm";
             break;
         default:
             assert(0);
