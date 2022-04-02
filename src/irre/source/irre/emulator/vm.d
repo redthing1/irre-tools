@@ -8,7 +8,6 @@ import irre.emulator.commit;
 import irre.disassembler.reader;
 import irre.disassembler.dumper;
 
-enum REGISTER_COUNT = 37;
 enum MEMORY_SIZE = 64 * 1024; // 65K
 
 class VirtualMachine {
