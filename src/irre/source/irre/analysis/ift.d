@@ -7,6 +7,7 @@ import std.algorithm;
 import std.range;
 import std.container.dlist;
 
+import irre.util;
 import irre.emulator.commit;
 import irre.encoding.instructions;
 
@@ -186,13 +187,15 @@ class IFTAnalyzer {
             unvisited.removeFront();
             visited[curr] = true;
 
-            // writefln(" visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix);
+            log_put(format("  visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix));
 
             if (curr.node.type == InfoType.Immediate || curr.node.type == InfoType.Device) {
                 // we found raw source data, no dependencies
                 // this is a leaf source, so we want to record it
                 // all data comes from some sort of leaf source
-                terminal_leaves ~= InfoSource(curr.node, curr.commit_ix);
+                auto leaf = InfoSource(curr.node, curr.commit_ix);
+                terminal_leaves ~= leaf;
+                log_put(format("   leaf (source): %s", leaf));
                 continue;
             }
 
@@ -202,20 +205,28 @@ class IFTAnalyzer {
                 // this means some information was found to have been traced to the initial snapshot
                 // this counts as a leaf node
 
-                terminal_leaves ~= InfoSource(curr.node, -1); // the current node came from the initial snapshot
+                auto leaf = InfoSource(curr.node, -1); // the current node came from the initial snapshot
+                terminal_leaves ~= leaf;
+                log_put(format("   leaf (pre-initial): %s", leaf));
                 continue;
             }
 
             auto touching_commit = trace.commits[touching_commit_ix];
-            // writefln("  found last touching commit (#%s) for node: %s: %s",
-            //     touching_commit_ix, curr, touching_commit);
+            log_put(format("   found last touching commit (#%s) for node: %s: %s",
+                touching_commit_ix, curr, touching_commit));
 
             // get all dependencies of this commit
             auto deps = touching_commit.sources.reverse;
             for (auto i = 0; i < deps.length; i++) {
                 auto dep = deps[i];
-                // writefln("   found dependency: %s", dep);
-                auto dep_walk = InfoNodeWalk(dep, touching_commit_ix);
+                log_put(format("    found dependency: %s", dep));
+
+                // where did this dependency's information come from?
+                // to find out we have to look for previous commits that created this dependency
+                // we have to search in commits before this one, because the dependency already had its value
+                // so we should walk through commits touching that dependency
+                // so we add it to our visit queue
+                auto dep_walk = InfoNodeWalk(dep, touching_commit_ix - 1);
 
                 // if we have not visited this dependency yet, add it to the unvisited list
                 if (!visited.get(dep_walk, false)) {
@@ -252,6 +263,7 @@ class IFTAnalyzer {
             auto reg_final_node = InfoNode(InfoType.Register, reg_id, reg_val);
 
             // now start backtracing
+            log_put(format("backtracking information flow for node: %s", reg_final_node));
             auto reg_sources = backtrace_information_flow(reg_final_node);
 
             // writefln("sources for reg %s: %s", reg_id, reg_sources);
