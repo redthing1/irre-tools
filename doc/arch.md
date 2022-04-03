@@ -17,6 +17,8 @@ IRRE exposes 37, 32-bit registers to the programmer. The first 32 of these are n
 
 In addition to these are 5 special registers, comprising a program counter, `pc`, a return address or link register `lr`, two special temporaries `ad` and `at`, and a stack pointer, `sp`.
 
+Registers `r0` to `r31` are encoded using `0x00` to `0x1f`, `pc` is `0x20`, `lr` is `0x21`, `ad` is `0x22`, `at` is `0x23`, and `sp` is `0x24`.
+
 All registers can be read and operated on by instructions; such operations are functionally identical on all registers. However, note that writing to `pc` can alter program flow.
 
 ### calling convention (suggested)
@@ -417,8 +419,8 @@ The bits of each component of these instructions are laid out so that the lower 
 | `tcs` | 0x0a&nbsp;rA&nbsp;rB&nbsp;rC  | Subtract the signed value stored in rC from the signed value stored in rB with arbitrary precision and store the sign of the result in rA. |
 | `set` | 0x0b&nbsp;rA&nbsp;v0         | Store, with sign extension, the 16-bit signed value v0 into rA. |
 | `mov` | 0x0c&nbsp;rA&nbsp;rB          | Copy the value from rB into rA. |
-| `ldw` | 0x0d&nbsp;rA&nbsp;rB&nbsp;v0  | Read a 32-bit word from the memory address referred to by rB, offset by v0, and store the value into rA. If the address is not word-aligned, the result is implementation-defined. |
-| `stw` | 0x0e&nbsp;rA&nbsp;rB&nbsp;v0  | Store the value in rA as a 32-bit value at the memory address referred to by rB, offset by v0. If the address is not word-aligned, the result is implementation-defined. |
+| `ldw` | 0x0d&nbsp;rA&nbsp;rB&nbsp;v0  | Read a 32-bit word from the memory address referred to by rB, signed offset by v0, and store the value into rA. If the address is not word-aligned, the result is implementation-defined. |
+| `stw` | 0x0e&nbsp;rA&nbsp;rB&nbsp;v0  | Store the value in rA as a 32-bit value at the memory address referred to by rB, signed offset by v0. If the address is not word-aligned, the result is implementation-defined. |
 | `hlt` | 0xff         | Halt execution. |
 | `int` | 0x71&nbsp;v0         | Raise an interrupt with the 24-bit unsigned code in v0. |
 | `jmi` | 0x10&nbsp;v0         | Unconditionally branch to the 24-bit unsigned address in v0. |
