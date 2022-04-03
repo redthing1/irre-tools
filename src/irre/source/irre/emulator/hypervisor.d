@@ -148,6 +148,9 @@ class Hypervisor {
         case "stk":
             dump_stack();
             break;
+        case "reg":
+            dump_registers(true);
+            break;
         case "s1":
             writefln("[cmd] ONESTEP = 1, DEBUG = 1");
             onestep_mode = true;
