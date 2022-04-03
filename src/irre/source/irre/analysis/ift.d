@@ -23,6 +23,10 @@ class IFTAnalyzer {
         trace = commit_trace;
     }
 
+    @property long last_commit_ix() const {
+        return (cast(long) trace.commits.length) - 1;
+    }
+
     /**
      * analyze the commit trace
      * @return the analysis result
@@ -69,7 +73,7 @@ class IFTAnalyzer {
         // 3. do a reverse pass through all commits, looking for special cases
         //    things like devices and mmio, external sources of data
 
-        for (auto i = (cast(long) trace.commits.length - 1); i >= 0; i--) {
+        for (auto i = last_commit_ix; i >= 0; i--) {
             auto commit = trace.commits[i];
 
             // look at sources of this commit
@@ -101,6 +105,17 @@ class IFTAnalyzer {
                 }
             }
         }
+    }
+
+    long find_last_commit_at_pc(UWORD pc_val, long from_commit) {
+        for (auto i = from_commit; i >= 0; i--) {
+            auto commit = &trace.commits[i];
+            if (commit.pc == pc_val) {
+                return i;
+            }
+        }
+
+        return -1; // none found
     }
 
     long find_commit_last_touching(InfoNode node, long from_commit) {
@@ -146,7 +161,7 @@ class IFTAnalyzer {
     InfoSource[] backtrace_information_flow(InfoNode final_node) {
         // 1. get the commit corresponding to this node
         auto final_node_last_touch_ix =
-            find_commit_last_touching(final_node, (cast(long) trace.commits.length) - 1);
+            find_commit_last_touching(final_node, last_commit_ix);
         // writefln("found last touching commit (#%s) for node: %s: %s",
         //     final_node_last_touch_ix, final_node, trace.commits[final_node_last_touch_ix]);
 
