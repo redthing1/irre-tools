@@ -38,6 +38,7 @@ void main(string[] raw_args) {
                 .add(new Argument("input", "input file"))
                 .add(new Argument("output", "output file"))
                 .add(new Flag("d", "dump", "dump the program"))
+                .add(new Flag("l", "lex", "dump the lex"))
                 .add(new Option("m", "mode", "the mode to assemble in")
                     .defaultValue("exe"))
         )
@@ -78,6 +79,7 @@ int cmd_asm(ProgramArgs args) {
     auto input = args.arg("input");
     auto output = args.arg("output");
     auto dump = args.flag("dump");
+    auto dump_lex = args.flag("lex");
     auto mode = args.option("mode").to!AssemblerMode;
 
     writefln("[IRRE] assembler v%s", Meta.VERSION);
@@ -98,13 +100,13 @@ int cmd_asm(ProgramArgs args) {
         lexer = new Lexer();
         lexed = lexer.lex(inf_source);
 
-        // if (dump_lex) {
-        //     // dump the tokens
-        //     writeln("======== TOKENS ========");
-        //     foreach (i, token; lexed.tokens) {
-        //         writefln("%4d TOK: %10s [%10s]", i, token.content, to!string(token.kind));
-        //     }
-        // }
+        if (dump_lex) {
+            // dump the tokens
+            writeln("======== TOKENS ========");
+            foreach (i, token; lexed.tokens) {
+                writefln("%4d TOK: %10s [%10s]", i, token.content, to!string(token.kind));
+            }
+        }
     } catch (LexerException e) {
         writefln("lexer error: %s at %s", e.msg, e.info);
         return 2;

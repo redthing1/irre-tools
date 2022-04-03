@@ -19,27 +19,27 @@ enum INSTRUCTION_SIZE = WORD.sizeof; // 4-byte (WORD) instructions
 
 enum OpCode : ARG {
     // set 1
-    NOP = 0x00,
-    ADD = 0x01,
-    SUB = 0x02,
-    AND = 0x03,
-    ORR = 0x04,
-    XOR = 0x05,
-    NOT = 0x06,
-    LSH = 0x07,
-    ASH = 0x08,
+    NOP = 0x00, // nop
+    ADD = 0x01, // add
+    SUB = 0x02, // sub
+    AND = 0x03, // and
+    ORR = 0x04, // orr
+    XOR = 0x05, // xor
+    NOT = 0x06, // not
+    LSH = 0x07, // logical shift
+    ASH = 0x08, // arithmetic shift
     TCU = 0x09,
     TCS = 0x0a,
-    SET = 0x0b,
-    MOV = 0x0c,
-    LDW = 0x0d,
-    STW = 0x0e,
+    SET = 0x0b, // set
+    MOV = 0x0c, // move
+    LDW = 0x0d, // load word
+    STW = 0x0e, // store word
     // LDB = 0x0f, [deprecated]
     // STB = 0x10, [deprecated]
 
     // set 2
-    HLT = 0xff,
-    INT = 0x71,
+    HLT = 0xff, // halt
+    INT = 0x71, // interrupt
 
     // set 3
     JMI = 0x10, // unconditional jump (imm)
@@ -50,8 +50,11 @@ enum OpCode : ARG {
     CAL = 0x1a, // branch, link in LR
     RET = 0x1b, // jump to LR
 
+    // set 4
+    ASI = 0x20, // add shifted immediate
+
     // regular-ext device api
-    SND = 0xfd,
+    SND = 0xfd, // send
 }
 
 enum REGISTER_COUNT = 37;
@@ -173,6 +176,7 @@ class InstructionEncoding {
             case OpCode.STW: return InstructionInfo(OpCode.STW, Operands.REG_REG_IMM, 1);
             // case OpCode.LDB: return InstructionInfo(OpCode.LDB, Operands.REG_REG, 1);
             // case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG, 1);
+            case OpCode.ASI: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
             // REGULAR_AD instruction set
             case OpCode.HLT: return InstructionInfo(OpCode.HLT, Operands.NONE, 1);
             case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.IMM, 1);
