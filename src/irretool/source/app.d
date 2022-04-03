@@ -1,5 +1,7 @@
 module app;
 
+version(app):
+
 import std.stdio;
 import std.format;
 import std.conv;
