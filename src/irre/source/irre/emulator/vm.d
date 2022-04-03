@@ -24,6 +24,7 @@ class VirtualMachine {
     public Reader reader;
     public Dumper dumper;
     public Instruction last_executed_instruction;
+    public UWORD last_program_counter;
 
     // aliases
     enum reg_pc = cast(int) Register.PC;
@@ -101,6 +102,7 @@ class VirtualMachine {
 
         last_branch_status = BranchStatus.NO_BRANCH; // default, no branch
         last_executed_instruction = ins; // save last executed instruction for logging
+        last_program_counter = reg[reg_pc]; // save program counter for logging
         switch (ins.op) {
         case OpCode.NOP:
             // literally do nothing
@@ -372,7 +374,7 @@ class VirtualMachine {
     }
 
     private void commit_set_state(ref Commit commit) {
-        commit.pc = reg[reg_pc];
+        commit.pc = last_program_counter;
         commit.description = dump_decoded_instruction();
     }
 
