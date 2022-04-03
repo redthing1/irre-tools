@@ -23,6 +23,7 @@ class VirtualMachine {
     public CommitTrace commit_trace;
     public Reader reader;
     public Dumper dumper;
+    public Instruction last_executed_instruction;
 
     // aliases
     enum reg_pc = cast(int) Register.PC;
@@ -99,6 +100,7 @@ class VirtualMachine {
         }
 
         last_branch_status = BranchStatus.NO_BRANCH; // default, no branch
+        last_executed_instruction = ins; // save last executed instruction for logging
         switch (ins.op) {
         case OpCode.NOP:
             // literally do nothing
@@ -364,8 +366,7 @@ class VirtualMachine {
     }
 
     private string dump_decoded_instruction() {
-        auto instr = decode_instruction();
-        auto statement = reader.decompile(instr);
+        auto statement = reader.decompile(last_executed_instruction);
         auto statement_dump = dumper.format_statement(statement);
         return statement_dump;
     }
