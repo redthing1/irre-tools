@@ -65,11 +65,11 @@ class IFTAnalyzer {
         }
     }
 
-    long find_commit_last_touching(InfoNode node) {
+    long find_commit_last_touching(InfoNode node, long from_commit) {
         switch (node.type) {
         case InfoType.Register:
             // go back through commits until we find one whose results modify this register
-            for (auto i = (cast(long) trace.commits.length) - 1; i >= 0; i--) {
+            for (auto i = from_commit; i >= 0; i--) {
                 auto commit = &trace.commits[i];
                 for (auto j = 0; j < commit.reg_ids.length; j++) {
                     if (commit.reg_ids[j] == node.data) {
@@ -81,7 +81,7 @@ class IFTAnalyzer {
             break;
         case InfoType.Memory:
             // go back through commits until we find one whose results modify this memory
-            for (auto i = (cast(long) trace.commits.length) - 1; i >= 0; i--) {
+            for (auto i = from_commit; i >= 0; i--) {
                 auto commit = &trace.commits[i];
                 for (auto j = 0; j < commit.mem_addrs.length; j++) {
                     if (commit.mem_addrs[j] == node.data) {
@@ -94,21 +94,28 @@ class IFTAnalyzer {
         default:
             assert(0);
         }
-        assert(0);
+        assert(0, format("could not find touching commit for node: %s, commit <= #%d", node, from_commit));
     }
 
     void backtrace_information_flow(InfoNode final_node) {
         // 1. get the commit corresponding to this node
-        // auto last_touching_commit_ix = find_commit_last_touching(final_node);
+        auto final_node_last_touch_ix =
+            find_commit_last_touching(final_node, (cast(long) trace.commits.length) - 1);
         // writefln("found last touching commit (#%s) for node: %s: %s",
-        //     last_touching_commit_ix, final_node, trace.commits[last_touching_commit_ix]);
-        
+        //     final_node_last_touch_ix, final_node, trace.commits[final_node_last_touch_ix]);
+
         // 2. data structures for dfs
-        auto unvisited = DList!InfoNode();
-        bool[InfoNode] visited;
+
+        struct InfoNodeWalk {
+            InfoNode node;
+            long commit_ix;
+        }
+
+        auto unvisited = DList!InfoNodeWalk();
+        bool[InfoNodeWalk] visited;
 
         // 3. queue our initial node
-        unvisited.insertFront(final_node);
+        unvisited.insertFront(InfoNodeWalk(final_node, final_node_last_touch_ix));
 
         // 4. iterative dfs
         while (!unvisited.empty) {
@@ -116,28 +123,29 @@ class IFTAnalyzer {
             unvisited.removeFront();
             visited[curr] = true;
 
-            // writefln("visiting node: %s", curr);
+            writefln("visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix);
 
-            if (curr.type == InfoType.Immediate) {
+            if (curr.node.type == InfoType.Immediate) {
                 // we found raw source data, no dependencies
                 continue;
             }
 
             // get last touching commit for this node
-            auto touching_commit_ix = find_commit_last_touching(curr);
+            auto touching_commit_ix = find_commit_last_touching(curr.node, curr.commit_ix);
             auto touching_commit = trace.commits[touching_commit_ix];
             writefln("found last touching commit (#%s) for node: %s: %s",
                 touching_commit_ix, curr, touching_commit);
-            
+
             // get all dependencies of this commit
-            auto deps = touching_commit.sources;
+            auto deps = touching_commit.sources.reverse;
             for (auto i = 0; i < deps.length; i++) {
                 auto dep = deps[i];
                 writefln("found dependency: %s", dep);
+                auto dep_walk = InfoNodeWalk(dep, touching_commit_ix);
 
                 // if we have not visited this dependency yet, add it to the unvisited list
-                if (!visited.get(dep, false)) {
-                    unvisited.insertFront(dep);
+                if (!visited.get(dep_walk, false)) {
+                    unvisited.insertFront(dep_walk);
                 }
             }
         }
