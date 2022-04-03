@@ -26,8 +26,13 @@ template make_test_prog(string name, string path) {
         `, name, name, path);
 }
 
-// enum PROG_BASIC = import("asm/basic.asm");
 mixin(make_test_prog!("BASIC", "asm/basic.asm"));
 mixin(make_test_prog!("BIGPROG", "asm/big_prog.asm"));
 mixin(make_test_prog!("FUNC", "asm/func.asm"));
 mixin(make_test_prog!("MEM", "asm/mem.asm"));
+
+mixin(make_test_prog!("ASMV5", "asm/asmv5.asm"));
+
+mixin(make_test_prog!("MACRO", "asm/macro.asm"));
+mixin(make_test_prog!("COND_BRANCH", "asm/cond_branch.asm"));
+mixin(make_test_prog!("COND_NOBRANCH", "asm/cond_nobranch.asm"));
