@@ -97,7 +97,7 @@ class IFTAnalyzer {
         assert(0, format("could not find touching commit for node: %s, commit <= #%d", node, from_commit));
     }
 
-    void backtrace_information_flow(InfoNode final_node) {
+    InfoSource[] backtrace_information_flow(InfoNode final_node) {
         // 1. get the commit corresponding to this node
         auto final_node_last_touch_ix =
             find_commit_last_touching(final_node, (cast(long) trace.commits.length) - 1);
@@ -114,6 +114,8 @@ class IFTAnalyzer {
         auto unvisited = DList!InfoNodeWalk();
         bool[InfoNodeWalk] visited;
 
+        InfoSource[] terminal_leaves;
+
         // 3. queue our initial node
         unvisited.insertFront(InfoNodeWalk(final_node, final_node_last_touch_ix));
 
@@ -123,24 +125,27 @@ class IFTAnalyzer {
             unvisited.removeFront();
             visited[curr] = true;
 
-            writefln(" visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix);
+            // writefln(" visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix);
 
             if (curr.node.type == InfoType.Immediate) {
                 // we found raw source data, no dependencies
+                // this is a leaf source, so we want to record it
+                // all data comes from some sort of leaf source
+                terminal_leaves ~= InfoSource(curr.node, curr.commit_ix);
                 continue;
             }
 
             // get last touching commit for this node
             auto touching_commit_ix = find_commit_last_touching(curr.node, curr.commit_ix);
             auto touching_commit = trace.commits[touching_commit_ix];
-            writefln("  found last touching commit (#%s) for node: %s: %s",
-                touching_commit_ix, curr, touching_commit);
+            // writefln("  found last touching commit (#%s) for node: %s: %s",
+            //     touching_commit_ix, curr, touching_commit);
 
             // get all dependencies of this commit
             auto deps = touching_commit.sources.reverse;
             for (auto i = 0; i < deps.length; i++) {
                 auto dep = deps[i];
-                writefln("   found dependency: %s", dep);
+                // writefln("   found dependency: %s", dep);
                 auto dep_walk = InfoNodeWalk(dep, touching_commit_ix);
 
                 // if we have not visited this dependency yet, add it to the unvisited list
@@ -149,6 +154,8 @@ class IFTAnalyzer {
                 }
             }
         }
+
+        return terminal_leaves;
     }
 
     void analyze_flows() {
@@ -162,7 +169,9 @@ class IFTAnalyzer {
             clobber.reg_ids[find_r0_final], clobber.reg_values[find_r0_final]);
 
         // now start backtracing
-        backtrace_information_flow(r0_final_node);
+        auto r0_sources = backtrace_information_flow(r0_final_node);
+
+        writefln("found %d sources for R0: %s", r0_sources.length, r0_sources);
     }
 
     void dump_analysis() {
