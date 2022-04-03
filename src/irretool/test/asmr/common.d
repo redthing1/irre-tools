@@ -7,6 +7,8 @@ public {
     import irre.assembler.parser;
     import irre.assembler.ast_freezer;
     import irre.encoding.rega;
+
+    import irretool.test.code;
 }
 
 Lexer.Result lex_program(string source) {
