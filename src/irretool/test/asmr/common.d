@@ -57,7 +57,7 @@ ubyte[] compile_program(string source) {
     return compiled_data;
 }
 
-void ensure_programs_assemble(TestProgram[] progs) {
+void ensure_programs_assemble(immutable TestProgram[] progs) {
     foreach (prg; progs) {
         try {
             auto lex = lex_program(prg.source);
