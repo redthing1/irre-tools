@@ -159,19 +159,34 @@ class IFTAnalyzer {
     }
 
     void analyze_flows() {
-        // for now, we'll only flow back from the R0 register
-        // get the clobber node for R0
-        auto find_r0_final = clobber.reg_ids.countUntil(Register.R0);
-        assert(find_r0_final >= 0, "could not find R0 in clobber list");
+        // // for now, we'll only flow back from the R0 register
+        // // get the clobber node for R0
+        // auto find_r0_final = clobber.reg_ids.countUntil(Register.R0);
+        // assert(find_r0_final >= 0, "could not find R0 in clobber list");
 
-        // create an info node for this point
-        auto r0_final_node = InfoNode(InfoType.Register,
-            clobber.reg_ids[find_r0_final], clobber.reg_values[find_r0_final]);
+        // // create an info node for this point
+        // auto r0_final_node = InfoNode(InfoType.Register,
+        //     clobber.reg_ids[find_r0_final], clobber.reg_values[find_r0_final]);
 
-        // now start backtracing
-        auto r0_sources = backtrace_information_flow(r0_final_node);
+        // // now start backtracing
+        // auto r0_sources = backtrace_information_flow(r0_final_node);
 
-        writefln("found %d sources for R0: %s", r0_sources.length, r0_sources);
+        // writefln("found %d sources for R0: %s", r0_sources.length, r0_sources);
+
+        // 1. backtrace all registers
+        for (auto clobbered_i = 0; clobbered_i < clobber.reg_ids.length; clobbered_i++) {
+            // get id of register that is clobbered
+            auto reg_id = clobber.reg_ids[clobbered_i].to!Register;
+            auto reg_val = clobber.reg_values[clobbered_i];
+
+            // create an info node for this point
+            auto reg_final_node = InfoNode(InfoType.Register, reg_id, reg_val);
+
+            // now start backtracing
+            auto reg_sources = backtrace_information_flow(reg_final_node);
+
+            writefln("sources for reg %s: %s", reg_id, reg_sources);
+        }
     }
 
     void dump_analysis() {
