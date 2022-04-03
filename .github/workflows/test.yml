@@ -17,6 +17,8 @@ jobs:
           compiler: ${{ matrix.dc }}
       - name: Build IRRE toolchain
         run: . ./script/build_tools.sh
+      - name: Build test programs
+        run: python3 ./script/make_tests.py
       - name: Run tests
         working-directory: ./src/irretool
         run: dub test --arch=${{ matrix.arch }}
