@@ -123,7 +123,7 @@ class IFTAnalyzer {
             unvisited.removeFront();
             visited[curr] = true;
 
-            writefln("visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix);
+            writefln(" visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix);
 
             if (curr.node.type == InfoType.Immediate) {
                 // we found raw source data, no dependencies
@@ -133,14 +133,14 @@ class IFTAnalyzer {
             // get last touching commit for this node
             auto touching_commit_ix = find_commit_last_touching(curr.node, curr.commit_ix);
             auto touching_commit = trace.commits[touching_commit_ix];
-            writefln("found last touching commit (#%s) for node: %s: %s",
+            writefln("  found last touching commit (#%s) for node: %s: %s",
                 touching_commit_ix, curr, touching_commit);
 
             // get all dependencies of this commit
             auto deps = touching_commit.sources.reverse;
             for (auto i = 0; i < deps.length; i++) {
                 auto dep = deps[i];
-                writefln("found dependency: %s", dep);
+                writefln("   found dependency: %s", dep);
                 auto dep_walk = InfoNodeWalk(dep, touching_commit_ix);
 
                 // if we have not visited this dependency yet, add it to the unvisited list
