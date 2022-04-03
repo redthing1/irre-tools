@@ -24,6 +24,15 @@ class IFTAnalyzer {
     long log_commits_walked;
     // Duration log_analysis_time;
     ulong log_analysis_time;
+    IFTDataType included_data = IFTDataType.All;
+
+    enum IFTDataType {
+        None = (0 << 0),
+        Registers = (1 << 0),
+        Memory = (1 << 1),
+        Special = (1 << 2),
+        All = (Registers | Memory | Special),
+    }
 
     this(CommitTrace commit_trace) {
         trace = commit_trace;
@@ -55,34 +64,44 @@ class IFTAnalyzer {
         log_analysis_time = elapsed.total!"usecs";
     }
 
-    void dump_commits() {
+    string dump_commits() {
+        import std.array;
+
+        auto sb = appender!string;
+
         foreach (i, commit; trace.commits) {
-            writefln("%6d %s", i, commit);
+            sb ~= format("%6d %s\n", i, commit);
         }
+
+        return sb.array;
     }
 
     void analyze_clobber() {
         // calculate the total clobber commit between the initial and final state
 
-        // 1. find regs that changed
-        for (auto i = 0; i < REGISTER_COUNT; i++) {
-            Register reg_id = i.to!Register;
-            if (snap_init.reg[reg_id] != snap_final.reg[reg_id]) {
-                // this register changed between the initial and final state
-                // store commit that clobbers this register
-                clobber.reg_ids ~= reg_id;
-                clobber.reg_values ~= snap_final.reg[reg_id];
+        if (included_data & IFTDataType.Registers) {
+            // 1. find regs that changed
+            for (auto i = 0; i < REGISTER_COUNT; i++) {
+                Register reg_id = i.to!Register;
+                if (snap_init.reg[reg_id] != snap_final.reg[reg_id]) {
+                    // this register changed between the initial and final state
+                    // store commit that clobbers this register
+                    clobber.reg_ids ~= reg_id;
+                    clobber.reg_values ~= snap_final.reg[reg_id];
+                }
             }
         }
 
-        // 2. find mem that changed
-        for (auto i = 0; i < snap_init.mem.length; i++) {
-            auto mem_addr = i;
-            if (snap_init.mem[mem_addr] != snap_final.mem[mem_addr]) {
-                // this memory changed between the initial and final state
-                // store commit that clobbers this memory
-                clobber.mem_addrs ~= mem_addr;
-                clobber.mem_values ~= snap_final.mem[mem_addr];
+        if (included_data & IFTDataType.Memory) {
+            // 2. find mem that changed
+            for (auto i = 0; i < snap_init.mem.length; i++) {
+                auto mem_addr = i;
+                if (snap_init.mem[mem_addr] != snap_final.mem[mem_addr]) {
+                    // this memory changed between the initial and final state
+                    // store commit that clobbers this memory
+                    clobber.mem_addrs ~= mem_addr;
+                    clobber.mem_values ~= snap_final.mem[mem_addr];
+                }
             }
         }
 
@@ -318,57 +337,63 @@ class IFTAnalyzer {
         }
     }
 
-    void dump_analysis() {
+    string dump_analysis() {
+        import std.array: appender;
+
+        auto sb = appender!string;
+
         // 1. dump clobber commit
-        writefln(" clobber (%s commits):", trace.commits.length);
+        sb ~= format(" clobber (%s commits):\n", trace.commits.length);
 
         // memory
-        writefln("  memory:");
+        sb ~= format("  memory:\n");
         for (auto i = 0; i < clobber.mem_addrs.length; i++) {
             auto mem_addr = clobber.mem_addrs[i];
             auto mem_value = clobber.mem_values[i];
-            writefln("   mem[%04x] <- %04x", mem_addr, mem_value);
+            sb ~= format("   mem[%04x] <- %04x\n", mem_addr, mem_value);
         }
 
         // registers
-        writefln("  regs:");
+        sb ~= format("  regs:\n");
         for (auto i = 0; i < clobber.reg_ids.length; i++) {
             auto reg_id = clobber.reg_ids[i].to!Register;
             auto reg_value = clobber.reg_values[i];
-            writefln("   reg %s <- %04x", reg_id, reg_value);
+            sb ~= format("   reg %s <- %04x\n", reg_id, reg_value);
         }
 
         // dump backtraces
-        writefln(" backtraces:");
+        sb ~= format(" backtraces:\n");
 
         long log_found_sources = 0;
 
         // registers
         foreach (reg_id; clobbered_regs_sources.byKey) {
-            writefln("  reg %s:", reg_id);
+            sb ~= format("  reg %s:\n", reg_id);
             foreach (source; clobbered_regs_sources[reg_id]) {
-                writefln("   %s", source);
+                sb ~= format("   %s\n", source);
                 log_found_sources++;
             }
         }
 
         // memory
         foreach (mem_addr; clobbered_mem_sources.byKey) {
-            writefln("  mem[%04x]:", mem_addr);
+            sb ~= format("  mem[%04x]:\n", mem_addr);
             foreach (source; clobbered_mem_sources[mem_addr]) {
-                writefln("   %s", source);
+                sb ~= format("   %s\n", source);
                 log_found_sources++;
             }
         }
 
         // summary
-        writefln(" summary:");
-        writefln("  num commits:            %8d", trace.commits.length);
-        writefln("  registers traced:       %8d", clobber.reg_ids.length);
-        writefln("  memory traced:          %8d", clobber.mem_addrs.length);
-        writefln("  found sources:          %8d", log_found_sources);
-        writefln("  walked info:            %8d", log_visited_info_nodes);
-        writefln("  walked commits:         %8d", log_commits_walked);
-        writefln("  analysis time:          %7ss", (cast(double) log_analysis_time / 1_000_000));
+        sb ~= format(" summary:\n");
+        sb ~= format("  num commits:            %8d\n", trace.commits.length);
+        sb ~= format("  registers traced:       %8d\n", clobber.reg_ids.length);
+        sb ~= format("  memory traced:          %8d\n", clobber.mem_addrs.length);
+        sb ~= format("  found sources:          %8d\n", log_found_sources);
+        sb ~= format("  walked info:            %8d\n", log_visited_info_nodes);
+        sb ~= format("  walked commits:         %8d\n", log_commits_walked);
+        sb ~= format("  analysis time:          %7ss\n", (cast(double) log_analysis_time / 1_000_000));
+
+        return sb.array;
     }
 }
