@@ -38,6 +38,7 @@ mixin(make_test_prog!("COND_BRANCH", "asm/cond_branch.asm"));
 mixin(make_test_prog!("COND_NOBRANCH", "asm/cond_nobranch.asm"));
 
 mixin(make_test_prog!("FIB2", "c_basic/fib_2.ire"));
+mixin(make_test_prog!("FIB3", "c_basic/fib_3.ire"));
 
 mixin(make_test_prog!("IFT1", "ift/ift1.asm"));
 mixin(make_test_prog!("IFT2", "ift/ift2.asm"));

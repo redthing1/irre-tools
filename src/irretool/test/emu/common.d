@@ -12,6 +12,7 @@ public {
     import irre.emulator.vm;
     import irre.emulator.hypervisor;
 
+    import irretool.test.asmr.common;
     import irretool.test.code;
 }
 
@@ -37,17 +38,39 @@ Hypervisor create_hypervisor_for(ubyte[] program) {
     return hyp;
 }
 
-// void ensure_programs_assemble(immutable TestProgram[] progs) {
-//     foreach (prg; progs) {
-//         try {
-//             auto lex = lex_program(prg.source);
-//             auto ast = parse_lex(lex);
+void verify_program(TestProgram prg, long exec_steps, UWORD[Register] expect) {
+    auto bin = compile_program(prg);
+    auto hyp = create_hypervisor_for(bin);
 
-//             assert(ast.statements.length > 0,
-//                 format("program: %s did not assemble correctly", prg.name));
-//         } catch (Exception e) {
-//             assert(false,
-//                 format("program: %s failed to assemble with exception: %s", prg.name, e));
-//         }
-//     }
-// }
+    hyp.run(exec_steps); // bound how many steps
+
+    // check result
+    struct Mistake {
+        Register reg;
+        UWORD expect;
+        UWORD actual;
+    }
+
+    auto regs = hyp.vm.reg;
+
+    auto sb = appender!string;
+    Mistake[] mistakes;
+
+    for (auto i = 0; i < REGISTER_COUNT; i++) {
+        auto reg_id = i.to!Register;
+        auto reg_value = regs[reg_id];
+
+        if (reg_id !in expect) {
+            continue;
+        }
+
+        auto expect_value = expect[reg_id];
+
+        if (reg_value != expect_value) {
+            mistakes ~= Mistake(reg_id, expect_value, reg_value);
+            sb ~= format(" (reg %s=$%04x (expect $%04x))", reg_id, reg_value, expect_value);
+        }
+    }
+
+    assert(mistakes.length == 0, format("prog %s incorrect:%s", prg.name, sb.array));
+}
