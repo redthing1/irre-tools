@@ -3,10 +3,11 @@ module irre.analysis.ift;
 import std.stdio;
 import std.format;
 import std.conv;
+import std.algorithm;
+import std.range;
 
 import irre.emulator.commit;
 import irre.encoding.instructions;
-import std.algorithm.mutation;
 
 /** analyzer for dynamic information flow tracking **/
 class IFTAnalyzer {
@@ -28,6 +29,7 @@ class IFTAnalyzer {
         snap_final = trace.snapshots[1];
 
         analyze_clobber();
+        analyze_flows();
     }
 
     void dump_commits() {
@@ -60,6 +62,59 @@ class IFTAnalyzer {
                 clobber.mem_values ~= snap_final.mem[mem_addr];
             }
         }
+    }
+
+    long find_commit_last_touching(InfoNode node) {
+        switch (node.type) {
+        case InfoType.Register:
+            // go back through commits until we find one whose results modify this register
+            for (auto i = (cast(long) trace.commits.length) - 1; i >= 0; i--) {
+                auto commit = &trace.commits[i];
+                for (auto j = 0; j < commit.reg_ids.length; j++) {
+                    if (commit.reg_ids[j] == node.data) {
+                        // the register id in the commit results is the same as the reg id in the info node we are searching
+                        return i;
+                    }
+                }
+            }
+            break;
+        case InfoType.Memory:
+            // go back through commits until we find one whose results modify this memory
+            for (auto i = (cast(long) trace.commits.length) - 1; i >= 0; i--) {
+                auto commit = &trace.commits[i];
+                for (auto j = 0; j < commit.mem_addrs.length; j++) {
+                    if (commit.mem_addrs[j] == node.data) {
+                        // the memory address in the commit results is the same as the mem addr in the info node we are searching
+                        return i;
+                    }
+                }
+            }
+            break;
+        default:
+            assert(0);
+        }
+        assert(0);
+    }
+
+    void backtrace_information_flow(InfoNode final_node) {
+        // 1. get the commit corresponding to this node
+        auto last_touching_commit_ix = find_commit_last_touching(final_node);
+        writefln("found last touching commit (#%s) for node: %s: %s",
+            last_touching_commit_ix, final_node, trace.commits[last_touching_commit_ix]);
+    }
+
+    void analyze_flows() {
+        // for now, we'll only flow back from the R0 register
+        // get the clobber node for R0
+        auto find_r0_final = clobber.reg_ids.countUntil(Register.R0);
+        assert(find_r0_final >= 0, "could not find R0 in clobber list");
+
+        // create an info node for this point
+        auto r0_final_node = InfoNode(InfoType.Register,
+            clobber.reg_ids[find_r0_final], clobber.reg_values[find_r0_final]);
+
+        // now start backtracing
+        backtrace_information_flow(r0_final_node);
     }
 
     void dump_analysis() {
