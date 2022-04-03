@@ -187,11 +187,12 @@ struct InfoSource {
 
         auto sb = appender!string;
 
-        sb ~= format("InfoSource(node: %s, commit_id: %s", node, commit_id);
+        sb ~= format("InfoSource(node: %s, commit_id: %s)", node, commit_id);
 
         return sb.array;
     }
 }
+alias InfoSources = InfoSource[];
 
 struct CommitTrace {
     public Snapshot[] snapshots;
