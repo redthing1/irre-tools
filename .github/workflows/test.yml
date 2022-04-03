@@ -15,6 +15,5 @@ jobs:
         uses: dlang-community/setup-dlang@v1
         with:
           compiler: ${{ matrix.dc }}
-      - run: cat dub.sdl
       - run: . ./script/build_tools.sh
       - run: cd src/irretool && dub test --arch=${{ matrix.arch }}
