@@ -188,8 +188,12 @@ class VirtualMachine {
         case OpCode.SUP: {
                 immutable UWORD val = (ins.a2 | (ins.a3 << 8));
                 immutable UWORD shifted_val = val << 16; // upper 16 bits of a word
-                reg[ins.a1] = (reg[ins.a1] & 0x0000FFFF) | shifted_val; // set only upper 16 bits of a1
-                commit_reg(ins.a1, reg[ins.a1], [Commit.Source(InfoType.Immediate, ImmediatePosBC, val)]);
+                immutable UWORD existing_data = reg[ins.a1];
+                reg[ins.a1] = (existing_data & 0x0000FFFF) | shifted_val; // set only upper 16 bits of a1
+                auto source_imm = [Commit.Source(InfoType.Immediate, ImmediatePosBC, val)];
+                auto source_reg = commit_source_regs([ins.a1], [existing_data]);
+                auto sources = source_imm ~ source_reg;
+                commit_reg(ins.a1, reg[ins.a1], sources);
                 break;
             }
         case OpCode.MOV: {
