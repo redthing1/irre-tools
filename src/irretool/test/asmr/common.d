@@ -57,6 +57,14 @@ ubyte[] compile_program(string source) {
     return compiled_data;
 }
 
+ubyte[] compile_program(TestProgram prog) {
+    try {
+        return compile_program(prog.source);
+    } catch (Exception e) {
+        assert(0, format("program %s failed to compile: %s", prog.name, e));
+    }
+}
+
 void ensure_programs_assemble(immutable TestProgram[] progs) {
     foreach (prg; progs) {
         try {
