@@ -22,4 +22,6 @@ configuration "unittest" {
 
     // add irre test file path as string importable
     stringImportPaths "../../test"
+
+    preBuildCommands "pushd ../.. && python3 ./script/make_tests.py && popd"
 }
