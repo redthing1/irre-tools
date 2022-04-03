@@ -43,6 +43,9 @@ struct InfoNode {
             case InfoType.Memory:
                 sb ~= format("mem[%04x]=%02x", data, value);
                 break;
+            case InfoType.Immediate:
+                sb ~= format("i=%04x", value);
+                break;
             default: assert(0);
         }
 
