@@ -38,9 +38,9 @@ func1:
 
 func2:
     ; test setting 32-bit immediates
-    ; set instruction only takes 24 bits, so we have to use set then asi
-    set r9 $bbccdd  ; set lower 24 bits
-    asi r9 $aa #24  ; set upper 8 bits
+    set r9 $ccdd  ; set lower 16 bits
+    sup r9 $aabb  ; set upper 16 bits
+    int $a0
     ret
 
 ; indicate that items here should be placed in the data section

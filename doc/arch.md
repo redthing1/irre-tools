@@ -417,11 +417,12 @@ The bits of each component of these instructions are laid out so that the lower 
 | `ash` | 0x08&nbsp;rA&nbsp;rB&nbsp;rC  | Arithmetically shift the value in rB by the number of bits represented by the signed quantity in rC. If this value is positive, shift the value contained in rB left by this many bits; if it is negative the shift will be to the right by the absolute value of the value in rC. Newly vacated bits will be zeroed in the former case and be a duplicate of the most significant bit in the latter. If the value in rC is outside of the range (-32, 32) the result is undefined. |
 | `tcu` | 0x09&nbsp;rA&nbsp;rB&nbsp;rC  | Subtract the unsigned value stored in rC from the unsigned value stored in rB with arbitrary precision and store the sign of the result in rA. |
 | `tcs` | 0x0a&nbsp;rA&nbsp;rB&nbsp;rC  | Subtract the signed value stored in rC from the signed value stored in rB with arbitrary precision and store the sign of the result in rA. |
-| `set` | 0x0b&nbsp;rA&nbsp;v0         | Store, with sign extension, the 16-bit signed value v0 into rA. |
+| `set` | 0x0b&nbsp;rA&nbsp;v0         | Store the 16-bit unsigned value v0 into rA. |
 | `mov` | 0x0c&nbsp;rA&nbsp;rB          | Copy the value from rB into rA. |
 | `ldw` | 0x0d&nbsp;rA&nbsp;rB&nbsp;v0  | Read a 32-bit word from the memory address referred to by rB, signed offset by v0, and store the value into rA. If the address is not word-aligned, the result is implementation-defined. |
 | `stw` | 0x0e&nbsp;rA&nbsp;rB&nbsp;v0  | Store the value in rA as a 32-bit value at the memory address referred to by rB, signed offset by v0. If the address is not word-aligned, the result is implementation-defined. |
-| `asi` | 0x11&nbsp;rA&nbsp;v0&nbsp;v1  | Left logical shift v0 by v1 bits, then add that quantity to the value stored in rA. If v1 is outside the range (0, 32), the result is undefined. |
+| `asi` | 0x20&nbsp;rA&nbsp;v0&nbsp;v1  | Left logical shift v0 by v1 bits, then add that quantity to the value stored in rA. If v1 is outside the range (0, 32), the result is undefined. |
+| `sup` | 0x21&nbsp;rA&nbsp;v0         | Store the 16-bit unsigned value v0 into the upper 16 bits rA, leaving the lower 16 bits untouched. |
 | `hlt` | 0xff         | Halt execution. |
 | `int` | 0x71&nbsp;v0         | Raise an interrupt with the 24-bit unsigned code in v0. |
 | `jmi` | 0x10&nbsp;v0         | Unconditionally branch to the 24-bit unsigned address in v0. |
