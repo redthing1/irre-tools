@@ -40,7 +40,6 @@ func2:
     ; test setting 32-bit immediates
     set r9 $ccdd  ; set lower 16 bits
     sup r9 $aabb  ; set upper 16 bits
-    int $a0
     ret
 
 ; indicate that items here should be placed in the data section
