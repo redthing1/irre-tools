@@ -24,6 +24,12 @@ enum InfoType {
     Immediate,
 }
 
+struct InfoNode {
+    InfoType type; // information type: register or memory?
+    UWORD data; // can be register id or memory address
+    UWORD value; // can be register value or memory value
+}
+
 struct Commit {
     private enum string[InfoType] _type_abbreviations = [
             InfoType.Combined: "cmb",
@@ -31,12 +37,8 @@ struct Commit {
             InfoType.Memory: "mem",
             InfoType.Immediate: "imm",
         ];
-
-    struct Source {
-        public InfoType type; // register or memory source?
-        public UWORD data; // can be register id or memory address
-        public UWORD value; // can be register value or memory value
-    }
+    
+    alias Source = InfoNode;
 
     InfoType type;
     UWORD[] reg_ids;
@@ -65,6 +67,34 @@ struct Commit {
         c.mem_addrs = mem_addrs;
         c.mem_values = mem_values;
         return c;
+    }
+
+    InfoNode[] as_nodes() {
+        InfoNode[] nodes;
+        
+        // check info type
+        switch (type) {
+            case InfoType.Combined:
+                assert(0, "combined commit is not supported to create info nodes");
+            case InfoType.Register:
+                // add a node for each register
+                for (auto i = 0; i < reg_ids.length; i++) {
+                    auto node = InfoNode(InfoType.Register, reg_ids[i], reg_values[i]);
+                    nodes ~= node;
+                }
+                break;
+            case InfoType.Memory:
+                // add a node for each memory address
+                for (auto i = 0; i < mem_addrs.length; i++) {
+                    auto node = InfoNode(InfoType.Memory, mem_addrs[i], mem_values[i]);
+                    nodes ~= node;
+                }
+                break;
+            default:
+                assert(0, "invalid commit info type for creating info nodes");
+        }
+
+        return nodes;
     }
 
     string toString() const {
