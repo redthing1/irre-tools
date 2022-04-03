@@ -1,4 +1,4 @@
-; ift test #1
+; ift test #2
 
 %entry :main
 
