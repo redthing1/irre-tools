@@ -92,6 +92,14 @@ class IFTAnalyzer {
                     }
                 }
             }
+            // if we're still here, that means we haven't found a commit that touches this memory position
+            // it's possible the memory wasn't touched because it was already in place before the initial snapshot
+            // to check this, we'll verify if the expected memory value can be found in the initial snapshot
+            if (snap_init.mem[node.data] == node.value) {
+                // the expected memory value is the same as the initial memory value
+                // this means the memory was already in place
+                return -1;
+            }
             break;
         default:
             assert(0);
@@ -139,6 +147,14 @@ class IFTAnalyzer {
 
             // get last touching commit for this node
             auto touching_commit_ix = find_commit_last_touching(curr.node, curr.commit_ix);
+            if (touching_commit_ix < 0) {
+                // this means some information was found to have been traced to the initial snapshot
+                // this counts as a leaf node
+
+                terminal_leaves ~= InfoSource(curr.node, -1); // the current node came from the initial snapshot
+                continue;
+            }
+
             auto touching_commit = trace.commits[touching_commit_ix];
             // writefln("  found last touching commit (#%s) for node: %s: %s",
             //     touching_commit_ix, curr, touching_commit);
