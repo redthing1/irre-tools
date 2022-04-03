@@ -50,7 +50,7 @@ class TerminalDevice : MappedDevice {
                 return 0;
             }
         default:
-            return 1; // unhandled
+            return -1; // unhandled
         }
     }
 }

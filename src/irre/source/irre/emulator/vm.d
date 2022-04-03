@@ -313,6 +313,12 @@ class VirtualMachine {
                     // TODO: UNK_DEVICE interrupt
                 }
 
+                // commit
+                auto source_regs = commit_source_regs([ins.a1, ins.a2, ins.a3], [reg[ins.a1], reg[ins.a2], reg[ins.a3]]);
+                auto source_device = Commit.Source(InfoType.Device, device_id, device_command);
+                auto sources = source_regs ~ source_device;
+                commit_regs([ins.a1], [reg[ins.a1]], sources);
+
                 break;
             }
         case OpCode.INT: {

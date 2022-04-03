@@ -22,6 +22,7 @@ enum InfoType {
     Register,
     Memory,
     Immediate,
+    Device,
 }
 
 enum ImmediatePositions : UWORD {
@@ -58,6 +59,9 @@ struct InfoNode {
             case InfoType.Immediate:
                 sb ~= format("i=%04x", value);
                 break;
+            case InfoType.Device:
+                sb ~= format("dev#%02x(%02x)", data, value);
+                break;
             default: assert(0);
         }
 
@@ -71,6 +75,7 @@ struct Commit {
             InfoType.Register: "reg",
             InfoType.Memory: "mem",
             InfoType.Immediate: "imm",
+            InfoType.Device: "dev",
         ];
     
     alias Source = InfoNode;
@@ -168,16 +173,18 @@ struct Commit {
         sb ~= format(" <source: ");
         for (auto i = 0; i < sources.length; i++) {
             auto source = sources[i];
-            string source_type_str = _type_abbreviations[source.type];
-            switch (source.type) {
-            case InfoType.Register : sb ~= format(" %s=%04x", source.data.to!Register, source.value);
-                break;
-            case InfoType.Memory : sb ~= format(" mem[%04x]=%02x", source.data, source.value);
-                break;
-            case InfoType.Immediate : sb ~= format(" i=%04x", source.value);
-                break;
-            default : assert(0);
-            }
+            // string source_type_str = _type_abbreviations[source.type];
+            // switch (source.type) {
+            // case InfoType.Register : sb ~= format(" %s=%04x", source.data.to!Register, source.value);
+            //     break;
+            // case InfoType.Memory : sb ~= format(" mem[%04x]=%02x", source.data, source.value);
+            //     break;
+            // case InfoType.Immediate : sb ~= format(" i=%04x", source.value);
+            //     break;
+            // case InfoType.Device : sb ~= format(" dev#%02x(%02x)", source.data, source.value);
+            // default : assert(0);
+            // }
+            sb ~= format(" %s", source.toString());
         }
         sb ~= format(">");
 
