@@ -18,7 +18,7 @@ alias ARG = BYTE;
 enum INSTRUCTION_SIZE = WORD.sizeof; // 4-byte (WORD) instructions
 
 enum OpCode : ARG {
-    // set 1
+    // basics (core set 1)
     NOP = 0x00, // nop
     ADD = 0x01, // add
     SUB = 0x02, // sub
@@ -37,11 +37,11 @@ enum OpCode : ARG {
     // LDB = 0x0f, [deprecated]
     // STB = 0x10, [deprecated]
 
-    // set 2
+    // sys (core set 2)
     HLT = 0xff, // halt
     INT = 0x71, // interrupt
 
-    // set 3
+    // branching (core set 3)
     JMI = 0x10, // unconditional jump (imm)
     JMP = 0x11, // unconditional jump (reg)
     // BIF = 0x13, // branch if equal (imm) [deprecated]
@@ -50,9 +50,14 @@ enum OpCode : ARG {
     CAL = 0x1a, // branch, link in LR
     RET = 0x1b, // jump to LR
 
-    // set 4
+    // logic extensions
     ASI = 0x20, // add shifted immediate
     SUP = 0x21, // set upper 16
+
+    // math extensions
+    MUL = 0x30, // multiply
+    DIV = 0x31, // divide
+    MOD = 0x32, // modulo
 
     // regular-ext device api
     SND = 0xfd, // send
@@ -177,8 +182,14 @@ class InstructionEncoding {
             case OpCode.STW: return InstructionInfo(OpCode.STW, Operands.REG_REG_IMM, 1);
             // case OpCode.LDB: return InstructionInfo(OpCode.LDB, Operands.REG_REG, 1);
             // case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG, 1);
+            
             case OpCode.ASI: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
             case OpCode.SUP: return InstructionInfo(OpCode.SUP, Operands.REG_IMM, 1);
+
+            case OpCode.MUL: return InstructionInfo(OpCode.MUL, Operands.REG_REG_REG, 1);
+            case OpCode.DIV: return InstructionInfo(OpCode.DIV, Operands.REG_REG_REG, 1);
+            case OpCode.MOD: return InstructionInfo(OpCode.MOD, Operands.REG_REG_REG, 1);
+
             // REGULAR_AD instruction set
             case OpCode.HLT: return InstructionInfo(OpCode.HLT, Operands.NONE, 1);
             case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.IMM, 1);
