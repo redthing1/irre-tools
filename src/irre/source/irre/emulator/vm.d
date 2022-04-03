@@ -12,6 +12,7 @@ enum MEMORY_SIZE = 64 * 1024; // 65K
 
 class VirtualMachine {
     public UWORD[REGISTER_COUNT] reg;
+    public UWORD[REGISTER_COUNT] prev_reg;
     public BYTE[] mem;
     public bool executing = true;
     public BranchStatus last_branch_status = BranchStatus.NO_BRANCH; // whether the last instruction took a branch
@@ -97,12 +98,36 @@ class VirtualMachine {
 
     public void execute_instruction(Instruction ins) {
         void commit_binary_op_regs() {
-            commit_reg(ins.a1, reg[ins.a1], commit_source_regs([ins.a2, ins.a3], [reg[ins.a2], reg[ins.a3]]));
+            // normally, if a1 is not a2 or a3, we can just commit:
+            // dest: a1, source: a2, a3
+            // but if a1 is a2 or a3, then
+            // dest: a1, source: a2, a3, prev_a1
+            auto is_simple = (ins.a1 != ins.a2) && (ins.a1 != ins.a3);
+
+            Commit.Source[] sources;
+            if (is_simple) {
+                sources = commit_source_regs(
+                    [ins.a2, ins.a3],
+                    [reg[ins.a2], reg[ins.a3]]);
+            } else {
+                if (ins.a1 == ins.a2) {
+                    // arg2 is the same as arg1
+                    // the value of arg2 was thus the previous value of arg1
+                    sources ~= Commit.Source(InfoType.Register, ins.a1, prev_reg[ins.a1]);
+                }
+                if (ins.a1 == ins.a3) {
+                    // arg3 is the same as arg1
+                    // the value of arg3 was thus the previous value of arg1
+                    sources ~= Commit.Source(InfoType.Register, ins.a1, prev_reg[ins.a1]);
+                }
+            }
+            commit_reg(ins.a1, reg[ins.a1], sources);
         }
 
         last_branch_status = BranchStatus.NO_BRANCH; // default, no branch
         last_executed_instruction = ins; // save last executed instruction for logging
         last_program_counter = reg[reg_pc]; // save program counter for logging
+        prev_reg = reg; // save previous register state
         switch (ins.op) {
         case OpCode.NOP:
             // literally do nothing
@@ -182,7 +207,9 @@ class VirtualMachine {
         case OpCode.SET: {
                 immutable UWORD val = (ins.a2 | (ins.a3 << 8));
                 reg[ins.a1] = val;
-                commit_reg(ins.a1, reg[ins.a1], [Commit.Source(InfoType.Immediate, ImmediatePosBC, val)]);
+                commit_reg(ins.a1, reg[ins.a1], [
+                        Commit.Source(InfoType.Immediate, ImmediatePosBC, val)
+                    ]);
                 break;
             }
         case OpCode.SUP: {
@@ -190,7 +217,9 @@ class VirtualMachine {
                 immutable UWORD shifted_val = val << 16; // upper 16 bits of a word
                 immutable UWORD existing_data = reg[ins.a1];
                 reg[ins.a1] = (existing_data & 0x0000FFFF) | shifted_val; // set only upper 16 bits of a1
-                auto source_imm = [Commit.Source(InfoType.Immediate, ImmediatePosBC, val)];
+                auto source_imm = [
+                    Commit.Source(InfoType.Immediate, ImmediatePosBC, val)
+                ];
                 auto source_reg = commit_source_regs([ins.a1], [existing_data]);
                 auto sources = source_imm ~ source_reg;
                 commit_reg(ins.a1, reg[ins.a1], sources);
@@ -198,7 +227,9 @@ class VirtualMachine {
             }
         case OpCode.MOV: {
                 reg[ins.a1] = reg[ins.a2];
-                commit_reg(ins.a1, reg[ins.a1], commit_source_regs([ins.a2], [reg[ins.a2]]));
+                commit_reg(ins.a1, reg[ins.a1], commit_source_regs([ins.a2], [
+                            reg[ins.a2]
+                        ]));
                 break;
             }
         case OpCode.LDW: {
@@ -206,13 +237,19 @@ class VirtualMachine {
                 immutable byte offset = ins.a3;
                 reg[ins.a1] = mem[addr + offset + 0] << 0 | mem[addr + offset + 1]
                     << 8 | mem[addr + offset + 2] << 16 | mem[addr + offset + 3] << 24;
-                
+
                 // complex commit
                 auto source_regs = commit_source_regs([ins.a2], [reg[ins.a2]]);
                 auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePosC, offset);
                 auto source_mem = commit_source_mem(
-                    [addr + offset + 0, addr + offset + 1, addr + offset + 2, addr + offset + 3],
-                    [mem[addr + offset + 0], mem[addr + offset + 1], mem[addr + offset + 2], mem[addr + offset + 3]]);
+                    [
+                    addr + offset + 0, addr + offset + 1, addr + offset + 2,
+                    addr + offset + 3
+                ],
+                [
+                    mem[addr + offset + 0], mem[addr + offset + 1],
+                    mem[addr + offset + 2], mem[addr + offset + 3]
+                ]);
                 auto sources = source_regs ~ source_imm ~ source_mem;
                 // registers a1 is modified, source is memory and address and offset
                 commit_reg(ins.a1, reg[ins.a1], sources);
@@ -231,43 +268,52 @@ class VirtualMachine {
                 mem[pos3] = (reg[ins.a1] >> 24) & 0xff;
 
                 // complex commit
-                auto source_regs = commit_source_regs([ins.a1, ins.a2], [reg[ins.a1], reg[ins.a2]]);
+                auto source_regs = commit_source_regs([ins.a1, ins.a2], [
+                        reg[ins.a1], reg[ins.a2]
+                    ]);
                 auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePosC, offset);
                 auto sources = source_regs ~ source_imm;
                 // memory is modified, source is registers source data, address, and offset
-                commit_mem([pos0, pos1, pos2, pos3], [mem[pos0], mem[pos1], mem[pos2], mem[pos3]], sources);
+                commit_mem([pos0, pos1, pos2, pos3], [
+                        mem[pos0], mem[pos1], mem[pos2], mem[pos3]
+                    ], sources);
                 break;
             }
         case OpCode.ASI: {
-            immutable UWORD existing = reg[ins.a1];
-            immutable ubyte val = ins.a2;
-            immutable byte shift = ins.a3;
+                immutable UWORD existing = reg[ins.a1];
+                immutable ubyte val = ins.a2;
+                immutable byte shift = ins.a3;
 
-            if (shift >= 0 && shift < 32) {
-                UWORD shifted = val << shift;
-                reg[ins.a1] = existing + shifted;
+                if (shift >= 0 && shift < 32) {
+                    UWORD shifted = val << shift;
+                    reg[ins.a1] = existing + shifted;
+                }
+
+                auto source_regs = commit_source_regs([ins.a1], [reg[ins.a1]]);
+                auto source_imm = [
+                    Commit.Source(InfoType.Immediate, ImmediatePosB, val),
+                    Commit.Source(InfoType.Immediate, ImmediatePosC, shift)
+                ];
+                auto sources = source_regs ~ source_imm;
+                commit_reg(ins.a1, reg[ins.a1], sources);
+                break;
             }
-
-            auto source_regs = commit_source_regs([ins.a1], [reg[ins.a1]]);
-            auto source_imm = [
-                Commit.Source(InfoType.Immediate, ImmediatePosB, val),
-                Commit.Source(InfoType.Immediate, ImmediatePosC, shift)];
-            auto sources = source_regs ~ source_imm;
-            commit_reg(ins.a1, reg[ins.a1], sources);
-            break;
-        }
         case OpCode.JMI: {
                 immutable UWORD addr = cast(UWORD)((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
-                commit_reg(Register.PC, reg[Register.PC], [Commit.Source(InfoType.Immediate, ImmediatePosABC, addr)]);
+                commit_reg(Register.PC, reg[Register.PC], [
+                        Commit.Source(InfoType.Immediate, ImmediatePosABC, addr)
+                    ]);
                 break;
             }
         case OpCode.JMP: {
                 immutable UWORD addr = reg[ins.a1];
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
-                commit_reg(Register.PC, reg[Register.PC], commit_source_regs([ins.a1], [reg[ins.a1]]));
+                commit_reg(Register.PC, reg[Register.PC], commit_source_regs([
+                        ins.a1
+                    ], [reg[ins.a1]]));
                 break;
             }
         case OpCode.BVE: {
@@ -281,7 +327,9 @@ class VirtualMachine {
                 } else {
                     last_branch_status = BranchStatus.NOT_TAKEN;
                 }
-                auto source_regs = commit_source_regs([ins.a1, ins.a2], [reg[ins.a1], reg[ins.a2]]);
+                auto source_regs = commit_source_regs([ins.a1, ins.a2], [
+                        reg[ins.a1], reg[ins.a2]
+                    ]);
                 auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePosC, b);
                 commit_reg(Register.PC, reg[Register.PC], source_regs ~ source_imm);
                 break;
@@ -297,7 +345,9 @@ class VirtualMachine {
                 } else {
                     last_branch_status = BranchStatus.NOT_TAKEN;
                 }
-                auto source_regs = commit_source_regs([ins.a1, ins.a2], [reg[ins.a1], reg[ins.a2]]);
+                auto source_regs = commit_source_regs([ins.a1, ins.a2], [
+                        reg[ins.a1], reg[ins.a2]
+                    ]);
                 auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePosC, b);
                 commit_reg(Register.PC, reg[Register.PC], source_regs ~ source_imm);
                 break;
@@ -308,8 +358,12 @@ class VirtualMachine {
                 reg[Register.LR] = reg[Register.PC] + cast(uint) INSTRUCTION_SIZE;
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
-                commit_regs([Register.PC, Register.LR], [reg[Register.PC], reg[Register.LR]],
-                    commit_source_regs([ins.a1, Register.PC], [reg[ins.a1], reg[Register.PC]]));
+                commit_regs([Register.PC, Register.LR], [
+                        reg[Register.PC], reg[Register.LR]
+                    ],
+                    commit_source_regs([ins.a1, Register.PC], [
+                            reg[ins.a1], reg[Register.PC]
+                        ]));
                 break;
             }
         case OpCode.RET: {
@@ -322,7 +376,9 @@ class VirtualMachine {
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
                 reg[Register.LR] = 0; // clear LR
-                commit_regs([Register.PC, Register.LR], [reg[Register.PC], reg[Register.LR]],
+                commit_regs([Register.PC, Register.LR], [
+                        reg[Register.PC], reg[Register.LR]
+                    ],
                     commit_source_regs([Register.LR], [reg[Register.LR]]));
                 break;
             }
@@ -342,7 +398,9 @@ class VirtualMachine {
                 }
 
                 // commit
-                auto source_regs = commit_source_regs([ins.a1, ins.a2, ins.a3], [reg[ins.a1], reg[ins.a2], reg[ins.a3]]);
+                auto source_regs = commit_source_regs([ins.a1, ins.a2, ins.a3], [
+                        reg[ins.a1], reg[ins.a2], reg[ins.a3]
+                    ]);
                 auto source_device = Commit.Source(InfoType.Device, device_id, device_command);
                 auto sources = source_regs ~ source_device;
                 commit_regs([ins.a1], [reg[ins.a1]], sources);
