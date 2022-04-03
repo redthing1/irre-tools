@@ -16,6 +16,8 @@ class IFTAnalyzer {
     Snapshot snap_init;
     Snapshot snap_final;
     Commit clobber;
+    InfoSources[Register] clobbered_regs_sources;
+    InfoSources[UWORD] clobbered_mem_sources;
 
     this(CommitTrace commit_trace) {
         trace = commit_trace;
@@ -173,7 +175,7 @@ class IFTAnalyzer {
 
         // writefln("found %d sources for R0: %s", r0_sources.length, r0_sources);
 
-        // 1. backtrace all registers
+        // 1. backtrace all clobbered registers
         for (auto clobbered_i = 0; clobbered_i < clobber.reg_ids.length; clobbered_i++) {
             // get id of register that is clobbered
             auto reg_id = clobber.reg_ids[clobbered_i].to!Register;
@@ -185,7 +187,26 @@ class IFTAnalyzer {
             // now start backtracing
             auto reg_sources = backtrace_information_flow(reg_final_node);
 
-            writefln("sources for reg %s: %s", reg_id, reg_sources);
+            // writefln("sources for reg %s: %s", reg_id, reg_sources);
+
+            clobbered_regs_sources[reg_id] = reg_sources;
+        }
+
+        // 2. backtrace all clobbered memory
+        for (auto clobbered_i = 0; clobbered_i < clobber.mem_addrs.length; clobbered_i++) {
+            // get id of memory that is clobbered
+            auto mem_addr = clobber.mem_addrs[clobbered_i];
+            auto mem_val = clobber.mem_values[clobbered_i];
+
+            // create an info node for this point
+            auto mem_final_node = InfoNode(InfoType.Memory, mem_addr, mem_val);
+
+            // now start backtracing
+            auto mem_sources = backtrace_information_flow(mem_final_node);
+
+            // writefln("sources for mem %s: %s", mem_addr, mem_sources);
+
+            clobbered_mem_sources[mem_addr] = mem_sources;
         }
     }
 
@@ -207,6 +228,25 @@ class IFTAnalyzer {
             auto reg_id = clobber.reg_ids[i].to!Register;
             auto reg_value = clobber.reg_values[i];
             writefln("   reg %s <- %04x", reg_id, reg_value);
+        }
+
+        // dump backtraces
+        writefln(" backtraces:");
+
+        // registers
+        foreach (reg_id; clobbered_regs_sources.byKey) {
+            writefln("  reg %s:", reg_id);
+            foreach (source; clobbered_regs_sources[reg_id]) {
+                writefln("   %s", source);
+            }
+        }
+
+        // memory
+        foreach (mem_addr; clobbered_mem_sources.byKey) {
+            writefln("  mem[%04x]:", mem_addr);
+            foreach (source; clobbered_mem_sources[mem_addr]) {
+                writefln("   %s", source);
+            }
         }
     }
 }
