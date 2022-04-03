@@ -1,9 +1,9 @@
-module irretool.test.vm_basic;
+module irretool.test.vm.basic;
 
 import irre.emulator.vm;
 import irre.emulator.hypervisor;
 
-@("vm_basic.init")
+@("vm.basic.init")
 unittest {
     auto vm = new VirtualMachine();
     vm.initialize();
