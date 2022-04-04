@@ -4,7 +4,7 @@ public import irre.encoding.instructions;
 import irre.encoding.rega;
 import std.algorithm.mutation;
 import irre.emulator.device;
-import irre.emulator.commit;
+import irre.analysis.commit;
 import irre.disassembler.reader;
 import irre.disassembler.dumper;
 

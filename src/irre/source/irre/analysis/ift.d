@@ -9,7 +9,7 @@ import std.container.dlist;
 import core.time : MonoTime, Duration;
 
 import irre.util;
-import irre.emulator.commit;
+import irre.analysis.commit;
 static import irre.encoding.instructions;
 
 alias IrreIFTAnalysis = IFTAnalysis!(
