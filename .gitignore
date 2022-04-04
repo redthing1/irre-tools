@@ -38,3 +38,5 @@ docs/
 
 trace.def
 trace.log
+
+callgrind.out*
