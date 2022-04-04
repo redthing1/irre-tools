@@ -17,6 +17,9 @@ class Reader {
         auto code_data = compiled_data[code_start_offset .. $];
         auto raw_instructions = decoder.read_code(code_data);
 
+        // TODO: if an instruction fails to decode, we should maybe throw an exception?
+        // if the instructions that fail to decode are at the end, treat them as data
+
         // decompile all instructions
         auto statements = appender!(AbstractStatement[]);
         foreach (instruction; raw_instructions) {
