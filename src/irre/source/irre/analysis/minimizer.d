@@ -17,7 +17,7 @@ import irre.analysis.ift;
 
 class ProgramMinimizer {
     ProgramAst source_program;
-    IFTAnalyzer ift;
+    IrreIFTAnalysis.IFTAnalyzer ift;
     long log_freeze1s;
     long log_freeze2s;
     long log_freeze_attempts;
@@ -25,7 +25,7 @@ class ProgramMinimizer {
     bool[Register] log_frozen_registers;
     ulong log_analysis_time;
 
-    this(ProgramAst program, IFTAnalyzer ift) {
+    this(ProgramAst program, IrreIFTAnalysis.IFTAnalyzer ift) {
         source_program = program;
         this.ift = ift;
     }
