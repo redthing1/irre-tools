@@ -39,11 +39,12 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
         Commit clobber;
         InfoSources[TRegSet] clobbered_regs_sources;
         InfoSources[TRegWord] clobbered_mem_sources;
+        IFTDataType included_data = IFTDataType.All;
+
         long log_visited_info_nodes;
         long log_commits_walked;
-        // Duration log_analysis_time;
+        long log_found_sources;
         ulong log_analysis_time;
-        IFTDataType included_data = IFTDataType.All;
 
         enum IFTDataType {
             None = (0 << 0),
@@ -78,6 +79,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
 
             log_visited_info_nodes = 0;
             log_commits_walked = 0;
+            log_found_sources = 0;
 
             // calculate diffs and clobber
             calculate_clobber();
@@ -246,6 +248,11 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
 
             InfoSource[] terminal_leaves;
 
+            pragma(inline, true) void add_info_leaf(InfoSource leaf) {
+                terminal_leaves ~= leaf;
+                log_found_sources++;
+            }
+
             // 3. queue our initial node
             unvisited.insertFront(InfoNodeWalk(final_node, final_node_last_touch_ix));
 
@@ -263,7 +270,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                     // this is a leaf source, so we want to record it
                     // all data comes from some sort of leaf source
                     auto leaf = InfoSource(curr.node, curr.commit_ix);
-                    terminal_leaves ~= leaf;
+                    add_info_leaf(leaf);
                     mixin(LOG_TRACE!(`format("   leaf (source): %s", leaf)`));
                     continue;
                 }
@@ -275,7 +282,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                     // this counts as a leaf node
 
                     auto leaf = InfoSource(curr.node, -1); // the current node came from the initial snapshot
-                    terminal_leaves ~= leaf;
+                    add_info_leaf(leaf);
                     mixin(LOG_TRACE!(`format("   leaf (pre-initial): %s", leaf)`));
                     continue;
                 }
@@ -385,14 +392,11 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
             // dump backtraces
             writefln(" backtraces:");
 
-            long log_found_sources = 0;
-
             // registers
             foreach (reg_id; clobbered_regs_sources.byKey) {
                 writefln("  reg %s:", reg_id);
                 foreach (source; clobbered_regs_sources[reg_id]) {
                     writefln("   %s", source);
-                    log_found_sources++;
                 }
             }
 
@@ -401,10 +405,11 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 writefln("  mem[%04x]:", mem_addr);
                 foreach (source; clobbered_mem_sources[mem_addr]) {
                     writefln("   %s", source);
-                    log_found_sources++;
                 }
             }
+        }
 
+        void dump_summary() {
             // summary
             writefln(" summary:");
             writefln("  num commits:            %8d", trace.commits.length);

@@ -257,6 +257,7 @@ int cmd_emu(ProgramArgs args) {
             if (!ift_quiet) {
                 ift_analyzer.dump_analysis();
             }
+            ift_analyzer.dump_summary();
 
             if (checkpoint_file != null) {
                 // we can save a checkpoint
