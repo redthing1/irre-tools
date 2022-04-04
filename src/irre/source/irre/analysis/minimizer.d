@@ -145,7 +145,7 @@ class ProgramMinimizer {
                                 stmt.a2 = ValueImm((final_reg_value & 0x00ff));
                                 stmt.a3 = ValueImm((final_reg_value & 0xff00) >> 8);
 
-                                log_put(format("   replacing with SET %s, %s, %s", stmt.a1, stmt.a2, stmt.a3));
+                                log_put(format("    replacing 1-freeze SET %s=$%04x", result_reg_id, final_reg_value));
                             } else {
                                 // this won't fit in a single SET instruction
                                 // we need a SET, SUP sequence.
@@ -203,7 +203,9 @@ class ProgramMinimizer {
                                         stmt.op = OpCode.SUP;
                                         stmt.a1 = ValueImm(result_reg_id);
                                         stmt.a2 = ValueImm((val_upper & 0x00ff));
-                                        stmt.a3 = ValueImm((val_upper & 0xff00) >> 8);                                        
+                                        stmt.a3 = ValueImm((val_upper & 0xff00) >> 8);
+                                        
+                                        log_put(format("    replacing 2-freeze SET/SUP %s=$%08x", result_reg_id, final_reg_value));
 
                                         break;
                                     } else {
