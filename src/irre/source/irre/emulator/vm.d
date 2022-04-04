@@ -11,12 +11,7 @@ import irre.disassembler.dumper;
 enum MEMORY_SIZE = 64 * 1024; // 65K
 
 mixin(IrreInfoLog.GenAliases!("IrreInfoLog"));
-alias ImmediatePositions = IrreInfoLog.ImmediatePositions;
-alias ImmediatePosA = IrreInfoLog.ImmediatePosA;
-alias ImmediatePosB = IrreInfoLog.ImmediatePosB;
-alias ImmediatePosC = IrreInfoLog.ImmediatePosC;
-alias ImmediatePosABC = IrreInfoLog.ImmediatePosABC;
-alias ImmediatePosBC = IrreInfoLog.ImmediatePosBC;
+alias ImmediatePos = IrreInfoLog.ImmediatePos;
 
 class VirtualMachine {
     public UWORD[REGISTER_COUNT] reg;
@@ -216,7 +211,7 @@ class VirtualMachine {
                 immutable UWORD val = (ins.a2 | (ins.a3 << 8));
                 reg[ins.a1] = val;
                 commit_reg(ins.a1, reg[ins.a1], [
-                        Commit.Source(InfoType.Immediate, ImmediatePosBC, val)
+                        Commit.Source(InfoType.Immediate, ImmediatePos.BC, val)
                     ]);
                 break;
             }
@@ -226,7 +221,7 @@ class VirtualMachine {
                 immutable UWORD existing_data = reg[ins.a1];
                 reg[ins.a1] = (existing_data & 0x0000FFFF) | shifted_val; // set only upper 16 bits of a1
                 auto source_imm = [
-                    Commit.Source(InfoType.Immediate, ImmediatePosBC, val)
+                    Commit.Source(InfoType.Immediate, ImmediatePos.BC, val)
                 ];
                 auto source_reg = commit_source_regs([ins.a1], [existing_data]);
                 auto sources = source_imm ~ source_reg;
@@ -248,7 +243,7 @@ class VirtualMachine {
 
                 // complex commit
                 auto source_regs = commit_source_regs([ins.a2], [reg[ins.a2]]);
-                auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePosC, offset);
+                auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePos.C, offset);
                 auto source_mem = commit_source_mem(
                     [
                     addr + offset + 0, addr + offset + 1, addr + offset + 2,
@@ -279,7 +274,7 @@ class VirtualMachine {
                 auto source_regs = commit_source_regs([ins.a1, ins.a2], [
                         reg[ins.a1], reg[ins.a2]
                     ]);
-                auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePosC, offset);
+                auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePos.C, offset);
                 auto sources = source_regs ~ source_imm;
                 // memory is modified, source is registers source data, address, and offset
                 commit_mem([pos0, pos1, pos2, pos3], [
@@ -299,8 +294,8 @@ class VirtualMachine {
 
                 auto source_regs = commit_source_regs([ins.a1], [reg[ins.a1]]);
                 auto source_imm = [
-                    Commit.Source(InfoType.Immediate, ImmediatePosB, val),
-                    Commit.Source(InfoType.Immediate, ImmediatePosC, shift)
+                    Commit.Source(InfoType.Immediate, ImmediatePos.B, val),
+                    Commit.Source(InfoType.Immediate, ImmediatePos.C, shift)
                 ];
                 auto sources = source_regs ~ source_imm;
                 commit_reg(ins.a1, reg[ins.a1], sources);
@@ -326,7 +321,7 @@ class VirtualMachine {
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
                 commit_reg(Register.PC, reg[Register.PC], [
-                        Commit.Source(InfoType.Immediate, ImmediatePosABC, addr)
+                        Commit.Source(InfoType.Immediate, ImmediatePos.ABC, addr)
                     ]);
                 break;
             }
@@ -353,7 +348,7 @@ class VirtualMachine {
                 auto source_regs = commit_source_regs([ins.a1, ins.a2], [
                         reg[ins.a1], reg[ins.a2]
                     ]);
-                auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePosC, b);
+                auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePos.C, b);
                 commit_reg(Register.PC, reg[Register.PC], source_regs ~ source_imm);
                 break;
             }
@@ -371,7 +366,7 @@ class VirtualMachine {
                 auto source_regs = commit_source_regs([ins.a1, ins.a2], [
                         reg[ins.a1], reg[ins.a2]
                     ]);
-                auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePosC, b);
+                auto source_imm = Commit.Source(InfoType.Immediate, ImmediatePos.C, b);
                 commit_reg(Register.PC, reg[Register.PC], source_regs ~ source_imm);
                 break;
             }

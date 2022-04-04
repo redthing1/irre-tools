@@ -50,17 +50,21 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
         Reserved4,
     }
 
-    enum ImmediatePositions : TRegWord {
+    enum ImmediatePos : TRegWord {
         NONE = (0 << 0),
         A = (1 << 0),
         B = (1 << 1),
         C = (1 << 2),
+        D = (1 << 3),
+        E = (1 << 4),
+        F = (1 << 5),
+        G = (1 << 6),
+        H = (1 << 7),
+
+        BC = B | C,
+
+        ABC = A | B | C,
     }
-    enum ImmediatePosA = ImmediatePositions.A;
-    enum ImmediatePosB = ImmediatePositions.B;
-    enum ImmediatePosC = ImmediatePositions.C;
-    enum ImmediatePosABC = ImmediatePositions.A | ImmediatePositions.B | ImmediatePositions.C;
-    enum ImmediatePosBC = ImmediatePositions.B | ImmediatePositions.C;
 
     struct InfoNode {
         InfoType type; // information type: register or memory?
