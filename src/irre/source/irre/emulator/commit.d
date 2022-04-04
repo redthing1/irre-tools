@@ -11,7 +11,7 @@ alias IrreInfoLog = InfoLog!(
     irre.encoding.instructions.Register,
     cast(int) irre.encoding.instructions.REGISTER_COUNT);
 
-template InfoLog(TRegWord, TMemWord, TRegisterSet, int register_count) {
+template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
     template GenAliases(string prefix) {
         import std.format;
 
@@ -72,7 +72,7 @@ template InfoLog(TRegWord, TMemWord, TRegisterSet, int register_count) {
 
             switch (type) {
                 case InfoType.Register:
-                    sb ~= format("%s=$%04x", data.to!TRegisterSet, value);
+                    sb ~= format("%s=$%04x", data.to!TRegSet, value);
                     break;
                 case InfoType.Memory:
                     sb ~= format("mem[$%04x]=%02x", data, value);
@@ -174,12 +174,12 @@ template InfoLog(TRegWord, TMemWord, TRegisterSet, int register_count) {
 
             // commit data
             if (type == InfoType.Register) {
-                // auto reg_id_show = reg_id.to!TRegisterSet;
+                // auto reg_id_show = reg_id.to!TRegSet;
                 // sb ~= format(" %04s <- $%04x", reg_id_show, reg_value);
                 for (auto i = 0; i < reg_ids.length; i++) {
                     auto reg_id = reg_ids[i];
                     auto reg_value = reg_values[i];
-                    auto reg_id_show = reg_id.to!TRegisterSet;
+                    auto reg_id_show = reg_id.to!TRegSet;
                     sb ~= format(" %04s <- $%04x", reg_id_show, reg_value);
                 }
             } else {
@@ -196,7 +196,7 @@ template InfoLog(TRegWord, TMemWord, TRegisterSet, int register_count) {
                 auto source = sources[i];
                 // string source_type_str = _type_abbreviations[source.type];
                 // switch (source.type) {
-                // case InfoType.Register : sb ~= format(" %s=$%04x", source.data.to!TRegisterSet, source.value);
+                // case InfoType.Register : sb ~= format(" %s=$%04x", source.data.to!TRegSet, source.value);
                 //     break;
                 // case InfoType.Memory : sb ~= format(" mem[$%04x]=%02x", source.data, source.value);
                 //     break;
