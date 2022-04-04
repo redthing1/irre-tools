@@ -25,6 +25,11 @@ class Reader {
         }
 
         auto ast = ProgramAst(statements.data);
+
+        // recreate guess sections
+        ast.sections ~= SectionInfo(SectionId.Code, cast(int) (ast.statements.length * INSTRUCTION_SIZE));
+        ast.sections ~= SectionInfo(SectionId.Data, 0);
+
         return ast;
     }
 
