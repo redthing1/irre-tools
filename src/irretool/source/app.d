@@ -243,8 +243,8 @@ int cmd_emu(ProgramArgs args) {
         if (!ift_quiet) {
             ift_analyzer.dump_commits();
 
-            // some very simple pre analysis, to find clobber
-            ift_analyzer.pre_analysis();
+            // some very simple operation, to find clobber
+            ift_analyzer.calculate_clobber();
             ift_analyzer.dump_clobber();
         }
 
