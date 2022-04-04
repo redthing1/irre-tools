@@ -22,12 +22,15 @@ alias IrreIFTAnalysis = IFTAnalysis!(
 template IFTAnalysis(TRegWord, TMemWord, TRegisterSet, int register_count) {
 
     alias TInfoLog = InfoLog!(TRegWord, TMemWord, TRegisterSet, register_count);
-    alias Snapshot = TInfoLog.Snapshot;
-    alias Commit = TInfoLog.Commit;
-    alias CommitTrace = TInfoLog.CommitTrace;
-    alias InfoNode = TInfoLog.InfoNode;
-    alias InfoSource = TInfoLog.InfoSource;
-    alias InfoSources = TInfoLog.InfoSources;
+
+    mixin(TInfoLog.GenAliases!("TInfoLog"));
+    // alias Snapshot = TInfoLog.Snapshot;
+    // alias Commit = TInfoLog.Commit;
+    // alias CommitTrace = TInfoLog.CommitTrace;
+    // alias InfoType = TInfoLog.InfoType;
+    // alias InfoNode = TInfoLog.InfoNode;
+    // alias InfoSource = TInfoLog.InfoSource;
+    // alias InfoSources = TInfoLog.InfoSources;
 
     class IFTAnalyzer {
         CommitTrace trace;
@@ -98,11 +101,11 @@ template IFTAnalysis(TRegWord, TMemWord, TRegisterSet, int register_count) {
 
             if (included_data & IFTDataType.Registers) {
                 // 1. find regs that changed
-                for (auto i = 0; i < REGISTER_COUNT; i++) {
-                    Register reg_id = i.to!Register;
+                for (auto i = 0; i < register_count; i++) {
+                    TRegisterSet reg_id = i.to!TRegisterSet;
                     if (snap_init.reg[reg_id] != snap_final.reg[reg_id]) {
-                        // this register changed between the initial and final state
-                        // store commit that clobbers this register
+                        // this TRegisterSet changed between the initial and final state
+                        // store commit that clobbers this TRegisterSet
                         clobber.reg_ids ~= reg_id;
                         clobber.reg_values ~= snap_final.reg[reg_id];
                     }
@@ -145,12 +148,12 @@ template IFTAnalysis(TRegWord, TMemWord, TRegisterSet, int register_count) {
                             auto reg_id = commit.reg_ids[k];
                             auto reg_val = commit.reg_values[k];
                             if (clobber.reg_ids.canFind(reg_id)) {
-                                // this register is already clobbered
+                                // this TRegisterSet is already clobbered
                                 // so we don't need to do anything
                                 continue;
                             }
 
-                            // this register is not clobbered yet
+                            // this TRegisterSet is not clobbered yet
                             // so we need to add it to the clobber list
                             clobber.reg_ids ~= reg_id;
                             clobber.reg_values ~= reg_val;
@@ -175,21 +178,21 @@ template IFTAnalysis(TRegWord, TMemWord, TRegisterSet, int register_count) {
         long find_commit_last_touching(InfoNode node, long from_commit) {
             switch (node.type) {
             case InfoType.Register:
-                // go back through commits until we find one whose results modify this register
+                // go back through commits until we find one whose results modify this TRegisterSet
                 for (auto i = from_commit; i >= 0; i--) {
                     auto commit = &trace.commits[i];
                     log_commits_walked++;
                     for (auto j = 0; j < commit.reg_ids.length; j++) {
                         if (commit.reg_ids[j] == node.data) {
-                            // the register id in the commit results is the same as the reg id in the info node we are searching
+                            // the TRegisterSet id in the commit results is the same as the reg id in the info node we are searching
                             return i;
                         }
                     }
                 }
 
-                // if we're still here, then we haven't found a commit that touches this register
-                // it's possible the register wasn't touched because it was already in place before the initial snapshot
-                // to check this, we'll verify if the expected register value can be found in the initial snapshot
+                // if we're still here, then we haven't found a commit that touches this TRegisterSet
+                // it's possible the TRegisterSet wasn't touched because it was already in place before the initial snapshot
+                // to check this, we'll verify if the expected TRegisterSet value can be found in the initial snapshot
                 if (snap_init.reg[node.data] == node.value) {
                     // the expected value exists in the initial snapshot
                     // so there's no commit from it because it was before initial
@@ -304,9 +307,9 @@ template IFTAnalysis(TRegWord, TMemWord, TRegisterSet, int register_count) {
         }
 
         void analyze_flows() {
-            // // for now, we'll only flow back from the R0 register
+            // // for now, we'll only flow back from the R0 TRegisterSet
             // // get the clobber node for R0
-            // auto find_r0_final = clobber.reg_ids.countUntil(Register.R0);
+            // auto find_r0_final = clobber.reg_ids.countUntil(TRegisterSet.R0);
             // assert(find_r0_final >= 0, "could not find R0 in clobber list");
 
             // // create an info node for this point
@@ -320,8 +323,8 @@ template IFTAnalysis(TRegWord, TMemWord, TRegisterSet, int register_count) {
 
             // 1. backtrace all clobbered registers
             for (auto clobbered_i = 0; clobbered_i < clobber.reg_ids.length; clobbered_i++) {
-                // get id of register that is clobbered
-                auto reg_id = clobber.reg_ids[clobbered_i].to!Register;
+                // get id of TRegisterSet that is clobbered
+                auto reg_id = clobber.reg_ids[clobbered_i].to!TRegisterSet;
                 auto reg_val = clobber.reg_values[clobbered_i];
 
                 // create an info node for this point
@@ -369,7 +372,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegisterSet, int register_count) {
             // registers
             writefln("  regs:");
             for (auto i = 0; i < clobber.reg_ids.length; i++) {
-                auto reg_id = clobber.reg_ids[i].to!Register;
+                auto reg_id = clobber.reg_ids[i].to!TRegisterSet;
                 auto reg_value = clobber.reg_values[i];
                 writefln("   reg %s <- $%04x", reg_id, reg_value);
             }
