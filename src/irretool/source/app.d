@@ -53,6 +53,7 @@ void main(string[] raw_args) {
                 .add(new Flag("d", "debug", "debug mode"))
                 .add(new Flag("s", "step", "step mode"))
                 .add(new Flag(null, "commitlog", "enable commit log").full("commit-log"))
+                .add(new Option(null, "savecommits", "save commits to file").full("save-commits"))
                 .add(new Flag(null, "ift", "enable ift analysis"))
                 .add(new Flag(null, "iftquiet", "quiet ift analysis").full("ift-quiet"))
                 .add(new Flag(null, "iftpl", "parallel ift analysis").full("ift-pl"))
@@ -200,6 +201,7 @@ int cmd_emu(ProgramArgs args) {
     auto debug_mode = args.flag("debug");
     auto step_mode = args.flag("step");
     auto log_commits = args.flag("commitlog");
+    auto save_commits = args.option("savecommits");
     auto enable_ift = args.flag("ift");
     auto ift_quiet = args.flag("iftquiet");
     auto ift_parallel = args.flag("iftpl");
@@ -240,7 +242,18 @@ int cmd_emu(ProgramArgs args) {
     if (log_commits) {
         alias IFTAnalyzer = IrreIFTAnalysis.IFTAnalyzer;
 
-        auto ift_analyzer = new IFTAnalyzer(hyp.vm.commit_trace);
+        auto commit_trace = hyp.vm.commit_trace;
+
+        if (save_commits != null) {
+            // write commits to file
+            import mir.ser.msgpack: serializeMsgpack;
+            auto serialized_trace = serializeMsgpack(commit_trace);
+
+            writefln("serialized commits: %d bytes, saving to %s", serialized_trace.length, save_commits);
+            std.file.write(save_commits, serialized_trace);
+        }
+
+        auto ift_analyzer = new IFTAnalyzer(commit_trace);
         writeln("\ncommit log");
         if (!ift_quiet) {
             ift_analyzer.dump_commits();

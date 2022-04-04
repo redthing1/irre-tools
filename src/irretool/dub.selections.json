@@ -3,6 +3,11 @@
 	"versions": {
 		"commandr": "0.2.0",
 		"irre": {"path":"../irre"},
+		"mir-algorithm": "3.12.26",
+		"mir-core": "1.1.103",
+		"mir-cpuid": "1.2.7",
+		"mir-ion": "1.0.39",
+		"msgpack-d": "1.0.3",
 		"silly": "1.1.1"
 	}
 }
