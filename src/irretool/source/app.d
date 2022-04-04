@@ -240,6 +240,10 @@ int cmd_emu(ProgramArgs args) {
         writeln("\ncommit log");
         if (!ift_quiet) {
             ift_analyzer.dump_commits();
+
+            // some very simple pre analysis, to find clobber
+            ift_analyzer.pre_analysis();
+            ift_analyzer.dump_clobber();
         }
 
         if (enable_ift) {
