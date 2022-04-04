@@ -264,6 +264,8 @@ int cmd_emu(ProgramArgs args) {
 
                 writefln("minimized program:");
                 dumper.dump_statements(prog_min);
+
+                minimizer.dump_summary();
             }
         }
     }

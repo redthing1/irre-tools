@@ -6,6 +6,7 @@ import std.conv;
 import std.algorithm;
 import std.range;
 import std.container.dlist;
+import core.time : MonoTime, Duration;
 
 import irre.util;
 import irre.emulator.commit;
@@ -17,6 +18,12 @@ import irre.analysis.ift;
 class ProgramMinimizer {
     ProgramAst source_program;
     IFTAnalyzer ift;
+    long log_freeze1s;
+    long log_freeze2s;
+    long log_freeze_attempts;
+    long log_nopped_instructions;
+    bool[Register] log_frozen_registers;
+    ulong log_analysis_time;
 
     this(ProgramAst program, IFTAnalyzer ift) {
         source_program = program;
@@ -24,11 +31,21 @@ class ProgramMinimizer {
     }
 
     ProgramAst create_minimized() {
+        log_freeze1s = 0;
+        log_freeze2s = 0;
+        log_freeze_attempts = 0;
+        log_nopped_instructions = 0;
+        log_frozen_registers.clear();
+
+        MonoTime tmr_start = MonoTime.currTime;
+
         void nop_statement(AbstractStatement* statement) {
             // set opcode to NOP
             statement.op = OpCode.NOP;
             // clear operands
             statement.a1 = statement.a2 = statement.a3 = ValueImm(0);
+
+            log_nopped_instructions += 1;
         }
 
         AbstractStatement* find_statement_at_pc(ProgramAst prog, UWORD pc) {
@@ -131,6 +148,7 @@ class ProgramMinimizer {
                         if (freezable_registers.get(result_reg_id, false)) {
                             // yes, we can
                             log_put(format("   commit result %s is of a freezable register %s", single_result, result_reg_id));
+                            log_freeze_attempts++;
 
                             auto final_reg_value = ift.snap_final.reg[result_reg_id];
                             // check if the value will fit in a single 16-bit SET instruction
@@ -146,6 +164,7 @@ class ProgramMinimizer {
                                 stmt.a3 = ValueImm((final_reg_value & 0xff00) >> 8);
 
                                 log_put(format("    replacing 1-freeze SET %s=$%04x", result_reg_id, final_reg_value));
+                                log_freeze1s++;
                             } else {
                                 // this won't fit in a single SET instruction
                                 // we need a SET, SUP sequence.
@@ -206,6 +225,7 @@ class ProgramMinimizer {
                                         stmt.a3 = ValueImm((val_upper & 0xff00) >> 8);
                                         
                                         log_put(format("    replacing 2-freeze SET/SUP %s=$%08x", result_reg_id, final_reg_value));
+                                        log_freeze2s++;
 
                                         break;
                                     } else {
@@ -223,6 +243,23 @@ class ProgramMinimizer {
             }
         }
 
+        MonoTime tmr_end = MonoTime.currTime;
+        auto elapsed = tmr_end - tmr_start;
+
+        log_frozen_registers = frozen_registers.dup;
+
+        log_analysis_time = elapsed.total!"usecs";
+
         return prog;
+    }
+
+    void dump_summary() {
+        writefln(" summary:");
+        writefln("  frozen:                 %8d (%s)", log_freeze1s + log_freeze2s, log_frozen_registers.byKey);
+        writefln("  1-freezes:              %8d", log_freeze1s);
+        writefln("  2-freezes:              %8d", log_freeze2s);
+        writefln("  freeze attempts:        %8d", log_freeze_attempts);
+        writefln("  nopped:                 %8d", log_nopped_instructions);
+        writefln("  analysis time:          %7ss", (cast(double) log_analysis_time / 1_000_000));
     }
 }
