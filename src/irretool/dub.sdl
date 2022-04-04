@@ -13,6 +13,13 @@ configuration "app" {
     targetType "executable"
 }
 
+configuration "ift_log" {
+    versions "app"
+    subConfiguration "irre" "ift_log"
+
+    targetType "executable"
+}
+
 configuration "unittest" {
     # test runner
     dependency "silly" version="~>1.1.1"
