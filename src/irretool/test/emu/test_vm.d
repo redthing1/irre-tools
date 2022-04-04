@@ -29,7 +29,14 @@ unittest {
 
 @("vm.exec.fib3")
 unittest {
-    verify_program(PROG_FIB3, 2048, [
+    verify_program(PROG_FIB3, 2400, [
         Register.R0: 121393,
+    ]);
+}
+
+@("vm.exec.shuffle1")
+unittest {
+    verify_program(PROG_SHUFFLE1, 32000, [
+        Register.R0: 0xad44f200,
     ]);
 }

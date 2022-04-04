@@ -29,3 +29,8 @@ unittest {
     auto progs = PROGS_SET_IFT;
     ensure_programs_assemble(progs);
 }
+
+@("asmr.full.cbasic")
+unittest {
+    ensure_programs_assemble(PROGS_SET_C_BASIC);
+}
