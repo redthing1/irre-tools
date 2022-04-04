@@ -93,7 +93,7 @@ class ProgramMinimizer {
             if (freezable) {
                 // then we can precompute this register's final value
                 freezable_registers[reg_id] = true;
-                log_put(format("  we are able to freeze register %s", reg_id.to!Register));
+                mixin(LOG_TRACE!(`format("  we are able to freeze register %s", reg_id.to!Register)`));
             }
         }
 
@@ -121,7 +121,7 @@ class ProgramMinimizer {
                 // we found a commit that was last at this offset
                 auto last_commit_here = ift.trace.commits[last_commit_here_ix];
 
-                log_put(format("  found last commit at %04x: %s", offset, last_commit_here));
+                mixin(LOG_TRACE!(`format("  found last commit at %04x: %s", offset, last_commit_here)`));
 
                 // let's see if the sole result of this commit is a register
                 auto commit_results = last_commit_here.as_nodes;
@@ -144,12 +144,12 @@ class ProgramMinimizer {
                             continue; // all done here
                         }
 
-                        log_put(format("    this commit has a single register result: %s", single_result));
+                        mixin(LOG_TRACE!(`format("    this commit has a single register result: %s", single_result)`));
                         
                         // if this register is freezable, then can we replace this step with direct setting?
                         if (freezable_registers.get(result_reg_id, false)) {
                             // yes, we can
-                            log_put(format("   commit result %s is of a freezable register %s", single_result, result_reg_id));
+                            mixin(LOG_TRACE!(`format("   commit result %s is of a freezable register %s", single_result, result_reg_id)`));
                             log_freeze_attempts++;
 
                             auto final_reg_value = ift.snap_final.reg[result_reg_id];
@@ -162,11 +162,11 @@ class ProgramMinimizer {
                                 stmt.op = OpCode.SET;
                                 // set operands
                                 stmt.a1 = ValueImm(result_reg_id);
-                                // stmt.a2 = ValueImm((final_reg_value & 0x00ff));
+                                // stmt.a2 = ValueImm((final_reg_value & 0x00ff)));
                                 // stmt.a3 = ValueImm((final_reg_value & 0xff00) >> 8);
                                 stmt.a2 = ValueImm(final_reg_value);
 
-                                log_put(format("    replacing 1-freeze SET %s=$%04x", result_reg_id, final_reg_value));
+                                mixin(LOG_TRACE!(`format("    replacing 1-freeze SET %s=$%04x", result_reg_id, final_reg_value)`));
                                 log_freeze1s++;
                             } else {
                                 // this won't fit in a single SET instruction
@@ -177,7 +177,7 @@ class ProgramMinimizer {
                                 // so we need to find the previous commit touching this register (if any) that sets it alone
                                 // this is O(n^2)
 
-                                log_put(format("   only 2-instruction freeze is possible, searching for candidate prev"));
+                                mixin(LOG_TRACE!(`format("   only 2-instruction freeze is possible, searching for candidate prev")`));
 
                                 auto found_prev_singleset = false;
                                 auto singleset_search_last_commit_ix = last_commit_here_ix - 1;
@@ -192,7 +192,7 @@ class ProgramMinimizer {
                                     if (prev_toucher_ix < 0) break;
 
                                     auto prev_toucher_commit = ift.trace.commits[prev_toucher_ix];
-                                    log_put(format("    checking candidate prev: %s", prev_toucher_commit));
+                                    mixin(LOG_TRACE!(`format("    checking candidate prev: %s", prev_toucher_commit)`));
 
                                     auto prev_toucher_results = prev_toucher_commit.as_nodes;
                                     if (prev_toucher_results.length == 1) {
@@ -202,7 +202,7 @@ class ProgramMinimizer {
                                         assert(prev_toucher_results[0].data.to!Register == result_reg_id);
 
                                         // we found a second-to-last commit that set this register alone
-                                        log_put(format("    accepted candidate prev: %s", prev_toucher_commit));
+                                        mixin(LOG_TRACE!(`format("    accepted candidate prev: %s", prev_toucher_commit)`));
 
                                         // find the statement there
                                         auto prev_touch_stmt = find_statement_at_pc(prog, prev_toucher_commit.pc);
@@ -219,17 +219,17 @@ class ProgramMinimizer {
 
                                         prev_touch_stmt.op = OpCode.SET;
                                         prev_touch_stmt.a1 = ValueImm(result_reg_id);
-                                        // prev_touch_stmt.a2 = ValueImm((val_lower & 0x00ff));
+                                        // prev_touch_stmt.a2 = ValueImm((val_lower & 0x00ff)));
                                         // prev_touch_stmt.a3 = ValueImm((val_lower & 0xff00) >> 8);
                                         prev_touch_stmt.a2 = ValueImm(val_lower);
 
                                         stmt.op = OpCode.SUP;
                                         stmt.a1 = ValueImm(result_reg_id);
-                                        // stmt.a2 = ValueImm((val_upper & 0x00ff));
+                                        // stmt.a2 = ValueImm((val_upper & 0x00ff)));
                                         // stmt.a3 = ValueImm((val_upper & 0xff00) >> 8);
                                         stmt.a2 = ValueImm(val_upper);
                                         
-                                        log_put(format("    replacing 2-freeze SET/SUP %s=$%08x", result_reg_id, final_reg_value));
+                                        mixin(LOG_TRACE!(`format("    replacing 2-freeze SET/SUP %s=$%08x", result_reg_id, final_reg_value)`));
                                         log_freeze2s++;
 
                                         break;
