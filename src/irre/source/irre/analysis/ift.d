@@ -12,7 +12,6 @@ import irre.util;
 import irre.emulator.commit;
 static import irre.encoding.instructions;
 
-/** analyzer for dynamic information flow tracking **/
 alias IrreIFTAnalysis = IFTAnalysis!(
     irre.encoding.instructions.UWORD,
     irre.encoding.instructions.BYTE,
@@ -32,6 +31,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegisterSet, int register_count) {
     // alias InfoSource = TInfoLog.InfoSource;
     // alias InfoSources = TInfoLog.InfoSources;
 
+    /** analyzer for dynamic information flow tracking **/
     class IFTAnalyzer {
         CommitTrace trace;
         Snapshot snap_init;
