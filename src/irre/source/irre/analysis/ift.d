@@ -40,6 +40,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
         InfoSources[TRegSet] clobbered_regs_sources;
         InfoSources[TRegWord] clobbered_mem_sources;
         IFTDataType included_data = IFTDataType.All;
+        bool analysis_parallelized = false;
 
         long log_visited_info_nodes;
         long log_commits_walked;
@@ -330,19 +331,6 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 reg_final_nodes ~= reg_final_node;
             }
 
-            // do work
-            // auto reg_final_nodes_work = reg_final_nodes;
-            auto reg_final_nodes_work = parallel(reg_final_nodes);
-            foreach (final_node; reg_final_nodes_work) {
-                // now start backtracing
-                mixin(LOG_TRACE!(`format("backtracking information flow for node: %s", final_node)`));
-                auto reg_sources = backtrace_information_flow(final_node);
-
-                // writefln("sources for reg %s: %s", reg_id, reg_sources);
-
-                clobbered_regs_sources[cast(TRegSet)final_node.data] = reg_sources;
-            }
-
             // 2. backtrace all clobbered memory
             // queue work
             InfoNode[] mem_final_nodes;
@@ -355,17 +343,44 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 mem_final_nodes ~= mem_final_node;
             }
 
-            // do work
-            // auto mem_final_nodes_work = mem_final_nodes;
-            auto mem_final_nodes_work = parallel(mem_final_nodes);
-            foreach (final_node; mem_final_nodes_work) {
-                // now start backtracing
-                mixin(LOG_TRACE!(`format("backtracking information flow for node: %s", final_node)`));
-                auto mem_sources = backtrace_information_flow(final_node);
+            void do_reg_trace() {
+                // do work
+                foreach (final_node; reg_final_nodes_work) {
+                    // now start backtracing
+                    mixin(LOG_TRACE!(`format("backtracking information flow for node: %s", final_node)`));
+                    auto reg_sources = backtrace_information_flow(final_node);
 
-                // writefln("sources for mem %s: %s", mem_addr, mem_sources);
+                    // writefln("sources for reg %s: %s", reg_id, reg_sources);
 
-                clobbered_mem_sources[final_node.data] = mem_sources;
+                    clobbered_regs_sources[cast(TRegSet)final_node.data] = reg_sources;
+                }
+            }
+
+            void do_mem_trace() {
+                // do work
+                foreach (final_node; mem_final_nodes_work) {
+                    // now start backtracing
+                    mixin(LOG_TRACE!(`format("backtracking information flow for node: %s", final_node)`));
+                    auto mem_sources = backtrace_information_flow(final_node);
+
+                    // writefln("sources for mem %s: %s", mem_addr, mem_sources);
+
+                    clobbered_mem_sources[final_node.data] = mem_sources;
+                }
+            }
+
+            // select serial/parallel task
+
+            if (analysis_parallelized) {
+                auto reg_final_nodes_work = parallel(reg_final_nodes);
+            } else {
+                auto reg_final_nodes_work = reg_final_nodes;
+            }
+
+            if (analysis_parallelized) {
+                auto mem_final_nodes_work = parallel(mem_final_nodes);
+            } else {
+                auto mem_final_nodes_work = mem_final_nodes;
             }
         }
 
