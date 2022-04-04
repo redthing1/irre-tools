@@ -44,14 +44,20 @@ class RegaEncoder {
         auto code_offset = code_start;
 
         foreach (statement; ast.statements) {
+            // log_put(format("   stmt: %s", statement));
+
             auto info = InstructionEncoding.get_info(statement.op).get();
             auto instruction = compile_statement(statement, info);
+
+            // log_put(format("    info: %s", info));
 
             // write instruction word
             wr ~= instruction.op;
             wr ~= instruction.a1;
             wr ~= instruction.a2;
             wr ~= instruction.a3;
+
+            // log_put(format("    instr: %s", instruction));
 
             code_offset += info.size * INSTRUCTION_SIZE;
         }
@@ -95,6 +101,9 @@ class RegaEncoder {
         bool trd_imm = (info.operands & Operands.K_I3) > 0;
         bool big_imm16 = snd_imm && !trd_imm;
         bool big_imm24 = fst_imm && !snd_imm && !trd_imm;
+
+        // log_put(format("     imm_types: %s %s %s, big16: %s, big24: %s",
+        //     fst_imm, snd_imm, trd_imm, big_imm16, big_imm24));
 
         if (big_imm24) {
             a1 = cast(ARG)((arg1 >> 0) & 0xff);

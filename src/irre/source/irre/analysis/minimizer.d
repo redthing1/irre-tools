@@ -160,8 +160,9 @@ class ProgramMinimizer {
                                 stmt.op = OpCode.SET;
                                 // set operands
                                 stmt.a1 = ValueImm(result_reg_id);
-                                stmt.a2 = ValueImm((final_reg_value & 0x00ff));
-                                stmt.a3 = ValueImm((final_reg_value & 0xff00) >> 8);
+                                // stmt.a2 = ValueImm((final_reg_value & 0x00ff));
+                                // stmt.a3 = ValueImm((final_reg_value & 0xff00) >> 8);
+                                stmt.a2 = ValueImm(final_reg_value);
 
                                 log_put(format("    replacing 1-freeze SET %s=$%04x", result_reg_id, final_reg_value));
                                 log_freeze1s++;
@@ -216,13 +217,15 @@ class ProgramMinimizer {
 
                                         prev_touch_stmt.op = OpCode.SET;
                                         prev_touch_stmt.a1 = ValueImm(result_reg_id);
-                                        prev_touch_stmt.a2 = ValueImm((val_lower & 0x00ff));
-                                        prev_touch_stmt.a3 = ValueImm((val_lower & 0xff00) >> 8);
+                                        // prev_touch_stmt.a2 = ValueImm((val_lower & 0x00ff));
+                                        // prev_touch_stmt.a3 = ValueImm((val_lower & 0xff00) >> 8);
+                                        prev_touch_stmt.a2 = ValueImm(val_lower);
 
                                         stmt.op = OpCode.SUP;
                                         stmt.a1 = ValueImm(result_reg_id);
-                                        stmt.a2 = ValueImm((val_upper & 0x00ff));
-                                        stmt.a3 = ValueImm((val_upper & 0xff00) >> 8);
+                                        // stmt.a2 = ValueImm((val_upper & 0x00ff));
+                                        // stmt.a3 = ValueImm((val_upper & 0xff00) >> 8);
+                                        stmt.a2 = ValueImm(val_upper);
                                         
                                         log_put(format("    replacing 2-freeze SET/SUP %s=$%08x", result_reg_id, final_reg_value));
                                         log_freeze2s++;
