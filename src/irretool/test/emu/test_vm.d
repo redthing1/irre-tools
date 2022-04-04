@@ -30,6 +30,6 @@ unittest {
 @("vm.exec.fib3")
 unittest {
     verify_program(PROG_FIB3, 2048, [
-        Register.R0: 144,
+        Register.R0: 121393,
     ]);
 }
