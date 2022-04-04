@@ -266,6 +266,13 @@ int cmd_emu(ProgramArgs args) {
                 dumper.dump_statements(prog_min);
 
                 minimizer.dump_summary();
+
+                // 3. write checkpoint
+                // EXE encode
+                auto encoder = new RegaEncoder();
+                auto compiled_min_prog = encoder.encode_exe(prog_min);
+
+                std.file.write(checkpoint_file, compiled_min_prog);
             }
         }
     }
