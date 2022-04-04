@@ -58,8 +58,13 @@ void main(string[] raw_args) {
                 .add(new Flag(null, "iftquiet", "quiet ift analysis").full("ift-quiet"))
                 .add(new Flag(null, "iftpl", "parallel ift analysis").full("ift-pl"))
                 .add(new Option(null, "iftdata", "ift data types").full("ift-data"))
-                .add(new Option(null, "checkpoint", "checkpoint file"))
-        )
+                .add(new Option(null, "checkpoint", "checkpoint file")))
+        .add(new Command("ift", "do ift analysis")
+                .add(new Argument("input", "input file"))
+                .add(new Flag(null, "iftquiet", "quiet ift analysis").full("ift-quiet"))
+                .add(new Flag(null, "iftpl", "parallel ift analysis").full("ift-pl"))
+                .add(new Option(null, "iftdata", "ift data types").full("ift-data"))
+                .add(new Option(null, "checkpoint", "checkpoint file")))
         .parse(raw_args);
 
     verbose = args.flag("verbose");
@@ -74,6 +79,9 @@ void main(string[] raw_args) {
         })
         .on("emu", (args) {
             cmd_emu(args);
+        })
+        .on("ift", (args) {
+            cmd_runift(args);
         })
         ;
      // dfmt on
@@ -253,6 +261,31 @@ int cmd_emu(ProgramArgs args) {
 
         do_ift_analysis(enable_ift, ift_quiet, ift_parallel, ift_data_types, checkpoint_file, commit_trace, compiled_data);
     }
+
+    return 0;
+}
+
+int cmd_runift(ProgramArgs args) {
+    auto input = args.arg("input");
+    auto ift_quiet = args.flag("iftquiet");
+    auto ift_parallel = args.flag("iftpl");
+    auto ift_data_types = args.option("iftdata");
+    auto checkpoint_file = args.option("checkpoint");
+
+    writefln("[IRRE] run_ift v%s", Meta.VERSION);
+
+    auto serialized_trace = cast(const(ubyte)[]) std.file.read(input);
+    
+    import irre.emulator.commit;
+    alias CommitTrace = IrreInfoLog.CommitTrace;
+
+    // deserialize
+    import mir.deser.msgpack: deserializeMsgpack;
+    // static immutable trace_symbol_table = serialized_trace.
+    //     deserializeMsgpack!CommitTrace();
+    auto commit_trace = serialized_trace.deserializeMsgpack!CommitTrace();
+
+    do_ift_analysis(true, ift_quiet, ift_parallel, ift_data_types, checkpoint_file, commit_trace, serialized_trace);
 
     return 0;
 }
