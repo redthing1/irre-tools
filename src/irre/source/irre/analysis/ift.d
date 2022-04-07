@@ -42,7 +42,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
         IFTDataType included_data = IFTDataType.All;
         bool analysis_parallelized = false;
 
-        version(ift_log) {
+        version (ift_log) {
             long log_visited_info_nodes;
             long log_commits_walked;
             long log_found_sources;
@@ -64,7 +64,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
             assert(trace.commits.length > 0, "trace must have at least one commit");
             assert(trace.snapshots.length == 2,
                 "trace must have exactly two snapshots, initial and final");
-            
+
             snap_init = trace.snapshots[0];
             snap_final = trace.snapshots[1];
         }
@@ -79,8 +79,8 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
         */
         void analyze() {
             MonoTime tmr_start = MonoTime.currTime;
-            
-            version(ift_log) {
+
+            version (ift_log) {
                 log_visited_info_nodes = 0;
                 log_commits_walked = 0;
                 log_found_sources = 0;
@@ -138,7 +138,8 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
 
             for (auto i = last_commit_ix; i >= 0; i--) {
                 auto commit = trace.commits[i];
-                version(ift_log) log_commits_walked++;
+                version (ift_log)
+                    log_commits_walked++;
 
                 // look at sources of this commit
                 for (auto j = 0; j < commit.sources.length; j++) {
@@ -174,7 +175,8 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
         long find_last_commit_at_pc(TRegWord pc_val, long from_commit) {
             for (auto i = from_commit; i >= 0; i--) {
                 auto commit = &trace.commits[i];
-                version(ift_log) log_commits_walked++;
+                version (ift_log)
+                    log_commits_walked++;
                 if (commit.pc == pc_val) {
                     return i;
                 }
@@ -188,7 +190,8 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 // go back through commits until we find one whose results modify this TRegSet
                 for (auto i = from_commit; i >= 0; i--) {
                     auto commit = &trace.commits[i];
-                    version(ift_log) log_commits_walked++;
+                    version (ift_log)
+                        log_commits_walked++;
                     for (auto j = 0; j < commit.reg_ids.length; j++) {
                         if (commit.reg_ids[j] == node.data) {
                             // the TRegSet id in the commit results is the same as the reg id in the info node we are searching
@@ -209,7 +212,8 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 // go back through commits until we find one whose results modify this memory
                 for (auto i = from_commit; i >= 0; i--) {
                     auto commit = &trace.commits[i];
-                    version(ift_log) log_commits_walked++;
+                    version (ift_log)
+                        log_commits_walked++;
                     for (auto j = 0; j < commit.mem_addrs.length; j++) {
                         if (commit.mem_addrs[j] == node.data) {
                             // the memory address in the commit results is the same as the mem addr in the info node we are searching
@@ -226,7 +230,8 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                     return -1;
                 }
             } else {
-                assert(0, format("we don't know how to find a last commit touching a node of type %s", node.type));
+                assert(0, format("we don't know how to find a last commit touching a node of type %s", node
+                        .type));
             }
             assert(0, format("could not find touching commit for node: %s, commit <= #%d", node, from_commit));
         }
@@ -252,7 +257,8 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
 
             pragma(inline, true) void add_info_leaf(InfoSource leaf) {
                 terminal_leaves ~= leaf;
-                version(ift_log) log_found_sources++;
+                version (ift_log)
+                    log_found_sources++;
             }
 
             // 3. queue our initial node
@@ -264,8 +270,10 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 unvisited.removeFront();
                 visited[curr] = true;
 
-                mixin(LOG_TRACE!(`format("  visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix)`));
-                version(ift_log) log_visited_info_nodes += 1;
+                mixin(LOG_TRACE!(
+                        `format("  visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix)`));
+                version (ift_log)
+                    log_visited_info_nodes += 1;
 
                 if (curr.node.type == InfoType.Immediate || curr.node.type == InfoType.Device) {
                     // we found raw source data, no dependencies
@@ -320,7 +328,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
             import std.parallelism;
 
             // 1. backtrace all clobbered registers
-            
+
             // queue work
             InfoNode[] reg_final_nodes;
             for (auto clobbered_i = 0; clobbered_i < clobber.reg_ids.length; clobbered_i++) {
@@ -346,17 +354,19 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
 
             pragma(inline, true) void do_reg_trace(InfoNode final_node) {
                 // now start backtracing
-                mixin(LOG_TRACE!(`format("backtracking information flow for node: %s", final_node)`));
+                mixin(LOG_TRACE!(
+                        `format("backtracking information flow for node: %s", final_node)`));
                 auto reg_sources = backtrace_information_flow(final_node);
 
                 // writefln("sources for reg %s: %s", reg_id, reg_sources);
 
-                clobbered_regs_sources[cast(TRegSet)final_node.data] = reg_sources;
+                clobbered_regs_sources[cast(TRegSet) final_node.data] = reg_sources;
             }
 
             pragma(inline, true) void do_mem_trace(InfoNode final_node) {
                 // now start backtracing
-                mixin(LOG_TRACE!(`format("backtracking information flow for node: %s", final_node)`));
+                mixin(LOG_TRACE!(
+                        `format("backtracking information flow for node: %s", final_node)`));
                 auto mem_sources = backtrace_information_flow(final_node);
 
                 // writefln("sources for mem %s: %s", mem_addr, mem_sources);
@@ -370,12 +380,12 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
             if (analysis_parallelized) {
                 auto reg_final_nodes_work = parallel(reg_final_nodes);
                 foreach (final_node; reg_final_nodes_work) {
-                    do_reg_trace(final_node);   
+                    do_reg_trace(final_node);
                 }
             } else {
                 auto reg_final_nodes_work = reg_final_nodes;
                 foreach (final_node; reg_final_nodes_work) {
-                    do_reg_trace(final_node);   
+                    do_reg_trace(final_node);
                 }
             }
 
@@ -414,7 +424,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
         }
 
         void dump_analysis() {
-            import std.array: appender;
+            import std.array : appender;
 
             // dump backtraces
             writefln(" backtraces:");
@@ -442,7 +452,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
             writefln("  num commits:            %8d", trace.commits.length);
             writefln("  registers traced:       %8d", clobber.reg_ids.length);
             writefln("  memory traced:          %8d", clobber.mem_addrs.length);
-            version(ift_log) {
+            version (ift_log) {
                 writefln("  found sources:          %8d", log_found_sources);
                 writefln("  walked info:            %8d", log_visited_info_nodes);
                 writefln("  walked commits:         %8d", log_commits_walked);
