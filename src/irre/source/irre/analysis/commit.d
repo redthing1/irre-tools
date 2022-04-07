@@ -40,6 +40,7 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
     }
 
     enum InfoType {
+        Unknown,
         Combined,
         Register,
         Memory,
