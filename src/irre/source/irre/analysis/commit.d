@@ -47,6 +47,7 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
         Immediate = 1 << 4,
         Combined = Register | Memory | Immediate,
         Device = 1 << 6,
+        CSR = 1 << 7,
         Reserved1,
         Reserved2,
         Reserved3,
@@ -110,6 +111,7 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
                 InfoType.Memory: "mem",
                 InfoType.Immediate: "imm",
                 InfoType.Device: "dev",
+                InfoType.CSR: "csr",
             ];
         
         alias Source = InfoNode;
@@ -242,8 +244,14 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
             return sb.array;
         }
 
-        /** returns whether this is a final/deterministic source */
         bool is_final() const {
+            return node.type == InfoType.Immediate
+                || node.type == InfoType.Device
+                || node.type == InfoType.CSR;
+        }
+
+        /** returns whether this is a deterministic source */
+        bool is_deterministic() const {
             return node.type == InfoType.Immediate;
         }
     }
