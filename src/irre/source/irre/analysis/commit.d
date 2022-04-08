@@ -31,11 +31,30 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
         public TRegWord[register_count] reg;
         public TMemWord[] mem;
 
+        public ulong mem_base = 0;
+
         static Snapshot from(TRegWord[register_count] reg, TMemWord[] mem) {
             Snapshot snapshot;
             snapshot.reg = reg.dup[0 .. register_count];
             snapshot.mem = mem.dup;
             return snapshot;
+        }
+
+        // access functions
+        public TRegWord get_reg(ulong id) {
+            return reg[id];
+        }
+
+        public TMemWord get_mem(ulong addr) {
+            auto adj_addr = addr - mem_base;
+            // range check
+            if (adj_addr >= 0 && adj_addr < mem.length) {
+                return mem[adj_addr];
+            }
+            // wtf?
+            // TODO: should we assert this?
+            // mem should probably be handled by some sort of page system
+            return TMemWord.init;
         }
     }
 

@@ -124,11 +124,11 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 // 2. find mem that changed
                 for (auto i = 0; i < snap_init.mem.length; i++) {
                     auto mem_addr = i;
-                    if (snap_init.mem[mem_addr] != snap_final.mem[mem_addr]) {
+                    if (snap_init.get_mem(mem_addr) != snap_final.get_mem(mem_addr)) {
                         // this memory changed between the initial and final state
                         // store commit that clobbers this memory
                         clobber.mem_addrs ~= mem_addr;
-                        clobber.mem_values ~= snap_final.mem[mem_addr];
+                        clobber.mem_values ~= snap_final.get_mem(mem_addr);
                     }
                 }
             }
@@ -224,7 +224,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 // if we're still here, that means we haven't found a commit that touches this memory position
                 // it's possible the memory wasn't touched because it was already in place before the initial snapshot
                 // to check this, we'll verify if the expected memory value can be found in the initial snapshot
-                if (snap_init.mem[node.data] == node.value) {
+                if (snap_init.get_mem(node.data) == node.value) {
                     // the expected memory value is the same as the initial memory value
                     // this means the memory was already in place
                     return -1;
