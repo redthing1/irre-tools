@@ -57,6 +57,7 @@ struct ProgramAst {
     LabelDef[] labels;
     string entry_point_label;
     SectionInfo[] sections;
+    Symbol[] exported_symbols;
 
     /** calculate the global offset pointed to by a label reference */
     public Nullable!int get_label_global_offset(ValueRef label_ref) {
@@ -136,4 +137,8 @@ struct MacroDef {
     string name;
     MacroArg[] args;
     SourceStatement[] statements;
+}
+
+struct Symbol {
+    string name;
 }
