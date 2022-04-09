@@ -467,6 +467,13 @@ class VirtualMachine {
         }
     }
 
+    public void write_bytes(UWORD addr, ubyte[] buffer, size_t count) {
+        for (int i = 0; i < count; i += 1) {
+            auto mem_i = addr + i;
+            mem[mem_i] = buffer[i];
+        }
+    }
+
     public Snapshot snapshot() {
         return Snapshot.from(reg, mem);
     }
