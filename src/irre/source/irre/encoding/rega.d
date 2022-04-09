@@ -22,21 +22,33 @@ struct RegaHeader {
 
 /** IRRE-REGA binary format encoder */
 class RegaEncoder {
-    ubyte[] encode_exe(ProgramAst ast) {
+    ubyte[] encode_obj(ProgramAst ast) {
+        log_put(format("writing REGA_OBJ:"));
         auto wr = appender!(ubyte[]);
-        auto data_block_size = 0;
-        foreach (data_block; ast.data_blocks) {
-            data_block_size += data_block.data.length;
-        }
+        auto data_block_size = calc_data_block_size(ast);
+
+        wr ~= make_header(ast, data_block_size);
+
+        write_code_section(wr, ast);
+        write_data_section(wr, ast);
+
+        return wr.data;
+    }
+
+    ubyte[] encode_exe(ProgramAst ast) {
         log_put(format("writing REGA_EXE:"));
+        auto wr = appender!(ubyte[]);
+        auto data_block_size = calc_data_block_size(ast);
 
-        // write header
-        auto head = RegaHeader(
-                cast(ushort)(data_block_size + ast.statements.length * INSTRUCTION_SIZE));
-        auto head_bin = write_header(head);
-        log_put(format("  writing HEADER[%d]", head_bin.length));
-        wr ~= head_bin;
+        wr ~= make_header(ast, data_block_size);
 
+        write_code_section(wr, ast);
+        write_data_section(wr, ast);
+
+        return wr.data;
+    }
+
+    private void write_code_section(ref Appender!(ubyte[]) wr, ref ProgramAst ast) {
         // - write CODE section
         log_put(format("  writing CODE section[%d] with %d instructions",
                 ast.sections[cast(int) SectionId.Code].length, ast.statements.length));
@@ -61,7 +73,9 @@ class RegaEncoder {
 
             code_offset += info.size * INSTRUCTION_SIZE;
         }
+    }
 
+    private void write_data_section(ref Appender!(ubyte[]) wr, ref ProgramAst ast) {
         // - write DATA section
         log_put(format("  writing DATA section[%d] with %d blocks",
                 ast.sections[cast(int) SectionId.Data].length, ast.data_blocks.length));
@@ -72,8 +86,21 @@ class RegaEncoder {
             data_offset += block.data.length;
             log_put(format("    wrote data block[%d] @ $%04x", block.data.length, block.offset));
         }
+    }
 
-        return wr.data;
+    private ubyte[] make_header(ref ProgramAst ast, ulong data_block_size) {
+        auto head = RegaHeader(
+                cast(ushort)(data_block_size + ast.statements.length * INSTRUCTION_SIZE));
+        auto head_bin = encode_header(head);
+        return head_bin;
+    }
+
+    private ulong calc_data_block_size(ref ProgramAst ast) {
+        auto res = 0;
+        foreach (data_block; ast.data_blocks) {
+            res += data_block.data.length;
+        }
+        return res;
     }
 
     /** compile an abstract statement to a binary-encoded instruction */
@@ -117,7 +144,7 @@ class RegaEncoder {
         return Instruction(op, a1, a2, a3);
     }
 
-    private ubyte[] write_header(RegaHeader head) {
+    private ubyte[] encode_header(RegaHeader head) {
         auto wr = appender!(ubyte[]);
         wr ~= cast(ubyte[]) REGA_MAGIC; // magic
         wr ~= cast(ubyte[]) nativeToLittleEndian(head.program_size);
