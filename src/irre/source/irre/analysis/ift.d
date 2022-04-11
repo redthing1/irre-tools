@@ -123,7 +123,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
             if (included_data & IFTDataType.Memory) {
                 // 2. find mem that changed
                 for (auto i = 0; i < snap_init.mem.length; i++) {
-                    auto mem_addr = i;
+                    auto mem_addr = snap_init.mem_base + i;
                     if (snap_init.get_mem(mem_addr) != snap_final.get_mem(mem_addr)) {
                         // this memory changed between the initial and final state
                         // store commit that clobbers this memory
