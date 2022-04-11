@@ -247,7 +247,9 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
 
             struct InfoNodeWalk {
                 InfoNode node;
-                long commit_ix;
+                // long commit_ix;
+                long owner_commit_ix; // which commit this infonode is in
+                long walk_commit_ix; // which commit to walk this back from
             }
 
             auto unvisited = DList!InfoNodeWalk();
@@ -262,7 +264,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
             }
 
             // 3. queue our initial node
-            unvisited.insertFront(InfoNodeWalk(final_node, final_node_last_touch_ix));
+            unvisited.insertFront(InfoNodeWalk(final_node, final_node_last_touch_ix, final_node_last_touch_ix));
 
             // 4. iterative dfs
             while (!unvisited.empty) {
@@ -271,7 +273,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 visited[curr] = true;
 
                 mixin(LOG_TRACE!(
-                        `format("  visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix)`));
+                        `format("  visiting: node: %s (#%s), walk: %s", curr.node, curr.owner_commit_ix, curr.walk_commit_ix)`));
                 version (ift_log)
                     log_visited_info_nodes += 1;
 
@@ -279,14 +281,14 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                     // we found raw source data, no dependencies
                     // this is a leaf source, so we want to record it
                     // all data comes from some sort of leaf source
-                    auto leaf = InfoSource(curr.node, curr.commit_ix);
+                    auto leaf = InfoSource(curr.node, curr.owner_commit_ix);
                     add_info_leaf(leaf);
                     mixin(LOG_TRACE!(`format("   leaf (source): %s", leaf)`));
                     continue;
                 }
 
                 // get last touching commit for this node
-                auto touching_commit_ix = find_commit_last_touching(curr.node, curr.commit_ix);
+                auto touching_commit_ix = find_commit_last_touching(curr.node, curr.walk_commit_ix);
                 if (touching_commit_ix < 0) {
                     // this means some information was found to have been traced to the initial snapshot
                     // this counts as a leaf node
@@ -305,18 +307,20 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 auto deps = touching_commit.sources.reverse;
                 for (auto i = 0; i < deps.length; i++) {
                     auto dep = deps[i];
-                    mixin(LOG_TRACE!(`format("    found dependency: %s", dep)`));
+                    mixin(LOG_TRACE!(`format("    found dependency: %s (#%s)", dep, touching_commit_ix)`));
 
                     // where did this dependency's information come from?
                     // to find out we have to look for previous commits that created this dependency
                     // we have to search in commits before this one, because the dependency already had its value
                     // so we should walk through commits touching that dependency
                     // so we add it to our visit queue
-                    auto dep_walk = InfoNodeWalk(dep, touching_commit_ix - 1);
+                    auto walk_commit_ix = touching_commit_ix - 1;
+                    auto dep_walk = InfoNodeWalk(dep, touching_commit_ix, walk_commit_ix);
 
                     // if we have not visited this dependency yet, add it to the unvisited list
                     if (!visited.get(dep_walk, false)) {
                         unvisited.insertFront(dep_walk);
+                        // mixin(LOG_TRACE!(`format("     queued walk: %s", dep_walk)`));
                     }
                 }
             }
