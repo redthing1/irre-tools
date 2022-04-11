@@ -429,11 +429,22 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
             // dump backtraces
             writefln(" backtraces:");
 
+            void log_commit_for_source(InfoSource source) {
+                writef("   %s", source);
+                if (source.commit_id >= 0) {
+                    auto commit = trace.commits[source.commit_id];
+                    writef(" -> %s", commit);
+                } else {
+                    writef(" -> <init>");
+                }
+                writeln();
+            }
+
             // registers
             foreach (reg_id; clobbered_regs_sources.byKey) {
                 writefln("  reg %s:", reg_id);
                 foreach (source; clobbered_regs_sources[reg_id]) {
-                    writefln("   %s", source);
+                    log_commit_for_source(source);
                 }
             }
 
@@ -441,7 +452,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
             foreach (mem_addr; clobbered_mem_sources.byKey) {
                 writefln("  mem[%04x]:", mem_addr);
                 foreach (source; clobbered_mem_sources[mem_addr]) {
-                    writefln("   %s", source);
+                    log_commit_for_source(source);
                 }
             }
         }
