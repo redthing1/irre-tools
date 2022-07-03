@@ -481,11 +481,12 @@ class VirtualMachine {
 
         Snapshot snapshot;
         snapshot.reg = reg.dup[0 .. irre.encoding.instructions.REGISTER_COUNT];
-        snapshot.memory_map ~= MemoryMap(MemoryMap.Type.Memory, 0x0, "mem0");
+        auto mem_base = 0x0;
+        snapshot.memory_map ~= MemoryMap(MemoryMap.Type.Memory, mem_base, "mem0");
         // copy our memory into pages
         for (auto i = 0; i < mem.length; i += MemoryPageTable.PAGE_SIZE) {
             auto mem_addr = i;
-            snapshot.tracked_mem.make_page(0x0);
+            snapshot.tracked_mem.make_page(mem_addr);
             // copy memory block
             auto copy_start = mem_addr;
             auto copy_end = min(mem.length, mem_addr + MemoryPageTable.PAGE_SIZE);
