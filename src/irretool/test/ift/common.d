@@ -12,9 +12,10 @@ public {
     import irre.encoding.instructions;
     import irre.emulator.vm;
     import irre.emulator.hypervisor;
+    import irre.analysis.irre_arch;
 
-    import irre.analysis.commit;
-    import irre.analysis.ift;
+    import infoflow.models;
+    import infoflow.analysis.ift;
 
     import irretool.test.asmr.common;
     import irretool.test.emu.common;
@@ -43,7 +44,7 @@ IFTAnalyzer test_ift(TestProgram prg, long exec_steps) {
     assert(trace.commits.length > 0, "expected at least one commit");
     assert(trace.snapshots.length == 2, "expected two snapshots");
 
-    auto ift_analyzer = new IFTAnalyzer(trace);
+    auto ift_analyzer = new IFTAnalyzer(trace, false);
 
     // run ift
     // ift_analyzer.analysis_parallelized = true;
