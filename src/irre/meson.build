@@ -8,6 +8,7 @@ sources = [
     'disassembler/dumper.d',
 
     'encoding/instructions.d',
+    'encoding/rega.d',
 ]
 
 libirre = shared_library('irre', sources,

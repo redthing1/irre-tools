@@ -33,7 +33,7 @@ struct RawStatement {
 struct ProgramAst {
     AbstractStatement[] statements;
     int entry;
-    byte[] data;
+    ubyte[] data;
 }
 
 class ParserException : Exception {
@@ -68,7 +68,7 @@ class Parser {
     private int token_pos;
     private int char_pos;
     private int offset;
-    private byte[] data;
+    private ubyte[] data;
     private Appender!(MacroDef[]) macros;
     private Appender!(LabelDef[]) labels;
 
@@ -118,7 +118,7 @@ class Parser {
                                 auto pack = take_token(); // any following token is valid
                                 pack_len = pack.content.length;
                                 // copy string from token to data
-                                data ~= cast(byte[]) pack.content;
+                                data ~= cast(ubyte[]) pack.content;
                                 break;
                             }
                         default:

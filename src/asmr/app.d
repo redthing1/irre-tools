@@ -7,6 +7,7 @@ import std.file;
 import irre.meta;
 import irre.assembler.lexer;
 import irre.assembler.parser;
+import irre.encoding.rega;
 import irre.disassembler.dumper;
 
 string input_file;
@@ -56,6 +57,12 @@ int main(string[] args) {
             auto dumper = new Dumper();
             dumper.dump_statements(programAst.statements);
         }
+
+        auto encoder = new RegaEncoder();
+        auto compiled_data = encoder.write(programAst);
+
+        auto ouf = File(output_file, "w");
+        ouf.rawWrite(compiled_data);
 
     } catch (ParserException e) {
         writefln("parser error: %s at %s", e.msg, e.info);
