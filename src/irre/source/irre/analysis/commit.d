@@ -41,6 +41,7 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
 
     enum InfoType {
         Unknown,
+        None,
         Combined,
         Register,
         Memory,
@@ -102,6 +103,8 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
 
     struct Commit {
         private enum string[InfoType] _type_abbreviations = [
+                InfoType.Unknown: "unk",
+                InfoType.None: "non",
                 InfoType.Combined: "cmb",
                 InfoType.Register: "reg",
                 InfoType.Memory: "mem",
