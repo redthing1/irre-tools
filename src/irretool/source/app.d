@@ -64,7 +64,7 @@ void main(string[] raw_args) {
         .add(new Command("analyze", "do analysis")
                 .add(new Argument("input", "input file"))
                 .add(new Flag(null, "pl", "enable parallel analysis computation"))
-                .add(new Option(null, "plthreads", "parallel worker count").full("pl-threads").defaultValue("0"))
+                // .add(new Option(null, "plthreads", "parallel worker count").full("pl-threads").defaultValue("0"))
 
                 .add(new Flag(null, "ift", "enable ift analysis"))
                 .add(new Flag(null, "iftquiet", "quiet ift analysis").full("ift-quiet"))
@@ -412,7 +412,7 @@ void cmd_runanalyze(ProgramArgs args) {
 
     auto input = args.arg("input");
     auto enable_parallel = args.flag("pl");
-    auto parallel_threads = args.option("plthreads").to!int;
+    // auto parallel_threads = args.option("plthreads").to!int;
     auto enable_ift = args.flag("ift");
     auto ift_quiet = args.flag("iftquiet");
     auto enable_ift_graph = args.flag("iftgraph");
@@ -426,23 +426,24 @@ void cmd_runanalyze(ProgramArgs args) {
 
     auto commit_trace = load_commit_trace(input);
 
-    if (parallel_threads == 0) {
-        parallel_threads = totalCPUs;
-    }
+    // if (parallel_threads == 0) {
+    //     parallel_threads = totalCPUs;
+    // }
 
     // do stuff
     alias IFTAnalyzer = IrreIFTAnalysis.IFTAnalyzer;
     alias IFTDumper = IrreIFTDump.IFTDumper;
 
-    auto ift_analyzer = new IFTAnalyzer(commit_trace, enable_parallel);
-    ift_analyzer.parallel_threads = parallel_threads;
+    auto ift_analyzer_config = IFTAnalyzer.Config();
+    auto ift_analyzer = new IFTAnalyzer(commit_trace, ift_analyzer_config, enable_parallel);
+    // ift_analyzer_config.parallel_threads = parallel_threads;
     auto ift_dumper = new IFTDumper(ift_analyzer);
 
     if (ift_data_types) {
-        ift_analyzer.included_data = ift_data_types.to!(IFTAnalyzer.IFTDataType);
+        ift_analyzer_config.included_data = ift_data_types.to!(IFTAnalyzer.IFTDataType);
     }
 
-    ift_analyzer.aggressive_revisit_skipping = enable_ift_skip_revisit;
+    ift_analyzer_config.aggressive_revisit_skipping = enable_ift_skip_revisit;
 
     if (enable_ift) {
         if (!ift_quiet) {
@@ -455,16 +456,16 @@ void cmd_runanalyze(ProgramArgs args) {
         }
 
         writefln("\nanalysis features: "
-            ~ (enable_parallel ? format("parallel x%s", parallel_threads) : "serial")
+            ~ (enable_parallel ? format("parallel x%s", totalCPUs) : "serial")
             ~ (enable_ift_graph ? " graph" : "")
             ~ (enable_ift_graph_analysis ? " graph_analysis" : "")
             ~ (enable_ift_skip_revisit ? " skip_revisit" : "")
         );
 
-        writefln(" included data types: %s", ift_analyzer.included_data);
+        writefln(" included data types: %s", ift_analyzer_config.included_data);
 
-        ift_analyzer.enable_ift_graph = enable_ift_graph;
-        ift_analyzer.enable_ift_graph_analysis = enable_ift_graph_analysis;
+        ift_analyzer_config.enable_ift_graph = enable_ift_graph;
+        ift_analyzer_config.enable_ift_graph_analysis = enable_ift_graph_analysis;
 
         ift_analyzer.analyze();
         if (!ift_quiet) {
