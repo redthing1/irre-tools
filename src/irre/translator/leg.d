@@ -40,7 +40,7 @@ class LegTranslator {
                     auto rewritten_instruction = rewrite_instruction(instruction);
                     writefln("  T %s", rewritten_instruction);
 
-                    conv_line = instruction;
+                    conv_line = rewritten_instruction;
                 }
                 // re-add the tab
                 conv_line = cast(string)('\t' ~ conv_line);
@@ -61,9 +61,22 @@ class LegTranslator {
         // now, tokenize the instruction
         auto lexed = lexer.lex(raw_instruction);
         parser.load_lex(lexed);
-        auto source_statement = parser.take_raw_statement().get();
+        auto maybe_source_statement = parser.take_raw_statement();
+        if (maybe_source_statement.isNull) {
+            writefln("  unimplemented instruction");
+            return "; UNIMPLEMENTED: " ~ raw_instruction;
+        }
+        auto source_statement = maybe_source_statement.get();
         writefln("  OP %s", source_statement.mnem);
-        // rewrite certain instructions (add, sub) to (adi, sbi) when relevant
+        switch (source_statement.mnem) {
+            case "add":
+            case "sub":
+                // rewrite to 'adi' and 'sbi' when A3 is imm
+
+                break;
+            default:
+                break; // we don't care
+        }
 
         auto rewritten = source_statement.dump();
         return rewritten;
