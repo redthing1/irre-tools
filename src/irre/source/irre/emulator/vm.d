@@ -298,6 +298,21 @@ class VirtualMachine {
                 commit_reg(ins.a1, reg[ins.a1], sources);
                 break;
             }
+        case OpCode.MUL: {
+                reg[ins.a1] = reg[ins.a2] * reg[ins.a3];
+                commit_binary_op_regs();
+                break;
+            }
+        case OpCode.DIV: {
+                reg[ins.a1] = reg[ins.a2] / reg[ins.a3];
+                commit_binary_op_regs();
+                break;
+            }
+        case OpCode.MOD: {
+                reg[ins.a1] = reg[ins.a2] % reg[ins.a3];
+                commit_binary_op_regs();
+                break;
+            }
         case OpCode.JMI: {
                 immutable UWORD addr = cast(UWORD)((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
                 reg[Register.PC] = addr;
