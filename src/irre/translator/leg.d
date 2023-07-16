@@ -3,6 +3,7 @@ module irre.translator.leg;
 import std.stdio;
 import std.algorithm.searching;
 import std.string;
+import std.conv;
 import std.range;
 import std.array;
 import irre.meta;
@@ -59,8 +60,32 @@ class LegTranslator {
     }
 
     string rewrite_instruction(string raw_instruction) {
+
+        void remap_instructions(Token[] tokens) {
+            auto mnem = tokens[0].content;
+            switch (mnem) {
+            case "b_to":
+                mnem = "jmi";
+                break;
+            default:
+                break;
+            }
+            tokens[0].content = mnem;
+        }
+
+        /** remap register names */
+        void remap_registers(Token[] tokens) {
+            if (parser.is_register_arg(tokens)) {
+                auto reg = tokens[0].content;
+                // rewrite rules
+                reg = reg.replace("r0", "rv");
+                tokens[0].content = reg;
+            }
+        }
+
         // now, tokenize the instruction
         auto lexed = lexer.lex(raw_instruction);
+        remap_instructions(lexed.tokens);
         parser.load_lex(lexed);
         auto maybe_source_statement = parser.take_raw_statement();
         if (maybe_source_statement.isNull) {
@@ -68,7 +93,13 @@ class LegTranslator {
             return "; UNIMPLEMENTED: " ~ raw_instruction;
         }
         auto source_statement = maybe_source_statement.get();
+        // remap registers
+        remap_registers(source_statement.a1);
+        remap_registers(source_statement.a2);
+        remap_registers(source_statement.a3);
+
         writefln("  OP %s", source_statement.mnem);
+
         switch (source_statement.mnem) {
         case "add":
             // rewrite to 'adi' when A3 is imm
@@ -81,6 +112,9 @@ class LegTranslator {
             if (!parser.is_register_arg(source_statement.a3)) {
                 source_statement.mnem = "sbi";
             }
+            break;
+        case "b_to":
+            source_statement.mnem = "jmi";
             break;
         default:
             break; // we don't care
