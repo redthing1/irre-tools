@@ -95,11 +95,11 @@ class Parser {
                     auto iden_next = peek_token();
                     if (iden_next.kind == CharType.MARK && iden_next.content == ":") { // label def (only if single mark)
                         expect_token(CharType.MARK); // eat the mark
-                        // define_label(iden.content); // create label
+                        define_label(iden.content); // create label
                         break;
                     } else if (iden_next.kind == CharType.BIND) { // macro def
                         expect_token(CharType.BIND); // eat the bind
-                        // define_macro(iden.content); // define the macro
+                        define_macro(iden.content); // define the macro
                         break;
                     } else { // instruction
                         immutable auto mnem = iden.content;
@@ -107,14 +107,14 @@ class Parser {
                         auto instr_size = INSTRUCTION_SIZE;
                         string a1, a2, a3;
                         if (maybeInfo.isNull) { // didn't match standard instruction names
-                            // auto md = resolve_macro(mnem); // check if a matching macro exists
-                            // if (!md.name) { // invalid mnemonic
-                            //     throw parser_error(format("unrecognized mnemonic: %s", mnem));
-                            // } else {
-                            //     // expand the macro
-                            //     expand_macro(&md, &src.statements);
-                            //     break;
-                            // }
+                            auto md = resolve_macro(mnem); // check if a matching macro exists
+                            if (!md.name) { // invalid mnemonic
+                                throw parser_error(format("unrecognized mnemonic: %s", mnem));
+                            } else {
+                                // expand the macro
+                                auto expanded_statements = expand_macro(md);
+                                break;
+                            }
                         } else { // fill in arguments
                             auto info = maybeInfo.get();
                             instr_size = info.size;
@@ -153,6 +153,41 @@ class Parser {
         // TODO: read args
 
         return statement;
+    }
+
+    void define_label(string name) {
+        labels ~= LabelDef(name, offset);
+    }
+
+    LabelDef resolve_label(string name) {
+        // find the label
+        foreach (label; labels.data) {
+            if (label.name == name) {
+                return label;
+            }
+        }
+        throw parser_error(format("label could not be resolved: %s", name));
+    }
+
+    void define_macro(string name) {
+        // TODO
+    }
+
+    MacroDef resolve_macro(string name) {
+        // find the macro
+        foreach (macro_; macros.data) {
+            if (macro_.name == name) {
+                return macro_;
+            }
+        }
+        throw parser_error(format("macro could not be resolved: %s", name));
+    }
+
+    AbstractStatement[] expand_macro(ref MacroDef def) {
+        // TODO
+        auto statements = appender!(AbstractStatement[]);
+
+        return statements.data;
     }
 
     private Token peek_token() {
