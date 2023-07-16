@@ -13,6 +13,7 @@ struct Snapshot {
 struct Commit {
     // what changed?
     enum Type {
+        Combined,
         Register,
         Memory
     }
@@ -50,7 +51,22 @@ struct Commit {
         import std.conv : to;
         import std.array : appender, array;
 
-        auto type_str = type == Type.Register ? "reg" : "mem";
+        // auto type_str = type == Type.Register ? "reg" : "mem";
+        string type_str;
+        switch (type) {
+        case Type.Register:
+            type_str = "reg";
+            break;
+        case Type.Memory:
+            type_str = "mem";
+            break;
+        case Type.Combined:
+            type_str = "comb";
+            break;
+        default:
+            assert(0);
+        }
+
         auto sb = appender!string;
 
         // commit type
