@@ -309,7 +309,7 @@ class VirtualMachine {
         case OpCode.STB: {
                 immutable UWORD addr = reg[ins.a2];
                 immutable byte offset = ins.a3;
-                mem[addr + offset] = reg[ins.a1];
+                mem[addr + offset] = cast(BYTE)(reg[ins.a1] & 0xff);
 
                 // complex commit
                 auto source_regs = commit_source_regs([ins.a1, ins.a2], [
