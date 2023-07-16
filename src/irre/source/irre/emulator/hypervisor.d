@@ -37,6 +37,7 @@ class Hypervisor {
 
     void add_debug_interrupt_handlers() {
         vm.custom_interrupt_handler = &interrupt;
+        vm.custom_halt_handler = &halt;
     }
 
     void interrupt(UWORD code) {
@@ -66,6 +67,10 @@ class Hypervisor {
                 break;
             }
         }
+    }
+
+    void halt(UWORD code) {
+        writefln("[halt] code %d", code);
     }
 
     bool onestep_prompt() {

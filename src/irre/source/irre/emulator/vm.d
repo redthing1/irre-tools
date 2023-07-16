@@ -24,6 +24,7 @@ class VirtualMachine {
     public Device[int] devices;
     private int device_id_counter = 0;
     public void delegate(UWORD) custom_interrupt_handler;
+    public void delegate(UWORD) custom_halt_handler;
     public bool log_commits;
     public CommitTrace commit_trace;
     public Reader reader;
@@ -104,7 +105,16 @@ class VirtualMachine {
 
     public void interrupt(UWORD code) {
         // call custom handler hook
-        custom_interrupt_handler(code);
+        if (custom_interrupt_handler) {
+            custom_interrupt_handler(code);
+        }
+    }
+
+    public void halt(UWORD code) {
+        executing = false;
+        if (custom_halt_handler) {
+            custom_halt_handler(code);
+        }
     }
 
     private void check_address(UWORD addr) {
@@ -226,8 +236,8 @@ class VirtualMachine {
                 immutable UWORD val = (ins.a2 | (ins.a3 << 8));
                 reg[ins.a1] = val;
                 commit_reg(ins.a1, reg[ins.a1], [
-                        InfoNode(InfoType.Immediate, ImmediatePos.BC, val)
-                    ]);
+                    InfoNode(InfoType.Immediate, ImmediatePos.BC, val)
+                ]);
                 break;
             }
         case OpCode.SUP: {
@@ -247,16 +257,16 @@ class VirtualMachine {
                 // move value from a2 to a1
                 reg[ins.a1] = reg[ins.a2];
                 commit_reg(ins.a1, reg[ins.a1], commit_source_regs([ins.a2], [
-                            reg[ins.a2]
-                        ]));
+                    reg[ins.a2]
+                ]));
                 break;
             }
         case OpCode.SXT: {
                 // move value from a2 to a1, sign extend
                 reg[ins.a1] = (cast(WORD) reg[ins.a2]);
                 commit_reg(ins.a1, reg[ins.a1], commit_source_regs([ins.a2], [
-                            reg[ins.a2]
-                        ]));
+                    reg[ins.a2]
+                ]));
                 break;
             }
         case OpCode.LDW: {
@@ -274,7 +284,7 @@ class VirtualMachine {
                     addr + offset + 0, addr + offset + 1, addr + offset + 2,
                     addr + offset + 3
                 ],
-                [
+                    [
                     mem[addr + offset + 0], mem[addr + offset + 1],
                     mem[addr + offset + 2], mem[addr + offset + 3]
                 ]);
@@ -298,14 +308,14 @@ class VirtualMachine {
 
                 // complex commit
                 auto source_regs = commit_source_regs([ins.a1, ins.a2], [
-                        reg[ins.a1], reg[ins.a2]
-                    ]);
+                    reg[ins.a1], reg[ins.a2]
+                ]);
                 auto source_imm = InfoNode(InfoType.Immediate, ImmediatePos.C, offset);
                 auto sources = source_regs ~ source_imm;
                 // memory is modified, source is registers source data, address, and offset
                 commit_mem([pos0, pos1, pos2, pos3], [
-                        mem[pos0], mem[pos1], mem[pos2], mem[pos3]
-                    ], sources);
+                    mem[pos0], mem[pos1], mem[pos2], mem[pos3]
+                ], sources);
                 break;
             }
         case OpCode.LDB: {
@@ -317,7 +327,9 @@ class VirtualMachine {
                 // complex commit
                 auto source_regs = commit_source_regs([ins.a2], [reg[ins.a2]]);
                 auto source_imm = InfoNode(InfoType.Immediate, ImmediatePos.C, offset);
-                auto source_mem = commit_source_mem([addr + offset], [mem[addr + offset]]);
+                auto source_mem = commit_source_mem([addr + offset], [
+                    mem[addr + offset]
+                ]);
                 auto sources = source_regs ~ source_imm ~ source_mem;
                 // registers a1 is modified, source is memory and address and offset
                 commit_reg(ins.a1, reg[ins.a1], sources);
@@ -331,8 +343,8 @@ class VirtualMachine {
 
                 // complex commit
                 auto source_regs = commit_source_regs([ins.a1, ins.a2], [
-                        reg[ins.a1], reg[ins.a2]
-                    ]);
+                    reg[ins.a1], reg[ins.a2]
+                ]);
                 auto source_imm = InfoNode(InfoType.Immediate, ImmediatePos.C, offset);
                 auto sources = source_regs ~ source_imm;
                 // memory is modified, source is registers source data, address, and offset
@@ -378,8 +390,8 @@ class VirtualMachine {
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
                 commit_reg(Register.PC, reg[Register.PC], [
-                        InfoNode(InfoType.Immediate, ImmediatePos.ABC, addr)
-                    ]);
+                    InfoNode(InfoType.Immediate, ImmediatePos.ABC, addr)
+                ]);
                 break;
             }
         case OpCode.JMP: {
@@ -387,8 +399,8 @@ class VirtualMachine {
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
                 commit_reg(Register.PC, reg[Register.PC], commit_source_regs([
-                        ins.a1
-                    ], [reg[ins.a1]]));
+                    ins.a1
+                ], [reg[ins.a1]]));
                 break;
             }
         case OpCode.BVE: {
@@ -403,8 +415,8 @@ class VirtualMachine {
                     last_branch_status = BranchStatus.NOT_TAKEN;
                 }
                 auto source_regs = commit_source_regs([ins.a1, ins.a2], [
-                        reg[ins.a1], reg[ins.a2]
-                    ]);
+                    reg[ins.a1], reg[ins.a2]
+                ]);
                 auto source_imm = InfoNode(InfoType.Immediate, ImmediatePos.C, b);
                 commit_reg(Register.PC, reg[Register.PC], source_regs ~ source_imm);
                 break;
@@ -421,8 +433,8 @@ class VirtualMachine {
                     last_branch_status = BranchStatus.NOT_TAKEN;
                 }
                 auto source_regs = commit_source_regs([ins.a1, ins.a2], [
-                        reg[ins.a1], reg[ins.a2]
-                    ]);
+                    reg[ins.a1], reg[ins.a2]
+                ]);
                 auto source_imm = InfoNode(InfoType.Immediate, ImmediatePos.C, b);
                 commit_reg(Register.PC, reg[Register.PC], source_regs ~ source_imm);
                 break;
@@ -434,11 +446,11 @@ class VirtualMachine {
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
                 commit_regs([Register.PC, Register.LR], [
-                        reg[Register.PC], reg[Register.LR]
-                    ],
-                    commit_source_regs([ins.a1, Register.PC], [
-                            reg[ins.a1], reg[Register.PC]
-                        ]));
+                    reg[Register.PC], reg[Register.LR]
+                ],
+                commit_source_regs([ins.a1, Register.PC], [
+                    reg[ins.a1], reg[Register.PC]
+                ]));
                 break;
             }
         case OpCode.RET: {
@@ -446,15 +458,15 @@ class VirtualMachine {
                 if (addr == 0) {
                     // attempted to RET to 0
                     // this is a HALT FAULT
-                    executing = false;
+                    halt(0);
                 }
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
                 reg[Register.LR] = 0; // clear LR
                 commit_regs([Register.PC, Register.LR], [
-                        reg[Register.PC], reg[Register.LR]
-                    ],
-                    commit_source_regs([Register.LR], [reg[Register.LR]]));
+                    reg[Register.PC], reg[Register.LR]
+                ],
+                commit_source_regs([Register.LR], [reg[Register.LR]]));
                 break;
             }
         case OpCode.SND: {
@@ -474,8 +486,8 @@ class VirtualMachine {
 
                 // commit
                 auto source_regs = commit_source_regs([ins.a1, ins.a2, ins.a3], [
-                        reg[ins.a1], reg[ins.a2], reg[ins.a3]
-                    ]);
+                    reg[ins.a1], reg[ins.a2], reg[ins.a3]
+                ]);
                 auto source_device = InfoNode(InfoType.Device, device_id, device_command);
                 auto sources = source_regs ~ source_device;
                 commit_regs([ins.a1], [reg[ins.a1]], sources);
@@ -488,7 +500,7 @@ class VirtualMachine {
                 break;
             }
         case OpCode.HLT:
-            executing = false;
+            halt(0);
             break;
         default:
             // unhandled op (illegal instruction)
@@ -534,7 +546,7 @@ class VirtualMachine {
     }
 
     public Snapshot snapshot() {
-        import std.algorithm.comparison: min;
+        import std.algorithm.comparison : min;
 
         Snapshot snapshot;
         snapshot.reg = reg.dup[0 .. irre.encoding.instructions.REGISTER_COUNT];
@@ -548,7 +560,7 @@ class VirtualMachine {
             auto copy_start = mem_addr;
             auto copy_end = min(mem.length, mem_addr + MemoryPageTable.PAGE_SIZE);
             auto copy_size = copy_end - copy_start;
-            snapshot.tracked_mem.pages[mem_addr].mem[0..copy_size] = mem[copy_start..copy_end];
+            snapshot.tracked_mem.pages[mem_addr].mem[0 .. copy_size] = mem[copy_start .. copy_end];
         }
         return snapshot;
     }
