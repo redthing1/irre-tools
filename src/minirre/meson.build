@@ -7,6 +7,7 @@ project('minirre', 'c',
 
 emu_sources = [
     'irre.h', 'irre.c',
+    'getopt.h',
     'demo.c',
 ]
 executable('minirre-emu', emu_sources)

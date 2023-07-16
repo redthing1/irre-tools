@@ -1,3 +1,4 @@
+#include "getopt.h"
 #include "irre.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,18 +56,38 @@ IRRE_UWORD handle_irre_device(IRRE_UWORD device_id, IRRE_UWORD device_command,
 }
 
 int main(int argc, char **argv) {
-  bool debug = false;
+  bool debug_insdump = false;
+  bool debug_regdump = false;
+  bool debug_memdump = false;
   char *filename = NULL;
 
   srand(time(NULL));
 
-  if (argc < 2) {
-    printf("usage: %s <filename> [debug]\n", argv[0]);
-    return 1;
+  int c;
+  while ((c = getopt(argc, argv, "drmf:")) != -1) {
+    switch (c) {
+    case 'd':
+      debug_insdump = true;
+      break;
+    case 'r':
+      debug_regdump = true;
+      break;
+    case 'm':
+      debug_memdump = true;
+      break;
+    case 'f':
+      filename = optarg;
+      break;
+    default:
+      printf("usage: %s [-d] [-r] [-m] -f <filename>\n", argv[0]);
+      return 1;
+    }
   }
-  filename = argv[1];
-  if (argc > 2 && argv[2][0] == 'd') {
-    debug = true;
+
+  // validate arguments
+  if (!filename) {
+    printf("specify a filename with -f\n");
+    return 1;
   }
 
   // load the binary
@@ -102,7 +123,7 @@ int main(int argc, char **argv) {
   printf("[%s] executing\n", __func__);
 
   for (size_t step = 0; vm_state.executing; step++) {
-    if (debug) {
+    if (debug_insdump) {
       // debug: show instruction
       IRRE_UWORD pc = vm_state.r[REG_PC];
       IRRE_WORD raw_instruction = irre_fetch(&vm_state);
@@ -118,23 +139,27 @@ int main(int argc, char **argv) {
     irre_step(&vm_state);
   }
 
-  // debug: show registers
-  printf("[%s] registers:\n", __func__);
-  for (int i = 0; i < IRRE_REGISTER_COUNT; i++) {
-    printf("[%s]   r%d: $%08x\n", __func__, i, vm_state.r[i]);
+  if (debug_regdump) {
+    // debug: show registers
+    printf("[%s] registers:\n", __func__);
+    for (int i = 0; i < IRRE_REGISTER_COUNT; i++) {
+      printf("[%s]   r%d: $%08x\n", __func__, i, vm_state.r[i]);
+    }
   }
 
-  // debug: pretty dump memory
-  printf("[%s] memory:\n", __func__);
-  for (int i = 0; i < IRRE_DEMO_MEMORY_SIZE; i += 16) {
-    printf("[%s] %08x: ", __func__, i);
-    for (int j = 0; j < 16; j++) {
-      printf("%02x", vm_state.m[i + j]);
-      if (j % 2 == 1) {
-        printf(" ");
+  if (debug_memdump) {
+    // debug: pretty dump memory
+    printf("[%s] memory:\n", __func__);
+    for (int i = 0; i < IRRE_DEMO_MEMORY_SIZE; i += 16) {
+      printf("[%s] %08x: ", __func__, i);
+      for (int j = 0; j < 16; j++) {
+        printf("%02x", vm_state.m[i + j]);
+        if (j % 2 == 1) {
+          printf(" ");
+        }
       }
+      printf("\n");
     }
-    printf("\n");
   }
 
   // free the binary
