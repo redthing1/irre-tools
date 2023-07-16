@@ -50,8 +50,8 @@ class Hypervisor {
             while (onestep_prompt()) {
             }
             break;
-        case VirtualMachine.DebugInterrupts.MEMFAULT:
-            writefln("[int] MEMFAULT");
+        case VirtualMachine.DebugInterrupts.MEMORY_FAULT:
+            writefln("[int] MEMORY_FAULT");
             dump_registers(true); // full dump
             // dump_stack();
             while (onestep_prompt()) {

@@ -44,7 +44,7 @@ class VirtualMachine {
 
     public enum DebugInterrupts {
         BREAK = 0xa0,
-        MEMFAULT = 0xa1,
+        MEMORY_FAULT = 0xa1,
         ILLEGAL_INSTRUCTION = 0xa2,
     }
 
@@ -121,7 +121,7 @@ class VirtualMachine {
     private void check_address(UWORD addr) {
         if (addr < 0 || addr >= MEMORY_SIZE) {
             // memory fault
-            interrupt(DebugInterrupts.MEMFAULT);
+            interrupt(DebugInterrupts.MEMORY_FAULT);
         }
     }
 
