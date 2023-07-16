@@ -11,6 +11,8 @@ sources = [
 
     'emulator/vm.d',
     'emulator/hypervisor.d',
+    'emulator/device.d',
+    'emulator/devices/terminal.d',
 
     'encoding/instructions.d',
     'encoding/rega.d',

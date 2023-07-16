@@ -1,8 +1,9 @@
 module irre.emulator.vm;
 
-import irre.encoding.instructions;
+public import irre.encoding.instructions;
 import irre.encoding.rega;
 import std.algorithm.mutation;
+import irre.emulator.device;
 
 enum REGISTER_COUNT = 32;
 enum MEMORY_SIZE = 64 * 1024; // 65K
@@ -12,10 +13,8 @@ class VirtualMachine {
     public BYTE[] mem;
     public bool executing = true;
     public ulong ticks;
-
-    this() {
-        initialize();
-    }
+    public Device[int] devices;
+    private int device_id_counter = 0;
 
     public void initialize() {
         // allocate memory buffer
@@ -26,9 +25,27 @@ class VirtualMachine {
 
         // reset stats
         ticks = 0;
+
+        // initialize all devices
+        device_id_counter = 0;
+        foreach (device; devices.byValue()) {
+            device.initialize(this, device_id_counter++);
+        }
     }
 
-    RegaHeader load(const ubyte[] compiled_data) {
+    public void attach_device(Device device) {
+        auto dev_id = device_id_counter++;
+        // initialize the device
+        device.initialize(this, dev_id);
+
+        devices[dev_id] = device;
+    }
+
+    public void detach_device(Device device) {
+        devices.remove(device.id);
+    }
+
+    public RegaHeader load(const ubyte[] compiled_data) {
         auto decoder = new RegaDecoder();
         auto head = decoder.read_header(compiled_data[0 .. RegaHeader.OFFSET]);
 
@@ -41,7 +58,7 @@ class VirtualMachine {
     }
 
     /** decode the next instruction */
-    Instruction decode_instruction() {
+    public Instruction decode_instruction() {
         OpCode op = cast(OpCode) mem[reg[cast(int) Register.PC] + 0];
         ARG a1 = cast(ARG) mem[reg[cast(int) Register.PC] + 1];
         ARG a2 = cast(ARG) mem[reg[cast(int) Register.PC] + 2];
@@ -50,11 +67,11 @@ class VirtualMachine {
         return Instruction(op, a1, a2, a3);
     }
 
-    void interrupt(UWORD code) {
+    public void interrupt(UWORD code) {
         // TODO: handle interrupt
     }
 
-    void execute_instruction(Instruction ins) {
+    public void execute_instruction(Instruction ins) {
         bool branched = false;
         switch (ins.op) {
         case OpCode.NOP:
@@ -184,6 +201,22 @@ class VirtualMachine {
                 reg[Register.LR] = 0; // clear LR
                 break;
             }
+        case OpCode.SND: {
+                immutable UWORD device_id = reg[ins.a1];
+                immutable UWORD device_command = reg[ins.a2];
+                immutable UWORD device_send_data = reg[ins.a3];
+
+                // get matching device
+                if (device_id in devices) {
+                    auto device = devices[device_id];
+                    device.recieve(device_command, device_send_data);
+                } else {
+                    // requested a device that was not found
+                    // TODO: UNK_DEVICE interrupt
+                }
+
+                break;
+            }
         case OpCode.INT: {
                 UWORD code = reg[ins.a1];
                 interrupt(code);
@@ -201,12 +234,20 @@ class VirtualMachine {
         }
     }
 
-    bool step() {
+    public bool step() {
         // fetch instruction
         auto instruction = decode_instruction();
         // execute the instruction
         execute_instruction(instruction);
         ticks++;
         return executing; // execution state
+    }
+
+    public void read_words(UWORD addr, UWORD[] buffer, size_t words) {
+        for (int i = 0; i < words; i += 1) {
+            auto mem_i = addr + i * UWORD.sizeof;
+            buffer[i] = mem[mem_i + 0] << 0 | mem[mem_i + 1] << 8 | mem[mem_i + 2]
+                << 16 | mem[mem_i + 3] << 24;
+        }
     }
 }

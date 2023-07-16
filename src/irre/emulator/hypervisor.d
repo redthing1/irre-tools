@@ -4,6 +4,7 @@ import irre.emulator.vm;
 import irre.disassembler.reader;
 import irre.disassembler.dumper;
 import irre.encoding.instructions;
+import irre.emulator.devices.terminal;
 import std.stdio;
 import std.conv;
 import std.string;
@@ -21,6 +22,11 @@ class Hypervisor {
         this.vm = vm;
         reader = new Reader();
         dumper = new Dumper(Dumper.Mode.Detailed);
+    }
+
+    void add_default_devices() {
+        // terminal
+        vm.attach_device(new TerminalDevice());
     }
 
     void run() {
