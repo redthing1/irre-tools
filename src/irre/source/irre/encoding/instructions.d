@@ -51,6 +51,7 @@ enum OpCode : ARG {
     ASI = 0x40, // add shifted immediate
     SUP = 0x41, // set upper 16
     SXT = 0x42, // sign extended move
+    SEQ = 0x43, // set equal to immediate
 
     INT = 0xf0, // interrupt
     SND = 0xfd, // send
@@ -213,6 +214,7 @@ class InstructionEncoding {
             case OpCode.ASI: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
             case OpCode.SUP: return InstructionInfo(OpCode.SUP, Operands.REG_IMM, 1);
             case OpCode.SXT: return InstructionInfo(OpCode.SXT, Operands.REG_REG, 1);
+            case OpCode.SEQ: return InstructionInfo(OpCode.SEQ, Operands.REG_REG_IMM, 1);
 
             // REGULAR_EXT device api
             case OpCode.SND: return InstructionInfo(OpCode.SND, Operands.REG_REG_REG, 1);

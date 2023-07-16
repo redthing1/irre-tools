@@ -270,6 +270,20 @@ class VirtualMachine {
                 ]));
                 break;
             }
+        case OpCode.SEQ: {
+                // set a1 to 1 if a2 == imm, else 0
+                immutable UWORD val = ins.a3;
+                if (reg[ins.a2] == val) {
+                    reg[ins.a1] = 1;
+                } else {
+                    reg[ins.a1] = 0;
+                }
+                auto source_regs = make_reg_sources([ins.a2], [reg[ins.a2]]);
+                auto source_imm = InfoNode(InfoType.Immediate, ImmediatePos.C, val);
+                auto sources = source_regs ~ source_imm;
+                commit_reg(ins.a1, reg[ins.a1], sources);
+                break;
+            }
         case OpCode.LDW: {
                 immutable UWORD addr = reg[ins.a2];
                 immutable byte offset = ins.a3;
