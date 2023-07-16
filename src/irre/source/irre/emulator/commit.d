@@ -51,13 +51,13 @@ struct InfoNode {
 
         switch (type) {
             case InfoType.Register:
-                sb ~= format("%s=%04x", data.to!Register, value);
+                sb ~= format("%s=$%04x", data.to!Register, value);
                 break;
             case InfoType.Memory:
-                sb ~= format("mem[%04x]=%02x", data, value);
+                sb ~= format("mem[$%04x]=%02x", data, value);
                 break;
             case InfoType.Immediate:
-                sb ~= format("i=%04x", value);
+                sb ~= format("i=$%04x", value);
                 break;
             case InfoType.Device:
                 sb ~= format("dev#%02x(%02x)", data, value);
@@ -149,23 +149,23 @@ struct Commit {
         // commit type
         sb ~= format("%s", type_str);
         // pc position
-        sb ~= format(" @0x%04x", pc);
+        sb ~= format(" @0x$%04x", pc);
 
         // commit data
         if (type == InfoType.Register) {
             // auto reg_id_show = reg_id.to!Register;
-            // sb ~= format(" %04s <- %04x", reg_id_show, reg_value);
+            // sb ~= format(" %04s <- $%04x", reg_id_show, reg_value);
             for (auto i = 0; i < reg_ids.length; i++) {
                 auto reg_id = reg_ids[i];
                 auto reg_value = reg_values[i];
                 auto reg_id_show = reg_id.to!Register;
-                sb ~= format(" %04s <- %04x", reg_id_show, reg_value);
+                sb ~= format(" %04s <- $%04x", reg_id_show, reg_value);
             }
         } else {
             for (auto i = 0; i < mem_addrs.length; i++) {
                 auto addr = mem_addrs[i];
                 auto value = mem_values[i];
-                sb ~= format(" mem[%04x] <- %02x", addr, value);
+                sb ~= format(" mem[$%04x] <- %02x", addr, value);
             }
         }
 
@@ -175,11 +175,11 @@ struct Commit {
             auto source = sources[i];
             // string source_type_str = _type_abbreviations[source.type];
             // switch (source.type) {
-            // case InfoType.Register : sb ~= format(" %s=%04x", source.data.to!Register, source.value);
+            // case InfoType.Register : sb ~= format(" %s=$%04x", source.data.to!Register, source.value);
             //     break;
-            // case InfoType.Memory : sb ~= format(" mem[%04x]=%02x", source.data, source.value);
+            // case InfoType.Memory : sb ~= format(" mem[$%04x]=%02x", source.data, source.value);
             //     break;
-            // case InfoType.Immediate : sb ~= format(" i=%04x", source.value);
+            // case InfoType.Immediate : sb ~= format(" i=$%04x", source.value);
             //     break;
             // case InfoType.Device : sb ~= format(" dev#%02x(%02x)", source.data, source.value);
             // default : assert(0);
