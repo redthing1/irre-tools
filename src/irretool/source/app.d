@@ -276,7 +276,7 @@ int cmd_runift(ProgramArgs args) {
 
     auto serialized_trace = cast(const(ubyte)[]) std.file.read(input);
     
-    import irre.emulator.commit;
+    import irre.analysis.commit;
     alias CommitTrace = IrreInfoLog.CommitTrace;
 
     // deserialize

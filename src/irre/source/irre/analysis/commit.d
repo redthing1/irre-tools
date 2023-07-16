@@ -1,4 +1,4 @@
-module irre.emulator.commit;
+module irre.analysis.commit;
 
 static import irre.encoding.instructions;
 // import irre.encoding.rega;

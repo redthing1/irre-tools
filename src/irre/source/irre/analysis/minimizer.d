@@ -9,7 +9,7 @@ import std.container.dlist;
 import core.time : MonoTime, Duration;
 
 import irre.util;
-import irre.emulator.commit;
+import irre.analysis.commit;
 import irre.assembler.ast;
 import irre.encoding.instructions;
 import irre.encoding.rega;
