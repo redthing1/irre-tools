@@ -6,6 +6,8 @@ import irre.assembler.lexer;
 class BuiltinMacros {
     public MacroDef MACRO_ADI;
     public MacroDef MACRO_SBI;
+    public MacroDef MACRO_LSI;
+    public MacroDef MACRO_ASI;
     public MacroDef MACRO_YEET;
     public MacroDef MACRO_CMP;
     public MacroDef MACRO_BEQ;
@@ -36,6 +38,30 @@ class BuiltinMacros {
                 SourceStatement("set", [Token("at", CharType.IDENTIFIER)],
                     [Token("v0", CharType.IDENTIFIER)]),
                 SourceStatement("sub", [Token("rA", CharType.IDENTIFIER)],
+                    [Token("rB", CharType.IDENTIFIER)], [
+                        Token("at", CharType.IDENTIFIER)
+                    ]),
+                ]);
+        MACRO_LSI = MacroDef("lsi", [
+                MacroArg(MacroArg.Type.REGISTER, "rA"),
+                MacroArg(MacroArg.Type.REGISTER, "rB"),
+                MacroArg(MacroArg.Type.VALUE, "v0")
+                ], [
+                SourceStatement("set", [Token("at", CharType.IDENTIFIER)],
+                    [Token("v0", CharType.IDENTIFIER)]),
+                SourceStatement("lsh", [Token("rA", CharType.IDENTIFIER)],
+                    [Token("rB", CharType.IDENTIFIER)], [
+                        Token("at", CharType.IDENTIFIER)
+                    ]),
+                ]);
+        MACRO_ASI = MacroDef("asi", [
+                MacroArg(MacroArg.Type.REGISTER, "rA"),
+                MacroArg(MacroArg.Type.REGISTER, "rB"),
+                MacroArg(MacroArg.Type.VALUE, "v0")
+                ], [
+                SourceStatement("set", [Token("at", CharType.IDENTIFIER)],
+                    [Token("v0", CharType.IDENTIFIER)]),
+                SourceStatement("ash", [Token("rA", CharType.IDENTIFIER)],
                     [Token("rB", CharType.IDENTIFIER)], [
                         Token("at", CharType.IDENTIFIER)
                     ]),

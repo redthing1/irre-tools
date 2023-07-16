@@ -36,6 +36,8 @@ class Parser {
         auto builtins = new BuiltinMacros();
         ast_builder.push_macro(builtins.MACRO_ADI);
         ast_builder.push_macro(builtins.MACRO_SBI);
+        ast_builder.push_macro(builtins.MACRO_LSI);
+        ast_builder.push_macro(builtins.MACRO_ASI);
         ast_builder.push_macro(builtins.MACRO_YEET);
         ast_builder.push_macro(builtins.MACRO_CMP);
         ast_builder.push_macro(builtins.MACRO_BEQ);
