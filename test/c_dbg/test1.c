@@ -7,10 +7,13 @@ char arr2[BLOCK_SIZE] = {9, 8, 7, 6};
 char add_buf[BLOCK_SIZE] = {0, 0, 0, 0};
 char arr3[BLOCK_SIZE] = {10, 10, 10, 10}; // correct result
 
-void add_blocks(char *block1, char *block2, char *result) {
-    for (int i = 0; i < BLOCK_SIZE; i++) {
-        result[i] = block1[i] + block2[i];
-    }
+// void add_blocks(char *block1, char *block2, char *result) {
+//     for (int i = 0; i < BLOCK_SIZE; i++) {
+//         result[i] = block1[i] + block2[i];
+//     }
+// }
+void add_second(char *block1, char *block2, char *result) {
+    result[1] = block1[1] + block2[1];
 }
 
 // bool compare_blocks(char *block1, char *block2) {
@@ -26,8 +29,8 @@ bool compare_second(char *block1, char *block2) {
 }
 
 int main() {
-    add_blocks(arr1, arr2, add_buf);
     __debugger_break();
+    add_second(arr1, arr2, add_buf);
 
     // if (!compare_blocks(add_buf, arr3)) {
     //     return 1;
