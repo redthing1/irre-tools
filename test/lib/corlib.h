@@ -39,6 +39,15 @@ void memset(volatile char *dst, int val, int count) {
     }
 }
 
+/** calculate length of null-terminated string */
+int strlen(volatile char *str) {
+    int len = 0;
+    while (str[len] != 0) {
+        len++;
+    }
+    return len;
+}
+
 int seed;
 int rng_a = 0xffffffff;
 int rng_c = 12345;
