@@ -107,22 +107,27 @@ class VirtualMachine {
             }
         case OpCode.SUB: {
                 reg[ins.a1] = (cast(WORD) reg[ins.a2]) - (cast(WORD) reg[ins.a3]);
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.AND: {
                 reg[ins.a1] = reg[ins.a2] & reg[ins.a3];
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.ORR: {
                 reg[ins.a1] = reg[ins.a2] | reg[ins.a3];
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.XOR: {
                 reg[ins.a1] = reg[ins.a2] ^ reg[ins.a3];
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.NOT: {
                 reg[ins.a1] = ~reg[ins.a2];
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.LSH: {
@@ -132,6 +137,7 @@ class VirtualMachine {
                 } else {
                     reg[ins.a1] = reg[ins.a2] >> -shift;
                 }
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.ASH: {
@@ -141,6 +147,7 @@ class VirtualMachine {
                 } else {
                     reg[ins.a1] = (cast(WORD) reg[ins.a2]) >> -shift;
                 }
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.TCU: {
@@ -151,6 +158,7 @@ class VirtualMachine {
                     sign = -1;
                 }
                 reg[ins.a1] = sign;
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.TCS: {
@@ -161,16 +169,19 @@ class VirtualMachine {
                     sign = -1;
                 }
                 reg[ins.a1] = sign;
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.SET: {
                 immutable short signed_val = cast(short)(ins.a2 | (ins.a3 << 8));
                 immutable WORD signext_imm = signed_val;
                 reg[ins.a1] = signext_imm;
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.MOV: {
                 reg[ins.a1] = reg[ins.a2];
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.LDW: {
@@ -178,27 +189,35 @@ class VirtualMachine {
                 immutable byte offset = ins.a3;
                 reg[ins.a1] = mem[addr + offset + 0] << 0 | mem[addr + offset + 1]
                     << 8 | mem[addr + offset + 2] << 16 | mem[addr + offset + 3] << 24;
+                commit_reg(ins.a1, reg[ins.a1]);
                 break;
             }
         case OpCode.STW: {
                 immutable UWORD addr = reg[ins.a2];
                 immutable byte offset = ins.a3;
-                mem[addr + offset + 0] = (reg[ins.a1] >> 0) & 0xff;
-                mem[addr + offset + 1] = (reg[ins.a1] >> 8) & 0xff;
-                mem[addr + offset + 2] = (reg[ins.a1] >> 16) & 0xff;
-                mem[addr + offset + 3] = (reg[ins.a1] >> 24) & 0xff;
+                auto pos0 = addr + offset + 0;
+                auto pos1 = addr + offset + 1;
+                auto pos2 = addr + offset + 2;
+                auto pos3 = addr + offset + 3;
+                mem[pos0] = (reg[ins.a1] >> 0) & 0xff;
+                mem[pos1] = (reg[ins.a1] >> 8) & 0xff;
+                mem[pos2] = (reg[ins.a1] >> 16) & 0xff;
+                mem[pos3] = (reg[ins.a1] >> 24) & 0xff;
+                commit_mem([pos0, pos1, pos2, pos3], [mem[pos0], mem[pos1], mem[pos2], mem[pos3]]);
                 break;
             }
         case OpCode.JMI: {
                 immutable UWORD addr = cast(UWORD)((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
+                commit_reg(Register.PC, reg[Register.PC]);
                 break;
             }
         case OpCode.JMP: {
                 immutable UWORD addr = reg[ins.a1];
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
+                commit_reg(Register.PC, reg[Register.PC]);
                 break;
             }
             // case OpCode.BIF: {
@@ -229,6 +248,7 @@ class VirtualMachine {
                 } else {
                     last_branch_status = BranchStatus.NOT_TAKEN;
                 }
+                commit_reg(Register.PC, reg[Register.PC]);
                 break;
             }
         case OpCode.BVN: {
@@ -242,6 +262,7 @@ class VirtualMachine {
                 } else {
                     last_branch_status = BranchStatus.NOT_TAKEN;
                 }
+                commit_reg(Register.PC, reg[Register.PC]);
                 break;
             }
         case OpCode.CAL: {
@@ -250,6 +271,7 @@ class VirtualMachine {
                 reg[Register.LR] = reg[Register.PC] + cast(uint) INSTRUCTION_SIZE;
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
+                commit_regs([Register.PC, Register.LR], [reg[Register.PC], reg[Register.LR]]);
                 break;
             }
         case OpCode.RET: {
@@ -262,6 +284,7 @@ class VirtualMachine {
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
                 reg[Register.LR] = 0; // clear LR
+                commit_regs([Register.PC, Register.LR], [reg[Register.PC], reg[Register.LR]]);
                 break;
             }
         case OpCode.SND: {
