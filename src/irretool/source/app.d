@@ -283,6 +283,21 @@ int cmd_emu(ProgramArgs args) {
     // start the emulator
     hyp.run();
 
+    // dump commits
+    if (log_commits) {
+        auto commit_trace = hyp.vm.commit_trace;
+
+        if (save_commits != null) {
+            // write commits to file
+            import std.zlib;
+            import mir.ser.msgpack: serializeMsgpack;
+            auto serialized_trace = serializeMsgpack(commit_trace);
+
+            writefln("serialized commits: %d bytes, saving to %s", serialized_trace.length, save_commits);
+            std.file.write(save_commits, compress(serialized_trace));
+        }
+    }
+
     return 0;
 }
 
