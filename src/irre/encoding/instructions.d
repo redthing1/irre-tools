@@ -81,9 +81,9 @@ enum Register : ARG {
     // R28 = 0x1c,
     LR = 0x1c, // return address
     // R29 = 0x1d,
-    AD = 0x1d, // asm temp 2
+    AD = 0x1d, // control flow temp
     // R30 = 0x1e,
-    AT = 0x1e, // asm temp 1
+    AT = 0x1e, // asm temp
     // R31 = 0x1f,
     SP = 0x1f, // stack pointer
 }
