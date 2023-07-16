@@ -17,4 +17,7 @@ configuration "unittest" {
     # test code
     sourcePaths "test"
     importPaths "test"
+
+    // add irre test file path as string importable
+    stringImportPaths "../../test"
 }
