@@ -7,6 +7,7 @@ import std.file;
 import irre.meta;
 import irre.assembler.lexer;
 import irre.assembler.parser;
+import irre.disassembler.dumper;
 
 string input_file;
 string output_file;
@@ -48,10 +49,9 @@ int main(string[] args) {
 
         // dump the ast
         writeln("== AST ==");
-        foreach (i, node; programAst.statements) {
-            writefln("4%d %04s $%04x $%04x $%04x", i, to!string(node.op), node.a1.peek!(ValueImm).val, node.a2.peek!(ValueImm).val, node.a3.peek!(ValueImm).val);
-            
-        }
+        auto dumper = new Dumper();
+        dumper.dump_statements(programAst.statements);
+        
     } catch (ParserException e) {
         writefln("parser error: %s at %s", e.msg, e.info);
     }
