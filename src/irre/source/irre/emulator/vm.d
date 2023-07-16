@@ -5,6 +5,8 @@ import irre.encoding.rega;
 import std.algorithm.mutation;
 import irre.emulator.device;
 import irre.emulator.commit;
+import irre.disassembler.reader;
+import irre.disassembler.dumper;
 
 enum REGISTER_COUNT = 37;
 enum MEMORY_SIZE = 64 * 1024; // 65K
@@ -20,6 +22,8 @@ class VirtualMachine {
     public void delegate(UWORD) custom_interrupt_handler;
     public bool log_commits;
     public CommitTrace commit_trace;
+    public Reader reader;
+    public Dumper dumper;
 
     // aliases
     enum reg_pc = cast(int) Register.PC;
@@ -45,6 +49,10 @@ class VirtualMachine {
         foreach (device; devices.byValue()) {
             device.initialize(this, device_id_counter++);
         }
+
+        // for commit logging
+        reader = new Reader();
+        dumper = new Dumper(Dumper.DumpStyle.Detailed);
     }
 
     public void attach_device(Device device) {
@@ -327,12 +335,24 @@ class VirtualMachine {
         commit_trace.snapshots ~= snapshot();
     }
 
+    private string dump_decoded_instruction() {
+        auto instr = decode_instruction();
+        auto statement = reader.decompile(instr);
+        auto statement_dump = dumper.format_statement(statement);
+        return statement_dump;
+    }
+
+    private void commit_set_state(ref Commit commit) {
+        commit.pc = reg[reg_pc];
+        commit.description = dump_decoded_instruction();
+    }
+
     public void commit_reg(UWORD reg_id, UWORD reg_val) {
         if (!log_commits)
             return;
 
         auto commit = Commit.from_reg(reg_id, reg_val);
-        commit.pc = reg[reg_pc];
+        commit_set_state(commit);
         commit_trace.commits ~= commit;
     }
 
@@ -341,7 +361,7 @@ class VirtualMachine {
             return;
 
         auto commit = Commit.from_mem(mem_addr, mem_val);
-        commit.pc = reg[reg_pc];
+        commit_set_state(commit);
         commit_trace.commits ~= commit;
     }
 }

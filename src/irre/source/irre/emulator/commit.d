@@ -23,6 +23,7 @@ struct Commit {
     UWORD mem_addr;
     UWORD mem_value;
     UWORD pc;
+    string description;
 
     static Commit from_reg(UWORD reg_id, UWORD reg_value) {
         Commit c;
@@ -43,14 +44,28 @@ struct Commit {
     string toString() const {
         import std.string : format;
         import std.conv : to;
+        import std.array: appender, array;
 
         auto type_str = type == Type.Register ? "reg" : "mem";
+        auto sb = appender!string;
+        
+        // commit type
+        sb ~= format("%s", type_str);
+        // pc position
+        sb ~= format(" @0x%04x", pc);
+
+        // commit data
         if (type == Type.Register) {
             auto reg_id_show = reg_id.to!Register;
-            return format("%s %04s <- %04x", type_str, reg_id_show, reg_value);
+            sb ~= format(" %04s <- %04x", reg_id_show, reg_value);
         } else {
-            return format("%s mem[%04x] <- %04x", type_str, mem_addr, mem_value);
+            sb ~= format(" mem[%04x] <- %04x", mem_addr, mem_value);
         }
+
+        // commit description
+        sb ~= format(" (%s)", description);
+
+        return sb.array;
     }
 }
 
