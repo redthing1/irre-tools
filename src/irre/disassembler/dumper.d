@@ -125,7 +125,7 @@ class Dumper {
                 append_arg(a1);
             }
             if (big_imm16) {
-                auto val = imm_arg_val(node.a1) | imm_arg_val(node.a2) << 8;
+                auto val = imm_arg_val(node.a2) | imm_arg_val(node.a3) << 8;
                 append_arg(format("$%04x", val));
             } else {
                 append_arg(a2);
