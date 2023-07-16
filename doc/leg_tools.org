@@ -110,4 +110,12 @@ compiles to assembly:
 #+end_src
 
 * building leg
+leg source code exists in two places, namely the original branch that the code was released for, and a pair of [[https://github.com/frasercrmck/llvm-leg][updated]] [[https://github.com/xdrie/clang-leg][repositories]] with slightly newer LLVM and Clang versions.
+
+for archival and tweaking purposes, we provide the following forked repositories:
++ [[https://github.com/xdrie/llvm-leg][llvm-leg]]
++ [[https://github.com/xdrie/clang-leg][clang-leg]]
+
+while the build instructions in those repos have been left mostly unmodified, the process will be again described in detail here.
+
 
