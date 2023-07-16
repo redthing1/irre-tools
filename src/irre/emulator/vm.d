@@ -166,7 +166,7 @@ class VirtualMachine {
                 break;
             }
         case OpCode.JMI: {
-                immutable UWORD addr = ins.a1;
+                immutable UWORD addr = cast(UWORD) ((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
                 reg[Register.PC] = addr;
                 branched = true;
                 break;
