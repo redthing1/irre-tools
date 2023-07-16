@@ -12,6 +12,7 @@ int add_or_sub(int a, int b, int add) {
 int main() {
     int a = 3;
     int b = 4;
-    int sum = add_or_sub(a, b, true);
-    int dif = add_or_sub(a, b, false);
+    int sum = add_or_sub(a, b, true);   // a + b = 7
+    int dif = add_or_sub(a, b, false);  // a - b = -1
+    return sum; // 7 + -1 = 6
 }
