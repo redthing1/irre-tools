@@ -65,4 +65,6 @@ $IRRE/irretool -v emu --commit-log --save-commits t1_trace.bin my_prog.bin
 ```
 2. run analyzer
 
-
+```
+$IRRE/irretool analyze --ift --pl --pl-threads 4 --ift-graph --ift-graph-analysis --ift-save-graph t1_graph.dot t1_trace.bin
+```
