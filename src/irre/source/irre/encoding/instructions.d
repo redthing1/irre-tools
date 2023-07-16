@@ -190,8 +190,8 @@ class InstructionEncoding {
             case OpCode.MOV: return InstructionInfo(OpCode.MOV, Operands.REG_REG, 1);
             case OpCode.LDW: return InstructionInfo(OpCode.LDW, Operands.REG_REG_IMM, 1);
             case OpCode.STW: return InstructionInfo(OpCode.STW, Operands.REG_REG_IMM, 1);
-            case OpCode.LDB: return InstructionInfo(OpCode.LDB, Operands.REG_REG, 1);
-            case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG, 1);
+            case OpCode.LDB: return InstructionInfo(OpCode.LDB, Operands.REG_REG_IMM, 1);
+            case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG_IMM, 1);
             
             // IRRE instruction set
             case OpCode.JMI: return InstructionInfo(OpCode.JMI, Operands.IMM, 1);
