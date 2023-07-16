@@ -347,7 +347,7 @@ class VirtualMachine {
     }
 
     public Snapshot snapshot() {
-        return Snapshot(reg, mem);
+        return Snapshot.from(reg, mem);
     }
 
     public void commit_snapshot() {
