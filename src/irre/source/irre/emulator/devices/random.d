@@ -4,7 +4,7 @@ import irre.emulator.device;
 import std.string;
 import std.stdio;
 import irre.util;
-import std.random: rndGen;
+import std.random : rndGen;
 
 class RandomDevice : Device {
     override @property UWORD id() {
@@ -21,7 +21,10 @@ class RandomDevice : Device {
         for (UWORD i = 0; i < out_length; i++) {
             BYTE rnd_byte = cast(BYTE) rndGen.front;
             vm.mem[out_address + i] = rnd_byte;
+            rndGen.popFront();
         }
+        log_put(format("[RANDOM] generated %d random bytes from %08x to %08x\n",
+                out_length, out_address, out_address + out_length));
 
         return 0;
     }
