@@ -40,13 +40,13 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
     }
 
     enum InfoType {
-        Unknown,
-        None,
-        Combined,
-        Register,
-        Memory,
-        Immediate,
-        Device,
+        Unknown = 0x0,
+        None = 0x1,
+        Register = 1 << 2,
+        Memory = 1 << 3,
+        Immediate = 1 << 4,
+        Combined = Register | Memory | Immediate,
+        Device = 1 << 6,
         Reserved1,
         Reserved2,
         Reserved3,
@@ -186,21 +186,18 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
             sb ~= format(" @0x$%04x", pc);
 
             // commit data
-            if (type == InfoType.Register) {
-                // auto reg_id_show = reg_id.to!TRegSet;
-                // sb ~= format(" %04s <- $%04x", reg_id_show, reg_value);
-                for (auto i = 0; i < reg_ids.length; i++) {
-                    auto reg_id = reg_ids[i];
-                    auto reg_value = reg_values[i];
-                    auto reg_id_show = reg_id.to!TRegSet;
-                    sb ~= format(" %04s <- $%04x", reg_id_show, reg_value);
-                }
-            } else {
-                for (auto i = 0; i < mem_addrs.length; i++) {
-                    auto addr = mem_addrs[i];
-                    auto value = mem_values[i];
-                    sb ~= format(" mem[$%04x] <- %02x", addr, value);
-                }
+            // auto reg_id_show = reg_id.to!TRegSet;
+            // sb ~= format(" %04s <- $%04x", reg_id_show, reg_value);
+            for (auto i = 0; i < reg_ids.length; i++) {
+                auto reg_id = reg_ids[i];
+                auto reg_value = reg_values[i];
+                auto reg_id_show = reg_id.to!TRegSet;
+                sb ~= format(" %04s <- $%04x", reg_id_show, reg_value);
+            }
+            for (auto i = 0; i < mem_addrs.length; i++) {
+                auto addr = mem_addrs[i];
+                auto value = mem_values[i];
+                sb ~= format(" mem[$%04x] <- %02x", addr, value);
             }
 
             // commit sources
