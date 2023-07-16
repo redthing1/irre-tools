@@ -149,6 +149,7 @@ class Parser {
                         // instruction
                         immutable auto mnem_token = iden;
                         immutable auto mnem = mnem_token.content;
+                        writefln("read mnem %s", mnem);
                         auto maybe_raw_statement = take_raw_statement(mnem);
                         if (!maybe_raw_statement.isNull) {
                             // standard instruction
@@ -157,16 +158,11 @@ class Parser {
                             offset += INSTRUCTION_SIZE; // update code offset
                         } else {
                             // it was not an instruction, perhaps it's a macro
-                            auto md = resolve_macro(mnem); // check if a matching macro exists
-                            if (!md.name) {
-                                // no matching macro was found
-                                // this, we don't recognize this statement
-                                throw parser_error_token(format("unrecognized macro: %s",
-                                        mnem), mnem_token);
-                            } else {
-                                // expand the macro
-                                // TODO: implementation
-                            }
+                            auto md = resolve_macro(mnem);
+                            // expand the macro
+                            auto unrolled_macro = expand_macro(md);
+                            statements ~= unrolled_macro;
+                            offset += INSTRUCTION_SIZE * unrolled_macro.length;
                         }
                     }
                     break;
@@ -208,51 +204,50 @@ class Parser {
         return resolved_statements.data;
     }
 
-    Nullable!SourceStatement take_raw_statement(string mnem) {
-        immutable auto maybeInfo = InstructionEncoding.get_info(mnem);
-        string a1, a2, a3;
+    /** get all the tokens that make up the next register arg */
+    Token[] take_register_arg_tokens() {
+        return [expect_token(CharType.IDENTIFIER)];
+    }
 
-        // get all the tokens that make up the next register arg
-        Token take_register_arg_tokens() {
-            return expect_token(CharType.IDENTIFIER);
-        }
-
-        // get all the tokens that make up the next value arg
-        Token[] take_value_arg_tokens() {
-            auto tokens = Token[].init;
-            immutable auto next = peek_token();
-            switch (next.kind) {
-            case CharType.MARK: {
-                    // this is a label reference
-                    expect_token(CharType.MARK); // eat the mark
-                    immutable auto label_token = expect_token(CharType.IDENTIFIER);
-                    tokens ~= label_token;
-                    immutable auto offset_token = peek_token();
-                    if (offset_token.kind == CharType.OFFSET) {
-                        // there is an offset token
-                        expect_token(CharType.OFFSET);
-                        tokens ~= expect_token(CharType.NUMERIC_CONSTANT);
-                    }
-                    // will consist of: [IDENTIFIER, NUMERIC_CONSTANT]
-                    break;
-                }
-            case CharType.NUMERIC_CONSTANT: {
-                    // this is a numeric token
+    /** get all the tokens that make up the next value arg */
+    Token[] take_value_arg_tokens() {
+        auto tokens = Token[].init;
+        immutable auto next = peek_token();
+        switch (next.kind) {
+        case CharType.MARK: {
+                // this is a label reference
+                expect_token(CharType.MARK); // eat the mark
+                immutable auto label_token = expect_token(CharType.IDENTIFIER);
+                tokens ~= label_token;
+                immutable auto offset_token = peek_token();
+                if (offset_token.kind == CharType.OFFSET) {
+                    // there is an offset token
+                    expect_token(CharType.OFFSET);
                     tokens ~= expect_token(CharType.NUMERIC_CONSTANT);
-                    // will consist of: [NUMERIC_CONSTANT]
-                    break;
                 }
-            case CharType.IDENTIFIER: {
+                // will consist of: [IDENTIFIER, NUMERIC_CONSTANT]
+                break;
+            }
+        case CharType.NUMERIC_CONSTANT: {
+                // this is a numeric token
+                tokens ~= expect_token(CharType.NUMERIC_CONSTANT);
+                // will consist of: [NUMERIC_CONSTANT]
+                break;
+            }
+        case CharType.IDENTIFIER: {
                 // could be a macro arg
                 tokens ~= expect_token(CharType.IDENTIFIER);
                 break;
             }
-            default:
-                throw parser_error_token(format("unrecognized value arg for instruction '%s'",
-                        mnem), next);
-            }
-            return tokens;
+        default:
+            throw parser_error_token(format("unrecognized value arg"), next);
         }
+        return tokens;
+    }
+
+    Nullable!SourceStatement take_raw_statement(string mnem) {
+        immutable auto maybeInfo = InstructionEncoding.get_info(mnem);
+        string a1, a2, a3;
 
         if (maybeInfo.isNull) { // didn't match standard instruction names
             return Nullable!SourceStatement.init;
@@ -281,67 +276,69 @@ class Parser {
         return Nullable!SourceStatement(statement);
     }
 
+    /** interpret numeric constant */
+    int parse_numeric(string num) {
+        char pfx = num[0];
+        // create a new string without the prefix
+        string num_str = num[1 .. $]; // convert base
+        int val = 0;
+        switch (pfx) {
+        case '$': {
+                // interpret as base-16
+                val = to!int(num_str, 16);
+                break;
+            }
+        case '.': {
+                // interpret as base-10
+                val = to!int(num_str);
+                break;
+            }
+        default:
+            // invalid numeric type (by prefix)
+            throw parser_error(format("invalid numeric prefix: %c", pfx));
+        }
+        return val;
+    }
+
+    /** parse a special register arg from tokens */
+    ValueImm read_register_arg(Token[] tokens) {
+        auto register_token = tokens[0];
+        return ValueImm(InstructionEncoding.get_register(register_token.content));
+    }
+
+    /** parse a special value arg from tokens */
+    ValueArg read_value_arg(Token[] tokens) {
+        auto pos = 0;
+        immutable auto next = tokens[pos];
+
+        switch (next.kind) {
+        case CharType.IDENTIFIER: {
+                // this is a label reference
+                immutable auto label_token = next;
+                pos++; // move to next token
+                auto offset = 0;
+                if (tokens.length > 1) {
+                    // there is an offset
+                    auto offset_token = tokens[pos];
+                    offset = parse_numeric(offset_token.content);
+                }
+                return cast(ValueArg) ValueRef(label_token.content, offset);
+            }
+        case CharType.NUMERIC_CONSTANT: {
+                immutable auto num_token = next;
+                auto num = parse_numeric(num_token.content);
+                return cast(ValueArg) ValueImm(num);
+            }
+        default:
+            throw parser_error_token(format("unrecognized value arg of type %s",
+                    to!string(next.kind)), next);
+        }
+    }
+
     AbstractStatement parse_statement(SourceStatement raw_statement) {
         auto maybeInfo = InstructionEncoding.get_info(raw_statement.mnem);
         auto info = maybeInfo.get();
         auto statement = AbstractStatement(info.op);
-
-        int parse_numeric(string num) { // interpret numeric constant
-            char pfx = num[0];
-            // create a new string without the prefix
-            string num_str = num[1 .. $]; // convert base
-            int val = 0;
-            switch (pfx) {
-            case '$': {
-                    // interpret as base-16
-                    val = to!int(num_str, 16);
-                    break;
-                }
-            case '.': {
-                    // interpret as base-10
-                    val = to!int(num_str);
-                    break;
-                }
-            default:
-                // invalid numeric type (by prefix)
-                throw parser_error(format("invalid numeric prefix: %c", pfx));
-            }
-            return val;
-        }
-
-        ValueImm read_register_arg(Token[] tokens) {
-            auto register_token = tokens[0];
-            return ValueImm(InstructionEncoding.get_register(register_token.content));
-        }
-
-        // read a special value arg
-        ValueArg read_value_arg(Token[] tokens) {
-            auto pos = 0;
-            immutable auto next = tokens[pos];
-
-            switch (next.kind) {
-            case CharType.IDENTIFIER: {
-                    // this is a label reference
-                    immutable auto label_token = next;
-                    pos++; // move to next token
-                    auto offset = 0;
-                    if (tokens.length > 1) {
-                        // there is an offset
-                        auto offset_token = tokens[pos];
-                        offset = parse_numeric(offset_token.content);
-                    }
-                    return cast(ValueArg) ValueRef(label_token.content, offset);
-                }
-            case CharType.NUMERIC_CONSTANT: {
-                    immutable auto num_token = next;
-                    auto num = parse_numeric(num_token.content);
-                    return cast(ValueArg) ValueImm(num);
-                }
-            default:
-                throw parser_error_token(format("unrecognized value arg of type %s for instruction '%s'",
-                        to!string(next.kind), raw_statement.mnem), next);
-            }
-        }
 
         // read in args from tokens
         if ((info.operands & Operands.K_R1) > 0) {
@@ -428,7 +425,8 @@ class Parser {
                 statements ~= maybe_raw_statement.get();
             } else {
                 // unrecognized mnemonic
-                throw parser_error_token(format("unrecognized mnemonic within macro '%s'", name), mnem_token);
+                throw parser_error_token(format("unrecognized mnemonic within macro '%s'",
+                        name), mnem_token);
             }
         }
         def.statements = statements.data;
@@ -446,8 +444,24 @@ class Parser {
     }
 
     AbstractStatement[] expand_macro(ref MacroDef def) {
-        // TODO
         auto statements = appender!(AbstractStatement[]);
+
+        // TODO: properly unroll the macro
+
+        auto given_args = appender!(Token[][]);
+        // get the given args
+        foreach (arg; def.args) {
+            switch (arg.type) {
+            case MacroArg.Type.VALUE:
+                given_args ~= take_value_arg_tokens();
+                break;
+            case MacroArg.Type.REGISTER:
+                given_args ~= take_register_arg_tokens();
+                break;
+            default:
+                assert(0);
+            }
+        }
 
         return statements.data;
     }
@@ -484,7 +498,7 @@ class Parser {
     }
 
     private ParserException parser_error_token(string message, Token token) {
-        return new ParserException(format("%s on line %d at token '%s'", message,
-                token.line, token.content));
+        return new ParserException(format("%s on line %d at token '%s'",
+                message, token.line, token.content));
     }
 }
