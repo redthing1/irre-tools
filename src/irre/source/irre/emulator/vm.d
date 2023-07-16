@@ -509,11 +509,6 @@ class VirtualMachine {
         return statement_dump;
     }
 
-    private void commit_set_state(ref Commit commit) {
-        commit.pc = last_program_counter;
-        commit.description = dump_decoded_instruction();
-    }
-
     public void commit_reg(UWORD reg_id, UWORD reg_value, Commit.Source[] sources) {
         commit_regs([reg_id], [reg_value], sources);
     }
@@ -522,9 +517,12 @@ class VirtualMachine {
         if (!log_commits)
             return;
 
-        auto commit = Commit.from_regs(reg_ids, reg_values);
-        commit.sources = sources;
-        commit_set_state(commit);
+        auto commit = Commit()
+            .with_type(InfoType.Register)
+            .with_pc(last_program_counter)
+            .with_dest_regs(reg_ids, reg_values)
+            .with_sources(sources)
+            .with_description(dump_decoded_instruction());
         commit_trace.commits ~= commit;
     }
 
@@ -532,9 +530,12 @@ class VirtualMachine {
         if (!log_commits)
             return;
 
-        auto commit = Commit.from_mem(mem_addrs, mem_values);
-        commit.sources = sources;
-        commit_set_state(commit);
+        auto commit = Commit()
+            .with_type(InfoType.Memory)
+            .with_pc(last_program_counter)
+            .with_dest_mem(mem_addrs, mem_values)
+            .with_sources(sources)
+            .with_description(dump_decoded_instruction());
         commit_trace.commits ~= commit;
     }
 
