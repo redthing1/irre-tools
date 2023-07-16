@@ -12,7 +12,7 @@
 #define IRRE_WORD int32_t
 #define IRRE_UWORD uint32_t
 
-#define IRRE_ARG IRRE_BYTE
+#define IRRE_ARG IRRE_UBYTE
 #define IRRE_OPCODE IRRE_UBYTE
 
 /* OPCODE and REG definitions */
@@ -109,7 +109,7 @@ typedef enum {
 
 typedef struct {
   IRRE_WORD r[IRRE_REGISTER_COUNT]; // registers
-  IRRE_BYTE *m;                     // memory
+  IRRE_UBYTE *m;                     // memory
   IRRE_UWORD mem_size;              // memory size
   void (*interrupt_handler)(IRRE_UWORD);
   void (*error_handler)(IrreError);
