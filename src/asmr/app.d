@@ -61,8 +61,7 @@ int main(string[] args) {
         auto encoder = new RegaEncoder();
         auto compiled_data = encoder.write(programAst);
 
-        auto ouf = File(output_file, "w");
-        ouf.rawWrite(compiled_data);
+        std.file.write(output_file, compiled_data);
 
     } catch (ParserException e) {
         writefln("parser error: %s at %s", e.msg, e.info);
