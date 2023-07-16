@@ -112,7 +112,8 @@ class Hypervisor {
         if (debug_mode) {
             dump_registers(true); // full dump
         }
-        log_put(format("halted after %d cycles with code $%04x.", vm.ticks, vm.reg[Register.R0]));
+        log_put(format("halted after %d cycles with code $%04x (#%04d).",
+            vm.ticks, vm.reg[Register.R0], vm.reg[Register.R0]));
         // add a final snapshot
         vm.commit_snapshot();
     }
