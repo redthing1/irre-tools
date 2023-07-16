@@ -22,7 +22,8 @@ enum CharType {
     DIRECTIVE_PREFIX = 1 << 9, // '%'
     NUMERIC_HEX = 1 << 10, // beef
     PACK_START = 1 << 11, // '\'
-    IDENTIFIER = ALPHA | NUMERIC,
+    IDENTIFIER_SPECIAL = 1 << 12, // other identifier symbols
+    IDENTIFIER = ALPHA | NUMERIC | IDENTIFIER_SPECIAL,
     DIRECTIVE = DIRECTIVE_PREFIX | ALPHA,
     NUMERIC_CONSTANT = NUMERIC | NUMERIC_HEX | NUM_SPECIAL,
 }
@@ -161,10 +162,12 @@ class Lexer {
         if ((c >= 'a' && c <= 'f')) {
             type |= CharType.NUMERIC_HEX;
         }
-        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_')) {
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
             type |= CharType.ALPHA;
         } else if (c >= '0' && c <= '9') {
             type |= CharType.NUMERIC;
+        } else if (c == '_' || c == '.') {
+            type |= CharType.IDENTIFIER_SPECIAL;
         }
 
         return type;
