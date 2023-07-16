@@ -4,7 +4,7 @@
 
 #define IRRE_DEMO_MEMORY_SIZE (1024 * 64) // 64 KB
 IrreState vm_state;
-IRRE_BYTE vm_memory[IRRE_DEMO_MEMORY_SIZE];
+IRRE_UBYTE vm_memory[IRRE_DEMO_MEMORY_SIZE];
 
 uint8_t *read_file(char *filename, size_t *size);
 
