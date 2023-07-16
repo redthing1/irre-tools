@@ -52,10 +52,9 @@ class Hypervisor {
         // done.
 
         if (debug_mode) {
-            writefln("execution halted after %d cycles.", vm.ticks);
             dump_registers(true); // full dump
         }
-        writefln("program halted with code $%04x", vm.reg[Register.R0]);
+        writefln("halted after %d cycles with code $%04x.", vm.ticks, vm.reg[Register.R0]);
     }
 
     void dump_registers(bool full) {
