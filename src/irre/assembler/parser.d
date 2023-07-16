@@ -146,6 +146,7 @@ class Parser {
                         // data directive
                         auto packed_data = take_data_declaration();
                         auto block = DataBlock(global_offset, packed_data);
+                        global_offset += packed_data.length;
                         data_blocks ~= block;
                         log_put(format("data block[%d] at offset %d", block.data.length, block.offset));
                     }

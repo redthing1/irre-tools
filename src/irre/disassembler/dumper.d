@@ -42,14 +42,6 @@ class Dumper {
 
     public string format_statement(AbstractStatement node) {
         // based on operand type, format each arg
-        auto maybeInfo = InstructionEncoding.get_info(node.op);
-        if (maybeInfo.isNull) {
-            throw new DumperException(format("could not format statement with unknown op: %s",
-                    to!string(node.op)));
-        }
-        auto info = maybeInfo.get();
-        string mnem = toLower(to!string(node.op));
-        string a1, a2, a3;
 
         string format_imm_arg(ValueArg arg) {
             auto v = arg.peek!(ValueImm).val;
@@ -60,6 +52,16 @@ class Dumper {
             auto s = toLower(to!string(to!Register(arg.peek!(ValueImm).val)));
             return format("%s", s);
         }
+
+        auto maybeInfo = InstructionEncoding.get_info(node.op);
+        if (maybeInfo.isNull) {
+            return format("?? [$%02x %s %s %s]", to!ubyte(node.op), format_imm_arg(node.a1), format_imm_arg(node.a2), format_imm_arg(node.a3));
+            // throw new DumperException(format("could not format statement with unknown op: %s",
+            //         to!string(node.op)));
+        }
+        auto info = maybeInfo.get();
+        string mnem = toLower(to!string(node.op));
+        string a1, a2, a3;
 
         // by default, format all as immediates
         a1 = format_imm_arg(node.a1);
@@ -102,7 +104,7 @@ class Dumper {
         if ((info.operands & Operands.K_R2) | (info.operands & Operands.K_I3)) {
             append_arg(a3);
         }
-        auto str = std.string.strip(cast (string) builder.data);
+        auto str = std.string.strip(cast(string) builder.data);
         return str;
     }
 

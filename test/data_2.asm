@@ -7,8 +7,13 @@ head_data:
 
 main:
     set r2 ::head_data
-    ldw r1 r2 #0 ; load the data into r1
+    ldw r1 r2 #0 ; load the data
+    set r2 ::tail_data_num
+    ldw r2 r2 #0
+    add r0 r1 r2 ; add
     hlt
 
-tail_data:
+tail_data_z:
     %d \z 8 ; 8 zero-bytes
+tail_data_num:
+    %d \x 33000000
