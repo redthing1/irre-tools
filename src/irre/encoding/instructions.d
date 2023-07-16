@@ -3,6 +3,10 @@ module irre.encoding.instructions;
 import std.typecons;
 import std.conv;
 import std.uni;
+import std.range;
+import std.traits;
+import std.algorithm.searching;
+import std.stdio;
 
 // integral types
 alias BYTE = ubyte;
@@ -109,8 +113,19 @@ class InstructionEncoding {
     public static Nullable!InstructionInfo get_info(string mnemonic) {
         // normalize mnemonic
         mnemonic = toUpper(mnemonic);
+
         // parse op from mnemonic
-        return get_info(to!OpCode(mnemonic));
+        auto matched_mnem = Nullable!OpCode.init;
+        foreach (immutable mnem; [EnumMembers!OpCode]) {
+            if (to!string(mnem) == mnemonic) {
+                matched_mnem = Nullable!OpCode(mnem);
+            }
+        }
+
+        if (matched_mnem.isNull) {
+            return Nullable!InstructionInfo.init;
+        }
+        return get_info(matched_mnem.get());
     }
 
     public static Nullable!InstructionInfo get_info(OpCode op) {
