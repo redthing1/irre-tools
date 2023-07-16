@@ -18,6 +18,7 @@ class Hypervisor {
     public VirtualMachine vm;
     public bool debug_mode;
     public bool onestep_mode;
+    public bool full_regdump = false;
     public Reader reader;
     public Dumper dumper;
 
@@ -42,7 +43,7 @@ class Hypervisor {
         switch (code) {
         case VirtualMachine.DebugInterrupts.BREAK:
             writefln("[int] BREAK");
-            dump_registers(false); // minidump
+            dump_registers(full_regdump); // minidump
             while (onestep_prompt()) {
             }
             break;
@@ -96,7 +97,7 @@ class Hypervisor {
                 default:
                     break;
                 }
-                dump_registers(false); // minidump
+                dump_registers(full_regdump); // minidump
             }
             if (onestep_mode) {
                 while (onestep_prompt()) {

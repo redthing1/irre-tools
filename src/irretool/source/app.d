@@ -52,6 +52,7 @@ void main(string[] raw_args) {
                 .add(new Argument("input", "input file"))
                 .add(new Flag("d", "debug", "debug mode"))
                 .add(new Flag("s", "step", "step mode"))
+                .add(new Flag("u", "fullregdump", "full register dump"))
                 .add(new Flag(null, "commitlog", "enable commit log").full("commit-log"))
                 .add(new Option(null, "savecommits", "save commits to file").full("save-commits"))
                 .add(new Flag(null, "ift", "enable ift analysis"))
@@ -246,6 +247,7 @@ int cmd_emu(ProgramArgs args) {
     auto input = args.arg("input");
     auto debug_mode = args.flag("debug");
     auto step_mode = args.flag("step");
+    auto full_regdump = args.flag("fullregdump");
     auto log_commits = args.flag("commitlog");
     auto save_commits = args.option("savecommits");
     auto enable_ift = args.flag("ift");
@@ -271,6 +273,7 @@ int cmd_emu(ProgramArgs args) {
     auto hyp = new Hypervisor(vm);
     hyp.debug_mode = debug_mode;
     hyp.onestep_mode = step_mode;
+    hyp.full_regdump = full_regdump;
 
     // add basic IO support
     hyp.add_default_devices();
