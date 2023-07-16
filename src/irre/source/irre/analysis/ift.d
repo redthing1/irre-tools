@@ -36,10 +36,6 @@ class IFTAnalyzer {
         }
     }
 
-    void dump_analysis() {
-        // TODO
-    }
-
     void analyze_clobber() {
         // calculate the total clobber commit between the initial and final state
 
@@ -63,6 +59,27 @@ class IFTAnalyzer {
                 clobber.mem_addrs ~= mem_addr;
                 clobber.mem_values ~= snap_final.mem[mem_addr];
             }
+        }
+    }
+
+    void dump_analysis() {
+        // 1. dump clobber commit
+        writefln(" clobber:");
+
+        // memory
+        writefln("  memory:");
+        for (auto i = 0; i < clobber.mem_addrs.length; i++) {
+            auto mem_addr = clobber.mem_addrs[i];
+            auto mem_value = clobber.mem_values[i];
+            writefln("   mem[%04x] <- %04x", mem_addr, mem_value);
+        }
+
+        // registers
+        writefln("  regs:");
+        for (auto i = 0; i < clobber.reg_ids.length; i++) {
+            auto reg_id = clobber.reg_ids[i].to!Register;
+            auto reg_value = clobber.reg_values[i];
+            writefln("   reg %s <- %04x", reg_id, reg_value);
         }
     }
 }
