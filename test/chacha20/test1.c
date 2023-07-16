@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
 #endif
 
     // check that the encryption and decryption worked
-    if (!memcmp(input, decrypt, PLAINTEXT_LEN)) {
+    if (memcmp(input, decrypt, PLAINTEXT_LEN) != 0) {
         return 1;
     }
 
