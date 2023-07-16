@@ -118,4 +118,30 @@ for archival and tweaking purposes, we provide the following forked repositories
 
 while the build instructions in those repos have been left mostly unmodified, the process will be again described in detail here.
 
+first, obtain all relevant source code:
+#+begin_src sh
+# get the LLVM source
+git clone https://github.com/xdrie/llvm-leg
+cd llvm-leg
+# get the clang source (technically optional, but required to compile C in addition to LLVM IR, which is supported by the rest of LLVM)
+git clone https://github.com/xdrie/clang-leg tools/clang
+#+end_src
+
+as for compiling, i was unable to build the repos using a modern version of Clang. instead, follow the suggestion of the tested compiler ~gcc-4.9~. this worked for me in 2020-06.
+
+#+begin_src sh
+mkdir build && cd build
+# generate the ninja build files
+CC=/usr/bin/gcc-4.9 CXX=/usr/bin/g++-4.9 cmake -G "Ninja" "-DCMAKE_BUILD_TYPE:STRING=DEBUG" "-DLLVM_TARGETS_TO_BUILD:STRING=LEG" ../
+# compile
+ninja
+#+end_src
+
+this will create binaries in ~build/bin~ from the repo root.
+to compile C source to ~.s~ LEG assembly:
+#+begin_src sh
+./build/bin/clang -cc1 -triple leg-unknown-unknown -S -o ex1.s docs/Codeplay/examples/ex1/ex1.c
+#+end_src
+
+
 
