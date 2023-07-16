@@ -60,9 +60,8 @@ class Dumper {
         string format_imm_arg(ValueArg arg) {
             string fmt;
             if (arg.hasValue) {
-                arg.visit!((ValueImm imm) => { fmt = format("$%02x", imm.val); }, (ValueRef ref_) => {
-                    fmt = format("::%s", ref_.label);
-                });
+                fmt = arg.visit!((ValueImm imm) => format("$%02x", imm.val),
+                        (ValueRef ref_) => format("::%s", ref_.label));
             } else {
                 fmt = format("$%02x", 0); // no value here
             }
