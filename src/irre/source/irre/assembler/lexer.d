@@ -80,17 +80,25 @@ class Lexer {
         // lexer loop
         while (pos < source.length) {
             skip_chars(CharType.SPACE); // skip any leading whitespace
+            bool is_comment = false;
             while (peek_char() == ';') { // comments
+                is_comment = true;
                 skip_until('\n'); // ignore the rest of the line
-                skip_chars(CharType.SPACE); // skip any remaining space
             }
             // start/end comments with /* */
             if (peek_char() == '/' && peek_char(1) == '*') {
-                skip_until("*/");
-                skip_chars(CharType.SPACE);
+                is_comment = true;
+                skip_until_str("*/"); // ignore the rest of the comment
+                // eat the end of the comment
+                take_char();
+                take_char();
             }
             if (pos >= source.length) {
                 break;
+            }
+            if (is_comment) {
+                // go back to the top of the loop
+                continue;
             }
             // process character
             auto c = peek_char();
@@ -235,9 +243,15 @@ class Lexer {
         }
     }
 
-    private void skip_until(string until) {
-        while (pos < source.length && !working.to!string.endsWith(until)) {
-            take_char();
+    private void skip_until_str(string until) {
+        auto sb = appender!string();
+        while (pos < source.length) {
+            sb ~= take_char();
+            if (sb.data.endsWith(until)) {
+                // rewind the length of the until string
+                pos -= until.length;
+                break;
+            }
         }
     }
 
