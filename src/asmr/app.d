@@ -54,7 +54,7 @@ int main(string[] args) {
         if (dump) {
             // dump the ast
             writeln("== AST ==");
-            auto dumper = new Dumper();
+            auto dumper = new Dumper(Dumper.Mode.Detailed);
             dumper.dump_statements(programAst.statements);
         }
 
