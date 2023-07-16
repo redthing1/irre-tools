@@ -1,4 +1,4 @@
-#include "corlib.h"
+#include "../lib/corlib.h"
 
 #define MSG_SZ 16 // the size of our message string
 #define TERM_MAP_ADDR (char *)0x7000 // the location (changeable) where we map the terminal

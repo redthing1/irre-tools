@@ -1,7 +1,7 @@
 #ifndef TERM_H
 #define TERM_H
 
-#include "corlib.h"
+#include "../lib/corlib.h"
 
 #define TERM_BUF_SZ 256 // the size of our terminal buffer
 #define TERM_DEV_ID 1 // device ID of the terminal

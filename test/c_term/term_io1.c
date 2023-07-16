@@ -1,4 +1,4 @@
-#include "corlib.h"
+#include "../lib/corlib.h"
 #include "term.h"
 
 #define MSG_SZ 16 // the size of our message string
