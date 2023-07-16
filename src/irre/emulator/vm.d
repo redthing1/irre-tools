@@ -132,17 +132,18 @@ class VirtualMachine {
             }
         case OpCode.LDW: {
                 immutable UWORD addr = reg[ins.a2];
-                immutable UWORD offset = reg[ins.a3];
+                immutable UWORD offset = ins.a3;
                 reg[ins.a1] = mem[addr + offset + 0] << 0 | mem[addr + offset + 1]
                     << 8 | mem[addr + offset + 2] << 16 | mem[addr + offset + 3] << 24;
                 break;
             }
         case OpCode.STW: {
-                UWORD addr = reg[ins.a1];
-                mem[addr + 0] = (reg[ins.a2] >> 0) & 0xff;
-                mem[addr + 1] = (reg[ins.a2] >> 8) & 0xff;
-                mem[addr + 2] = (reg[ins.a2] >> 16) & 0xff;
-                mem[addr + 3] = (reg[ins.a2] >> 24) & 0xff;
+                immutable UWORD addr = reg[ins.a1];
+                immutable UWORD offset = ins.a3;
+                mem[addr + offset + 0] = (reg[ins.a2] >> 0) & 0xff;
+                mem[addr + offset + 1] = (reg[ins.a2] >> 8) & 0xff;
+                mem[addr + offset + 2] = (reg[ins.a2] >> 16) & 0xff;
+                mem[addr + offset + 3] = (reg[ins.a2] >> 24) & 0xff;
                 break;
             }
         case OpCode.JMI: {
