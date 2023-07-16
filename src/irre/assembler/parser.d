@@ -83,13 +83,11 @@ class Parser {
                             auto packed_data = take_data_declaration();
                             DataBlock block = {data: packed_data};
                             ast_builder.push_data_block(block);
-                            log_put(format("data block[%d] at offset %d",
-                                    block.data.length, block.offset));
+                            log_put(format("data block[%d]", block.data.length));
                             break;
                         }
                     case "section": {
                             // section directive
-                            expect_token(CharType.MARK);
                             immutable auto section_type_tok = expect_token(CharType.IDENTIFIER);
                             auto section_type = section_type_tok.content;
                             // update current section
