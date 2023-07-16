@@ -20,3 +20,4 @@ $(BINOUT): $(CASMFILES)
 clean:
 	# casm outputs
 	@rm -rf *.casm
+	@rm -rf $(BINOUT)
