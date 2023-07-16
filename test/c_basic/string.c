@@ -1,4 +1,4 @@
-int letters[10] = {};
+int letters[10];
 
 void load_letters() {
     letters[0] = 'h';  // h
