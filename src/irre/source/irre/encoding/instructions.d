@@ -122,6 +122,22 @@ enum Operands {
     REG_REG_REG = REG_REG | K_R3,
 }
 
+enum ImmediatePos : WORD {
+    NONE = (0 << 0),
+    A = (1 << 0),
+    B = (1 << 1),
+    C = (1 << 2),
+    D = (1 << 3),
+    E = (1 << 4),
+    F = (1 << 5),
+    G = (1 << 6),
+    H = (1 << 7),
+
+    BC = B | C,
+
+    ABC = A | B | C,
+}
+
 /** binary-packed representation of an instruction word */
 struct Instruction {
     OpCode op;
