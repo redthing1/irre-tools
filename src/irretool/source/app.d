@@ -33,7 +33,7 @@ void main(string[] raw_args) {
     // dfmt off
     auto args = new Program("irretool", format("v. %s", Meta.VERSION)).summary("IRRE architecture tool")
         .author("redthing1")
-        .add(new Flag("v", "verbose", "turns on more verbose output"))
+        .add(new Flag("v", "verbose", "turns on more verbose output").repeating)
         .add(new Command("asm", "assemble a file")
                 .add(new Argument("input", "input file"))
                 .add(new Argument("output", "output file"))
