@@ -145,7 +145,9 @@ class Parser {
                     } else if (dir_type == "d") {
                         // data directive
                         auto packed_data = take_data_declaration();
-                        data_blocks ~= DataBlock(global_offset, packed_data);
+                        auto block = DataBlock(global_offset, packed_data);
+                        data_blocks ~= block;
+                        log_put(format("data block[%d] at offset %d", block.data.length, block.offset));
                     }
                     break;
                 }

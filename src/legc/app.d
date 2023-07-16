@@ -6,6 +6,7 @@ import std.conv;
 import std.file;
 import std.algorithm;
 import std.array;
+import irre.util;
 import irre.meta;
 import irre.translator.leg;
 
@@ -22,6 +23,7 @@ int main(string[] args) {
         defaultGetoptPrinter("./irre-asm [OPTIONS] <input> <output>", help.options);
         return 1;
     }
+    IRRE_TOOLS_VERBOSE = verbose;
 
     input_file = args[1];
     output_file = args[2];

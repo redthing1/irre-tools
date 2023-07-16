@@ -5,6 +5,7 @@ import std.getopt;
 import std.conv;
 import std.file;
 import irre.meta;
+import irre.util;
 import irre.assembler.lexer;
 import irre.assembler.parser;
 import irre.encoding.rega;
@@ -23,6 +24,7 @@ int main(string[] args) {
         defaultGetoptPrinter("./irre-asm [OPTIONS] <input> <output>", help.options);
         return 1;
     }
+    IRRE_TOOLS_VERBOSE = verbose;
 
     input_file = args[1];
     output_file = args[2];
