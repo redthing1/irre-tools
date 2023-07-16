@@ -489,9 +489,9 @@ class VirtualMachine {
                 break;
             }
         case OpCode.SND: {
-                immutable UWORD device_data = reg[ins.a1];
-                immutable UWORD device_id = reg[ins.a2];
-                immutable UWORD device_command = reg[ins.a3];
+                immutable UWORD device_id = reg[ins.a1];
+                immutable UWORD device_command = reg[ins.a2];
+                immutable UWORD device_data = reg[ins.a3];
 
                 // get matching device
                 if (device_id in devices) {
