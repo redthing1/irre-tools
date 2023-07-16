@@ -169,8 +169,7 @@ class Parser {
             immutable auto entry_label_def = resolve_label(entry_label);
             // since all instructions increment PC, we subtract
             auto entry_addr = entry_label_def.offset - cast(int) INSTRUCTION_SIZE;
-            statements.data[0] = AbstractStatement(OpCode.SET,
-                    cast(ValueArg) ValueImm(Register.PC), cast(ValueArg) ValueImm(entry_addr));
+            statements.data[0] = AbstractStatement(OpCode.JMI, cast(ValueArg) ValueImm(entry_addr));
         }
         // resolve statements, rewriting them
         auto resolved_statements = resolve_statements(statements);

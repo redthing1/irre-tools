@@ -35,7 +35,7 @@ class VirtualMachine {
         // copy the program into memory
         auto copy_size = head.data_size + head.code_size;
         auto program_slice = compiled_data[RegaHeader.OFFSET .. RegaHeader.OFFSET + copy_size];
-        program_slice.copy(mem);
+        program_slice.copy(mem); // copy everything after the header
 
         return head;
     }
