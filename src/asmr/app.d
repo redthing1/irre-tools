@@ -9,6 +9,7 @@ import irre.meta;
 import irre.util;
 import irre.assembler.lexer;
 import irre.assembler.parser;
+import irre.assembler.ast_freezer;
 import irre.encoding.rega;
 import irre.disassembler.dumper;
 
@@ -73,13 +74,16 @@ int main(string[] args) {
         parser.load_lex(lexed);
         parser.parse();
 
-        // if executable mode, then freeze symbols
-        if (mode == Mode.exe) {
-            parser.freeze_all_symbols();
-        }
-
         // create an ast
         programAst = parser.to_ast();
+
+        // if executable mode, then freeze symbols
+        if (mode == Mode.exe) {
+            log_put("freezing all symbols in ast");
+            auto freezer = new AstFreezer(programAst);
+            freezer.freeze_all_symbols();
+            programAst = freezer.get_frozen_ast();
+        }
 
         if (dump) {
             // dump the ast
