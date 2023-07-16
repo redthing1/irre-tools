@@ -2,7 +2,8 @@ module irre.assembler.parser;
 
 import irre.util;
 import irre.assembler.lexer;
-import irre.assembler.ast;
+public import irre.assembler.ast;
+import irre.assembler.builtins;
 import irre.encoding.instructions;
 import std.array;
 import std.string;
@@ -36,33 +37,8 @@ class Parser {
     }
 
     private void define_builtins() {
-        auto macro_adi = MacroDef("adi", [
-                MacroArg(MacroArg.Type.REGISTER, "rA"),
-                MacroArg(MacroArg.Type.REGISTER, "rB"),
-                MacroArg(MacroArg.Type.VALUE, "v0")
-                ], [
-                SourceStatement("set", [Token("at", CharType.IDENTIFIER)],
-                    [Token("v0", CharType.IDENTIFIER)]),
-                SourceStatement("add", [Token("rA", CharType.IDENTIFIER)],
-                    [Token("rB", CharType.IDENTIFIER)], [
-                        Token("at", CharType.IDENTIFIER)
-                    ]),
-                ]);
-        macros ~= macro_adi;
-        auto macro_sbi = MacroDef("sbi", [
-                MacroArg(MacroArg.Type.REGISTER, "rA"),
-                MacroArg(MacroArg.Type.REGISTER, "rB"),
-                MacroArg(MacroArg.Type.VALUE, "v0")
-                ], [
-                SourceStatement("set", [Token("at", CharType.IDENTIFIER)],
-                    [Token("v0", CharType.IDENTIFIER)]),
-                SourceStatement("sub", [Token("rA", CharType.IDENTIFIER)],
-                    [Token("rB", CharType.IDENTIFIER)], [
-                        Token("at", CharType.IDENTIFIER)
-                    ]),
-                ]);
-        macros ~= macro_adi;
-        macros ~= macro_sbi;
+        macros ~= BuiltinMacros.MACRO_ADI;
+        macros ~= BuiltinMacros.MACRO_SBI;
     }
 
     ubyte[] take_data_declaration() {
