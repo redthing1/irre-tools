@@ -9,12 +9,12 @@ import irre.assembler.lexer;
 import irre.assembler.parser;
 import irre.assembler.ast;
 
+/** translates LEG assembly to IRRE assembly */
 class LegTranslator {
-    string[] translate(string[] source_lines) {
-        // create a lexer for tokenizing use
-        auto lexer = new Lexer();
-        auto parser = new Parser();
+    private Lexer lexer = new Lexer(); // create a lexer for tokenizing use
+    private Parser parser = new Parser(); // use a parser to semantically understand tokens
 
+    string[] translate(string[] source_lines) {
         auto out_lines = appender!(string[]);
 
         foreach (line; source_lines) {
@@ -37,12 +37,8 @@ class LegTranslator {
                     // replace imm references in set
                     instruction = instruction.replace("::#", "#");
 
-                    // now, tokenize the instruction
-                    auto lexed = lexer.lex(instruction);
-                    parser.load_lex(lexed);
-                    auto source_statement = parser.take_raw_statement().get();
-                    writefln("  OP %s", source_statement.mnem);
-                    // rewrite certain instructions (add, sub) to (adi, sbi) when relevant
+                    auto rewritten_instruction = rewrite_instruction(instruction);
+                    writefln("  T %s", rewritten_instruction);
 
                     conv_line = instruction;
                 }
@@ -59,5 +55,17 @@ class LegTranslator {
         }
 
         return out_lines.data;
+    }
+
+    string rewrite_instruction(string raw_instruction) {
+        // now, tokenize the instruction
+        auto lexed = lexer.lex(raw_instruction);
+        parser.load_lex(lexed);
+        auto source_statement = parser.take_raw_statement().get();
+        writefln("  OP %s", source_statement.mnem);
+        // rewrite certain instructions (add, sub) to (adi, sbi) when relevant
+
+        auto rewritten = source_statement.dump();
+        return rewritten;
     }
 }
