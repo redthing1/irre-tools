@@ -43,9 +43,12 @@ enum OpCode : ARG {
 
     // set 3
     JMI = 0x10, // unconditional jump (imm)
-    BIF = 0x12, // branch-if
-    CAL = 0x13, // branch, link in LR
-    RET = 0x14, // jump to LR
+    JMP = 0x11, // unconditional jump (reg)
+    BIF = 0x13, // branch if equal (imm)
+    BVE = 0x14, // branch if value-equal (reg)
+    BVN = 0x15, // branch if value-not-equal (reg)
+    CAL = 0x1a, // branch, link in LR
+    RET = 0x1b, // jump to LR
 
     // regular-ext device api
     SND = 0xfd,
@@ -79,11 +82,17 @@ enum Register : ARG {
     R24 = 0x18,
     R25 = 0x19,
     R26 = 0x1a,
-    PC = 0x1b, // program counter
-    LR = 0x1c, // return address
-    AD = 0x1d, // control flow temp
-    AT = 0x1e, // asm temp
-    SP = 0x1f, // stack pointer
+    R27 = 0x1b,
+    R28 = 0x1c,
+    R29 = 0x1d,
+    R30 = 0x1e,
+    R31 = 0x1f,
+    // - special registers
+    PC = 0x20, // program counter (32)
+    LR = 0x21, // return address (33)
+    AD = 0x22, // control flow temp (34)
+    AT = 0x23, // asm temp (35)
+    SP = 0x24, // stack pointer (36)
 }
 
 enum Operands {
@@ -167,7 +176,10 @@ class InstructionEncoding {
             case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.IMM, 1);
             // IRRE instruction set
             case OpCode.JMI: return InstructionInfo(OpCode.JMI, Operands.IMM, 1);
+            case OpCode.JMP: return InstructionInfo(OpCode.JMP, Operands.REG, 1);
             case OpCode.BIF: return InstructionInfo(OpCode.BIF, Operands.REG_IMM_IMM, 1);
+            case OpCode.BVE: return InstructionInfo(OpCode.BVE, Operands.REG_REG_IMM, 1);
+            case OpCode.BVN: return InstructionInfo(OpCode.BVN, Operands.REG_REG_IMM, 1);
             case OpCode.CAL: return InstructionInfo(OpCode.CAL, Operands.REG, 1);
             case OpCode.RET: return InstructionInfo(OpCode.RET, Operands.NONE, 1);
             // REGULAR_EXT device api
