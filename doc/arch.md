@@ -437,7 +437,7 @@ The bits of each component of these instructions are laid out so that the lower 
 | `sxt` | 0x42&nbsp;rA&nbsp;rB          | Copy the value from rB into rA, with sign extension. |
 | `seq` | 0x43&nbsp;rA&nbsp;rB&nbsp;v0          | Set rA to `1` if the value in `rB` is euqal to the value `v0`, otherwise set rA to `0`. |
 | `int` | 0xf0&nbsp;v0         | Raise an interrupt with the 24-bit unsigned code in v0. 
-| `snd` | 0xfd&nbsp;rA&nbsp;rB&nbsp;rC         | Send command in `rC` to the device identifier in `rB` with argument in `rA`. Result is stored in `rA`. |
+| `snd` | 0xfd&nbsp;rA&nbsp;rB&nbsp;rC         | Send command in `rB` to the device identifier in `rA` with argument in `rC`. Result is stored in `rC`. If the device does not exist, the behavior is implementation defined. |
 | `hlt` | 0xff         | Halt execution. |
 
 To complement this somewhat limited set, most assemblers implement more complex psuedoinstructions built on top of these base instructions by taking advantage of the special temporary registers.
