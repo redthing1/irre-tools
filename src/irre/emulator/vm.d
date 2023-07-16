@@ -61,11 +61,11 @@ class VirtualMachine {
             // literally do nothing
             break;
         case OpCode.ADD: {
-                reg[ins.a1] = reg[ins.a2] + reg[ins.a3];
+                reg[ins.a1] = (cast(WORD) reg[ins.a2]) + (cast(WORD) reg[ins.a3]);
                 break;
             }
         case OpCode.SUB: {
-                reg[ins.a1] = reg[ins.a2] - reg[ins.a3];
+                reg[ins.a1] = (cast(WORD) reg[ins.a2]) - (cast(WORD) reg[ins.a3]);
                 break;
             }
         case OpCode.AND: {
@@ -123,7 +123,8 @@ class VirtualMachine {
                 break;
             }
         case OpCode.SET: {
-                reg[ins.a1] = ins.a2 | (ins.a3 << 8);
+                immutable WORD signed_val = cast(WORD)(ins.a2 | (ins.a3 << 8));
+                reg[ins.a1] = signed_val;
                 break;
             }
         case OpCode.MOV: {
@@ -132,14 +133,14 @@ class VirtualMachine {
             }
         case OpCode.LDW: {
                 immutable UWORD addr = reg[ins.a2];
-                immutable UWORD offset = ins.a3;
+                immutable WORD offset = ins.a3;
                 reg[ins.a1] = mem[addr + offset + 0] << 0 | mem[addr + offset + 1]
                     << 8 | mem[addr + offset + 2] << 16 | mem[addr + offset + 3] << 24;
                 break;
             }
         case OpCode.STW: {
                 immutable UWORD addr = reg[ins.a2];
-                immutable UWORD offset = ins.a3;
+                immutable WORD offset = ins.a3;
                 mem[addr + offset + 0] = (reg[ins.a1] >> 0) & 0xff;
                 mem[addr + offset + 1] = (reg[ins.a1] >> 8) & 0xff;
                 mem[addr + offset + 2] = (reg[ins.a1] >> 16) & 0xff;
