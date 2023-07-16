@@ -43,10 +43,13 @@ int main(string[] args) {
         return 2;
     }
 
+    Lexer lexer;
+    Lexer.Result lexed;
+
     try {
-        // - assemble the source
-        auto lexer = new Lexer();
-        auto lexed = lexer.lex(inf_source);
+        // lex the source
+        lexer = new Lexer();
+        lexed = lexer.lex(inf_source);
 
         if (dump) {
             // dump the tokens
@@ -55,10 +58,19 @@ int main(string[] args) {
                 writefln("%4d TOK: %10s [%10s]", i, token.content, to!string(token.kind));
             }
         }
+    } catch (LexerException e) {
+        writefln("lexer error: %s at %s", e.msg, e.info);
+        return 2;
+    }
 
-        auto parser = new Parser();
+    Parser parser;
+    ProgramAst programAst;
+
+    try {
+        // build an ast
+        parser = new Parser();
         parser.load_lex(lexed);
-        auto programAst = parser.parse();
+        programAst = parser.parse();
 
         if (dump) {
             // dump the ast
@@ -67,14 +79,15 @@ int main(string[] args) {
             dumper.dump_statements(programAst);
         }
 
-        auto encoder = new RegaEncoder();
-        auto compiled_data = encoder.write(programAst);
-
-        std.file.write(output_file, compiled_data);
-
     } catch (ParserException e) {
         writefln("parser error: %s at %s", e.msg, e.info);
+        return 3;
     }
+
+    auto encoder = new RegaEncoder();
+    auto compiled_data = encoder.write(programAst);
+
+    std.file.write(output_file, compiled_data);
 
     return 0;
 }
