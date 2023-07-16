@@ -7,6 +7,8 @@ import irre.meta;
 import irre.assembler.parser;
 import irre.disassembler.dumper;
 import irre.disassembler.reader;
+import irre.emulator.vm;
+import irre.emulator.hypervisor;
 
 string input_file;
 bool verbose;
@@ -24,11 +26,20 @@ int main(string[] args) {
 
     auto compiled_data = cast(const(ubyte)[]) std.file.read(input_file);
 
-    auto reader = new Reader();
-    auto programAst = reader.read(compiled_data);
+    auto vm = new VirtualMachine();
+    vm.initialize();
 
-    // auto dumper = new Dumper(clean ? Dumper.Mode.Clean : Dumper.Mode.Detailed);
-    // dumper.dump_statements(programAst.statements);
+    // load the program
+    auto header = vm.load(compiled_data);
+    // dump the header
+    auto dumper = new Dumper(Dumper.Mode.Detailed);
+    dumper.dump_header(header);
+
+    // create a hypervisor
+    auto hyp = new Hypervisor(vm);
+
+    // start the emulator
+    hyp.run();
 
     return 0;
 }

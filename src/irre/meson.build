@@ -8,6 +8,9 @@ sources = [
     'disassembler/dumper.d',
     'disassembler/reader.d',
 
+    'emulator/vm.d',
+    'emulator/hypervisor.d',
+
     'encoding/instructions.d',
     'encoding/rega.d',
 ]
