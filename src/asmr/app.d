@@ -2,6 +2,7 @@ module asmr.app;
 
 import std.stdio;
 import std.getopt;
+import std.file;
 import irre.meta;
 
 string input_file;
@@ -20,7 +21,8 @@ int main(string[] args) {
     input_file = args[1];
     output_file = args[2];
 
-    writefln("input: %s, output: %s", input_file, output_file);
+    auto inf_source = std.file.readText(input_file);
+    // run assembler
 
     return 0;
 }
