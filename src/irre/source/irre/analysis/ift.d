@@ -7,6 +7,7 @@ import std.algorithm;
 import std.range;
 import std.container.dlist;
 import core.time : MonoTime, Duration;
+import core.atomic;
 
 import irre.util;
 import irre.emulator.commit;
@@ -42,10 +43,10 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
         IFTDataType included_data = IFTDataType.All;
         bool analysis_parallelized = false;
 
-        long log_visited_info_nodes;
-        long log_commits_walked;
-        long log_found_sources;
-        ulong log_analysis_time;
+        shared long log_visited_info_nodes;
+        shared long log_commits_walked;
+        shared long log_found_sources;
+        shared ulong log_analysis_time;
 
         enum IFTDataType {
             None = (0 << 0),
@@ -134,7 +135,8 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
 
             for (auto i = last_commit_ix; i >= 0; i--) {
                 auto commit = trace.commits[i];
-                log_commits_walked++;
+                // log_commits_walked++;
+                log_commits_walked.atomicOp!"+="(1);
 
                 // look at sources of this commit
                 for (auto j = 0; j < commit.sources.length; j++) {
@@ -170,7 +172,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
         long find_last_commit_at_pc(TRegWord pc_val, long from_commit) {
             for (auto i = from_commit; i >= 0; i--) {
                 auto commit = &trace.commits[i];
-                log_commits_walked++;
+                log_commits_walked.atomicOp!"+="(1);
                 if (commit.pc == pc_val) {
                     return i;
                 }
@@ -185,7 +187,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 // go back through commits until we find one whose results modify this TRegSet
                 for (auto i = from_commit; i >= 0; i--) {
                     auto commit = &trace.commits[i];
-                    log_commits_walked++;
+                    log_commits_walked.atomicOp!"+="(1);
                     for (auto j = 0; j < commit.reg_ids.length; j++) {
                         if (commit.reg_ids[j] == node.data) {
                             // the TRegSet id in the commit results is the same as the reg id in the info node we are searching
@@ -207,7 +209,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 // go back through commits until we find one whose results modify this memory
                 for (auto i = from_commit; i >= 0; i--) {
                     auto commit = &trace.commits[i];
-                    log_commits_walked++;
+                    log_commits_walked.atomicOp!"+="(1);
                     for (auto j = 0; j < commit.mem_addrs.length; j++) {
                         if (commit.mem_addrs[j] == node.data) {
                             // the memory address in the commit results is the same as the mem addr in the info node we are searching
@@ -251,7 +253,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
 
             pragma(inline, true) void add_info_leaf(InfoSource leaf) {
                 terminal_leaves ~= leaf;
-                log_found_sources++;
+                log_found_sources.atomicOp!"+="(1);
             }
 
             // 3. queue our initial node
@@ -264,7 +266,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 visited[curr] = true;
 
                 mixin(LOG_TRACE!(`format("  visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix)`));
-                log_visited_info_nodes += 1;
+                log_visited_info_nodes.atomicOp!"+="(1);
 
                 if (curr.node.type == InfoType.Immediate || curr.node.type == InfoType.Device) {
                     // we found raw source data, no dependencies
