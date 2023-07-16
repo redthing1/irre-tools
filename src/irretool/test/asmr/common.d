@@ -56,3 +56,18 @@ ubyte[] compile_program(string source) {
 
     return compiled_data;
 }
+
+void ensure_programs_assemble(TestProgram[] progs) {
+    foreach (prg; progs) {
+        try {
+            auto lex = lex_program(prg.source);
+            auto ast = parse_lex(lex);
+
+            assert(ast.statements.length > 0,
+                format("program: %s did not assemble correctly", prg.name));
+        } catch (Exception e) {
+            assert(false,
+                format("program: %s failed to assemble with exception: %s", prg.name, e));
+        }
+    }
+}

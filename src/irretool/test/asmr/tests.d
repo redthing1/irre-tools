@@ -16,18 +16,14 @@ unittest {
 
 @("asmr.basic.simpleprogs")
 unittest {
-    auto progs = [PROG_BIGPROG, PROG_FUNC, PROG_MEM];
-
-    foreach (prg; progs) {
-        try {
-            auto lex = lex_program(prg.source);
-            auto ast = parse_lex(lex);
-
-            assert(ast.statements.length > 0,
-                format("program: %s did not assemble correctly", prg.name));
-        } catch (Exception e) {
-            assert(false,
-                format("program: %s failed to assemble with exception: %s", prg.name, e));
-        }
-    }
+    auto progs = [PROG_BIGPROG, PROG_FUNC, PROG_MEM, PROG_COND_BRANCH, PROG_COND_NOBRANCH];
+    
+    ensure_programs_assemble(progs);    
 }
+
+@("asmr.full.asmsyntax")
+unittest {
+    auto progs = [PROG_ASMV5];
+    ensure_programs_assemble(progs);    
+}
+

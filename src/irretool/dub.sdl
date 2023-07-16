@@ -9,6 +9,8 @@ dependency "commandr" version="~>0.2.0"
 
 configuration "app" {
     versions "app"
+
+    targetType "executable"
 }
 
 configuration "unittest" {

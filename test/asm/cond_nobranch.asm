@@ -1,6 +1,6 @@
 ; constructing a basic conditional jump
 
-%entry main
+%entry :main
 
 ; "compare-jump"
 jeq@ rA v_cmp v_loc :
@@ -21,9 +21,9 @@ main:
     jeq r7 $7 ::is_seven
 
 not_seven:
-    set r1 $b000
+    set r1 $b000 ; fail
     hlt
 
 is_seven:
-    set r1 $beef
+    set r1 $1337 ; based
     hlt
