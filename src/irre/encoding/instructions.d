@@ -39,7 +39,7 @@ enum OpCode : ARG {
 }
 
 enum Register : ARG {
-    R0 = 0x00,
+    // R0 = 0x00,
     PC = 0x00,
     R1 = 0x01,
     R2 = 0x02,
@@ -69,11 +69,11 @@ enum Register : ARG {
     R26 = 0x1a,
     R27 = 0x1b,
     R28 = 0x1c,
-    R29 = 0x1d,
+    // R29 = 0x1d,
     RAD = 0x1d,
-    R30 = 0x1e,
+    // R30 = 0x1e,
     RAT = 0x1e,
-    R31 = 0x1f,
+    // R31 = 0x1f,
     RSP = 0x1f,
     RX = 0xff,
 }

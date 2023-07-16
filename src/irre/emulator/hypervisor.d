@@ -41,7 +41,7 @@ class Hypervisor {
         // done.
 
         if (debug_mode) {
-            writefln("execution halted.");
+            writefln("execution halted after %d cycles.", vm.ticks);
             dump(true); // full dump
         }
     }
