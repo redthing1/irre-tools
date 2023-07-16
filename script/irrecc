@@ -46,7 +46,9 @@ def cli(
 
     # use chcc to compile c to asm
     cc_args = [
-        "-S"
+        "-S",
+        "-march",
+        "irre",
     ]
     asm_output_file = f"{output}.ire"
     cc_command = chcc.bake(*cc_args, *input, f"-o", f"{asm_output_file}")
