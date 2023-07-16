@@ -8,5 +8,5 @@ int main() {
 
     the_value = 3;
 
-    return the_value + nums[0] + nums[3];
+    return the_value + nums[0] + nums[3]; // (3 + 6 + 7 = 16 = 0x10)
 }
