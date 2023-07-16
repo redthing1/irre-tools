@@ -126,7 +126,7 @@ class ProgramMinimizer {
                 mixin(LOG_TRACE!(`format("  found last commit at %04x: %s", offset, last_commit_here)`));
 
                 // let's see if the sole result of this commit is a register
-                auto commit_results = last_commit_here.as_nodes;
+                auto commit_results = last_commit_here.to_nodes;
                 if (commit_results.length == 1
                     && commit_results[0].type == InfoType.Register) {
                         // get that single result
@@ -196,7 +196,7 @@ class ProgramMinimizer {
                                     auto prev_toucher_commit = ift.trace.commits[prev_toucher_ix];
                                     mixin(LOG_TRACE!(`format("    checking candidate prev: %s", prev_toucher_commit)`));
 
-                                    auto prev_toucher_results = prev_toucher_commit.as_nodes;
+                                    auto prev_toucher_results = prev_toucher_commit.to_nodes;
                                     if (prev_toucher_results.length == 1) {
                                         // this is what we wanted
 
