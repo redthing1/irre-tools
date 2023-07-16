@@ -6,6 +6,7 @@ sources = [
     'assembler/parser.d',
 
     'disassembler/dumper.d',
+    'disassembler/reader.d',
 
     'encoding/instructions.d',
     'encoding/rega.d',
