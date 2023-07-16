@@ -477,7 +477,22 @@ class VirtualMachine {
     }
 
     public Snapshot snapshot() {
-        return Snapshot.from(reg, mem);
+        import std.algorithm.comparison: min;
+
+        Snapshot snapshot;
+        snapshot.reg = reg.dup[0 .. irre.encoding.instructions.REGISTER_COUNT];
+        snapshot.memory_map ~= MemoryMap(MemoryMap.Type.Memory, 0x0, "mem0");
+        // copy our memory into pages
+        for (auto i = 0; i < mem.length; i += MemoryPageTable.PAGE_SIZE) {
+            auto mem_addr = i;
+            snapshot.tracked_mem.make_page(0x0);
+            // copy memory block
+            auto copy_start = mem_addr;
+            auto copy_end = min(mem.length, mem_addr + MemoryPageTable.PAGE_SIZE);
+            auto copy_size = copy_end - copy_start;
+            snapshot.tracked_mem.pages[mem_addr].mem[0..copy_size] = mem[copy_start..copy_end];
+        }
+        return snapshot;
     }
 
     public void commit_snapshot() {
