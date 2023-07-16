@@ -24,6 +24,18 @@ enum InfoType {
     Immediate,
 }
 
+enum ImmediatePositions : UWORD {
+    NONE = (0 << 0),
+    A = (1 << 0),
+    B = (1 << 1),
+    C = (1 << 2),
+}
+enum ImmediatePosA = ImmediatePositions.A;
+enum ImmediatePosB = ImmediatePositions.B;
+enum ImmediatePosC = ImmediatePositions.C;
+enum ImmediatePosABC = ImmediatePositions.A | ImmediatePositions.B | ImmediatePositions.C;
+enum ImmediatePosBC = ImmediatePositions.B | ImmediatePositions.C;
+
 struct InfoNode {
     InfoType type; // information type: register or memory?
     UWORD data; // can be register id or memory address
