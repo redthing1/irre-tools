@@ -32,7 +32,7 @@ int main(string[] args) {
     auto programAst = reader.read(compiled_data);
 
     auto dumper = new Dumper(clean ? Dumper.Mode.Clean : Dumper.Mode.Detailed);
-    dumper.dump_statements(programAst.statements);
+    dumper.dump_statements(programAst);
 
     return 0;
 }
