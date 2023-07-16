@@ -132,6 +132,15 @@ class IFTAnalyzer {
                     }
                 }
             }
+
+            // if we're still here, then we haven't found a commit that touches this register
+            // it's possible the register wasn't touched because it was already in place before the initial snapshot
+            // to check this, we'll verify if the expected register value can be found in the initial snapshot
+            if (snap_init.reg[node.data] == node.value) {
+                // the expected value exists in the initial snapshot
+                // so there's no commit from it because it was before initial
+                return -1;
+            }
             break;
         case InfoType.Memory:
             // go back through commits until we find one whose results modify this memory
