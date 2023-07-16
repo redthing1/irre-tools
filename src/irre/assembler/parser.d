@@ -84,19 +84,19 @@ class Parser {
 
         // parse lex result into instruction list
         while (token_pos < lexed.tokens.length) {
-            auto next = peek_token();
+            immutable auto next = peek_token();
             switch (next.kind) {
             case CharType.DIRECTIVE: {
-                    auto dir = expect_token(CharType.DIRECTIVE);
+                    immutable auto dir = expect_token(CharType.DIRECTIVE);
                     if (dir.content == "#entry") { // entrypoint directive
                         // following label has the entry point
                         expect_token(CharType.MARK);
-                        auto label_ref = expect_token(CharType.IDENTIFIER);
+                        immutable auto label_ref = expect_token(CharType.IDENTIFIER);
                         entry_label = label_ref.content; // store entry label
                     } else if (dir.content == "#d") { // data directive
                         expect_token(CharType.PACK_START); // eat pack start
                         // check pack type indicator
-                        auto pack_type_indicator = expect_token(CharType.ALPHA | CharType.QUOT);
+                        immutable auto pack_type_indicator = expect_token(CharType.ALPHA | CharType.QUOT);
                         auto pack_len = 0uL; // size of packed data
 
                         switch (pack_type_indicator.kind) {
@@ -132,8 +132,8 @@ class Parser {
                     break;
                 }
             case CharType.IDENTIFIER: {
-                    auto iden = expect_token(CharType.IDENTIFIER);
-                    auto iden_next = peek_token();
+                    immutable auto iden = expect_token(CharType.IDENTIFIER);
+                    immutable auto iden_next = peek_token();
                     if (iden_next.kind == CharType.MARK && iden_next.content == ":") { // label def (only if single mark)
                         expect_token(CharType.MARK); // eat the mark
                         define_label(iden.content); // create label
@@ -185,7 +185,7 @@ class Parser {
         // check for entry point label
         if (entry_label) {
             // resolve the label and replace the entry jump
-            auto entry_label_def = resolve_label(entry_label);
+            immutable auto entry_label_def = resolve_label(entry_label);
             // since all instructions increment PC, we subtract
             auto entry_addr = entry_label_def.offset - cast(int) INSTRUCTION_SIZE;
             statements.data[0] = AbstractStatement(OpCode.SET,
@@ -257,7 +257,7 @@ class Parser {
                 return cast(ValueArg) vs;
             } else if (next.kind == CharType.NUMERIC_CONSTANT) {
                 // interpret numeric token
-                auto num_tok = expect_token(CharType.NUMERIC_CONSTANT);
+                immutable auto num_tok = expect_token(CharType.NUMERIC_CONSTANT);
                 auto vs = ValueImm(parse_numeric(num_tok.content));
                 return cast(ValueArg) vs;
             } else {
