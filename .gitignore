@@ -35,3 +35,6 @@ docs/
 
 # Code coverage
 *.lst
+
+trace.def
+trace.log

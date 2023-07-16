@@ -255,7 +255,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 unvisited.removeFront();
                 visited[curr] = true;
 
-                log_put(format("  visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix));
+                mixin(LOG_TRACE!(`format("  visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix)`));
                 log_visited_info_nodes += 1;
 
                 if (curr.node.type == InfoType.Immediate || curr.node.type == InfoType.Device) {
@@ -264,7 +264,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                     // all data comes from some sort of leaf source
                     auto leaf = InfoSource(curr.node, curr.commit_ix);
                     terminal_leaves ~= leaf;
-                    log_put(format("   leaf (source): %s", leaf));
+                    mixin(LOG_TRACE!(`format("   leaf (source): %s", leaf)`));
                     continue;
                 }
 
@@ -276,19 +276,19 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
 
                     auto leaf = InfoSource(curr.node, -1); // the current node came from the initial snapshot
                     terminal_leaves ~= leaf;
-                    log_put(format("   leaf (pre-initial): %s", leaf));
+                    mixin(LOG_TRACE!(`format("   leaf (pre-initial): %s", leaf)`));
                     continue;
                 }
 
                 auto touching_commit = trace.commits[touching_commit_ix];
-                log_put(format("   found last touching commit (#%s) for node: %s: %s",
-                        touching_commit_ix, curr, touching_commit));
+                mixin(LOG_TRACE!(`format("   found last touching commit (#%s) for node: %s: %s",
+                        touching_commit_ix, curr, touching_commit)`));
 
                 // get all dependencies of this commit
                 auto deps = touching_commit.sources.reverse;
                 for (auto i = 0; i < deps.length; i++) {
                     auto dep = deps[i];
-                    log_put(format("    found dependency: %s", dep));
+                    mixin(LOG_TRACE!(`format("    found dependency: %s", dep)`));
 
                     // where did this dependency's information come from?
                     // to find out we have to look for previous commits that created this dependency
@@ -332,7 +332,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                 auto reg_final_node = InfoNode(InfoType.Register, reg_id, reg_val);
 
                 // now start backtracing
-                log_put(format("backtracking information flow for node: %s", reg_final_node));
+                mixin(LOG_TRACE!(`format("backtracking information flow for node: %s", reg_final_node)`));
                 auto reg_sources = backtrace_information_flow(reg_final_node);
 
                 // writefln("sources for reg %s: %s", reg_id, reg_sources);

@@ -61,7 +61,7 @@ void main(string[] raw_args) {
         .parse(raw_args);
 
     verbose = args.flag("verbose");
-    IRRE_TOOLS_VERBOSE = verbose;
+    IRRE_TOOLS_VERBOSITY = verbose ? Verbosity.Trace : Verbosity.Warning;
     
     args
         .on("asm", (args) {
