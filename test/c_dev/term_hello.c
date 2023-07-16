@@ -1,17 +1,17 @@
-#define MSG_SZ 10
+#define MSG_SZ 16
 #define TERM_MAP_ADDR (char *)0x7000
 #define TERM_DEV_ID 1
+#define TERM_CMD_MAP 0xb0
+#define TERM_CMD_FLUSH 0x10
 
-char msg[MSG_SZ] = "hello\n";
+char msg[MSG_SZ] = "hello, world!\n";
 
-__regsused("r0/r1/r2") void term_init(__reg("r0") int dev_id, __reg("r2") volatile char *map_addr) {
-    // map the terminal and return the address
-    __asm(
-        // "\tset r0 #1"  // DEV_ID
-        "\tset r1 $b0\n" // MAP
-        // "\tset r2 $7000" // ADDR
-        "\tsnd r2 r0 r1\n" // term.map(ADDR)
-    );
+__regsused("r0/r1/r2") void dev_msg(__reg("r0") int dev_id, __reg("r1") int cmd,
+                                    __reg("r2") int arg) = "\tsnd r2 r0 r1"; // devices[dev_id].send(cmd, arg)
+
+void term_init(int dev_id, volatile char *map_addr) {
+    // send MAP cmd to term
+    dev_msg(dev_id, TERM_CMD_MAP, (int)map_addr);
 }
 
 void u_memcpy(volatile char *dst, volatile char *src, int count) {
@@ -20,13 +20,7 @@ void u_memcpy(volatile char *dst, volatile char *src, int count) {
     }
 }
 
-__regsused("r0/r1") void term_flush(__reg("r0") int dev_id) {
-    __asm(
-        // "\tset r0 #1"    // DEV_ID
-        "\tset r1 $10\n"   // FLUSH
-        "\tsnd r0 r0 r1\n" // term.flush()
-    );
-}
+void term_flush(int dev_id) { dev_msg(dev_id, TERM_CMD_FLUSH, 0); }
 
 int main() {
     volatile char *h_term = TERM_MAP_ADDR;
