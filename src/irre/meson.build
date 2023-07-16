@@ -1,5 +1,7 @@
 sources = [
-    'meta.d'
+    'meta.d',
+    'assembler/lexer.d',
+    'assembler/parser.d'
 ]
 
 libirre = shared_library('irre', sources)
