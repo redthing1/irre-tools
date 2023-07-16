@@ -292,6 +292,35 @@ class VirtualMachine {
                     ], sources);
                 break;
             }
+        case OpCode.LDB: {
+                immutable UWORD addr = reg[ins.a2];
+                immutable byte offset = ins.a3;
+                reg[ins.a1] = mem[addr + offset];
+
+                // complex commit
+                auto source_regs = commit_source_regs([ins.a2], [reg[ins.a2]]);
+                auto source_imm = InfoNode(InfoType.Immediate, ImmediatePos.C, offset);
+                auto source_mem = commit_source_mem([addr + offset], [mem[addr + offset]]);
+                auto sources = source_regs ~ source_imm ~ source_mem;
+                // registers a1 is modified, source is memory and address and offset
+                commit_reg(ins.a1, reg[ins.a1], sources);
+                break;
+            }
+        case OpCode.STB: {
+                immutable UWORD addr = reg[ins.a2];
+                immutable byte offset = ins.a3;
+                mem[addr + offset] = reg[ins.a1];
+
+                // complex commit
+                auto source_regs = commit_source_regs([ins.a1, ins.a2], [
+                        reg[ins.a1], reg[ins.a2]
+                    ]);
+                auto source_imm = InfoNode(InfoType.Immediate, ImmediatePos.C, offset);
+                auto sources = source_regs ~ source_imm;
+                // memory is modified, source is registers source data, address, and offset
+                commit_mem([addr + offset], [mem[addr + offset]], sources);
+                break;
+            }
         case OpCode.ASI: {
                 immutable UWORD existing = reg[ins.a1];
                 immutable ubyte val = ins.a2;

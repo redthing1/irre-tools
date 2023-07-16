@@ -34,34 +34,27 @@ enum OpCode : ARG {
     MOV = 0x0c, // move
     LDW = 0x0d, // load word
     STW = 0x0e, // store word
-    // LDB = 0x0f, [deprecated]
-    // STB = 0x10, [deprecated]
+    LDB = 0x0f, // load byte
+    STB = 0x10, // store byte
 
-    // sys (core set 2)
-    HLT = 0xff, // halt
-    INT = 0x71, // interrupt
+    JMI = 0x20, // unconditional jump (imm)
+    JMP = 0x21, // unconditional jump (reg)
+    BVE = 0x24, // branch if value-equal (reg)
+    BVN = 0x25, // branch if value-not-equal (reg)
+    CAL = 0x2a, // branch, link in LR
+    RET = 0x2b, // jump to LR
 
-    // branching (core set 3)
-    JMI = 0x10, // unconditional jump (imm)
-    JMP = 0x11, // unconditional jump (reg)
-    // BIF = 0x13, // branch if equal (imm) [deprecated]
-    BVE = 0x14, // branch if value-equal (reg)
-    BVN = 0x15, // branch if value-not-equal (reg)
-    CAL = 0x1a, // branch, link in LR
-    RET = 0x1b, // jump to LR
-
-    // logic extensions
-    ASI = 0x20, // add shifted immediate
-    SUP = 0x21, // set upper 16
-    SXT = 0x22, // sign extended move
-
-    // math extensions
     MUL = 0x30, // multiply
     DIV = 0x31, // divide
     MOD = 0x32, // modulo
 
-    // regular-ext device api
+    ASI = 0x40, // add shifted immediate
+    SUP = 0x41, // set upper 16
+    SXT = 0x42, // sign extended move
+
+    INT = 0xf0, // interrupt
     SND = 0xfd, // send
+    HLT = 0xff, // halt
 }
 
 enum REGISTER_COUNT = 37;
@@ -101,8 +94,8 @@ enum Register : ARG {
     // - special registers
     PC = 0x20, // program counter (32)
     LR = 0x21, // return address (33)
-    AD = 0x22, // control flow temp (34)
-    AT = 0x23, // asm temp (35)
+    AD = 0x22, // temp 1 (34)
+    AT = 0x23, // temp 2 (35)
     SP = 0x24, // stack pointer (36)
 }
 
@@ -197,8 +190,8 @@ class InstructionEncoding {
             case OpCode.MOV: return InstructionInfo(OpCode.MOV, Operands.REG_REG, 1);
             case OpCode.LDW: return InstructionInfo(OpCode.LDW, Operands.REG_REG_IMM, 1);
             case OpCode.STW: return InstructionInfo(OpCode.STW, Operands.REG_REG_IMM, 1);
-            // case OpCode.LDB: return InstructionInfo(OpCode.LDB, Operands.REG_REG, 1);
-            // case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG, 1);
+            case OpCode.LDB: return InstructionInfo(OpCode.LDB, Operands.REG_REG, 1);
+            case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG, 1);
             
             // IRRE instruction set
             case OpCode.JMI: return InstructionInfo(OpCode.JMI, Operands.IMM, 1);
@@ -211,15 +204,15 @@ class InstructionEncoding {
             case OpCode.HLT: return InstructionInfo(OpCode.HLT, Operands.NONE, 1);
             case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.IMM, 1);
 
-            // IRRE utility extensions
-            case OpCode.ASI: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
-            case OpCode.SUP: return InstructionInfo(OpCode.SUP, Operands.REG_IMM, 1);
-            case OpCode.SXT: return InstructionInfo(OpCode.SXT, Operands.REG_REG, 1);
-
             // IRRE math extensions
             case OpCode.MUL: return InstructionInfo(OpCode.MUL, Operands.REG_REG_REG, 1);
             case OpCode.DIV: return InstructionInfo(OpCode.DIV, Operands.REG_REG_REG, 1);
             case OpCode.MOD: return InstructionInfo(OpCode.MOD, Operands.REG_REG_REG, 1);
+
+            // IRRE utility extensions
+            case OpCode.ASI: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
+            case OpCode.SUP: return InstructionInfo(OpCode.SUP, Operands.REG_IMM, 1);
+            case OpCode.SXT: return InstructionInfo(OpCode.SXT, Operands.REG_REG, 1);
 
             // REGULAR_EXT device api
             case OpCode.SND: return InstructionInfo(OpCode.SND, Operands.REG_REG_REG, 1);
