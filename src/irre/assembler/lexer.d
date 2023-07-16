@@ -4,6 +4,9 @@ import std.stdio;
 import std.array : Appender;
 import std.conv;
 
+/**
+represents the type of character (for tokens) 
+*/
 enum CharType {
     UNKNOWN = 0,
     ALPHA = 1 << 0, // abc
@@ -23,22 +26,37 @@ enum CharType {
     NUMERIC_CONSTANT = NUMERIC | NUMERIC_HEX | NUM_SPECIAL,
 }
 
+/**
+represents a token
+*/
 struct Token {
     string content;
     CharType kind;
 }
 
+/**
+provides logic to lex a source file
+*/
 class Lexer {
-    string source;
-    int pos;
-    int line;
-    int line_start;
-    Appender!(char[]) working;
+    private string source;
+    private int pos;
+    private int line;
+    private int line_start;
+    private Appender!(char[]) working;
 
+    /**
+    represents a lexed source file
+    */
     public struct Result {
+        /**
+        the tokens
+        */
         Appender!(Token[]) tokens;
     }
 
+    /**
+    populate a Lex.Result with tokens read from the text of an input program
+    */
     public Result lex(string program) {
         source = program;
         line = 1;
@@ -99,7 +117,7 @@ class Lexer {
         return res;
     }
 
-    CharType classify_char(char c) {
+    private CharType classify_char(char c) {
         switch (c) {
         case ',':
             return CharType.ARGSEP;
@@ -140,15 +158,15 @@ class Lexer {
         return type;
     }
 
-    char peek_char() {
+    private char peek_char() {
         return source[pos];
     }
 
-    CharType peek_chartype() {
+    private CharType peek_chartype() {
         return classify_char(peek_char());
     }
 
-    char take_char() {
+    private char take_char() {
         char c = peek_char();
         if (c == '\n') {
             line++;
@@ -158,33 +176,33 @@ class Lexer {
         return c;
     }
 
-    void take_chars(CharType readType) {
+    private void take_chars(CharType readType) {
         while (pos < source.length && ((cast(int) peek_chartype() & cast(int) readType) > 0)) {
             immutable auto c = take_char();
             working ~= c;
         }
     }
 
-    void take_chars_until(CharType stopType) {
+    private void take_chars_until(CharType stopType) {
         while (pos < source.length && ((cast(int) peek_chartype() & cast(int) stopType) == 0)) {
             immutable auto c = take_char();
             working ~= c;
         }
     }
 
-    void skip_chars(CharType skip) {
+    private void skip_chars(CharType skip) {
         while (pos < source.length && (cast(int) peek_chartype() & cast(int) skip) > 0) {
             take_char();
         }
     }
 
-    void skip_until(char until) {
+    private void skip_until(char until) {
         while (pos < source.length && peek_char() != until) {
             take_char();
         }
     }
 
-    Token read_token_of(CharType type) {
+    private Token read_token_of(CharType type) {
         take_chars(type);
         return Token(to!string(working[]), type);
     }
