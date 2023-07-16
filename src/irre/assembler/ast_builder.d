@@ -41,7 +41,20 @@ class AstBuilder {
     }
 
     public void freeze_references() {
+        auto unresolved_statements = ast.statements;
+        auto resolved_statements = rewrite_statements_resolved(unresolved_statements);
+        // clear statements from ast and add new ones
+        ast.statements = [];
 
+        if (ast.entry_point_label) {
+            // if an entry point is defined
+            // resolve the label specified as entry
+            immutable auto entry_label_def = resolve_label(ast.entry_point_label);
+            immutable auto entry_addr = entry_label_def.offset;
+            // replace the padding instruction with a jump to entry point
+            resolved_statements[0] = AbstractStatement(OpCode.JMI, cast(ValueArg) ValueImm(entry_addr));
+        }
+        ast.statements ~= resolved_statements;
     }
 
     /** convert all value references in instructions to immediate values (compute all offsets, replacing symbols) */
