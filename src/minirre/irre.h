@@ -108,7 +108,7 @@ typedef enum {
 } IrreError;
 
 typedef struct {
-  IRRE_WORD r[IRRE_REGISTER_COUNT]; // registers
+  IRRE_UWORD r[IRRE_REGISTER_COUNT]; // registers
   IRRE_UBYTE *m;                     // memory
   IRRE_UWORD mem_size;              // memory size
   void (*interrupt_handler)(IRRE_UWORD);
