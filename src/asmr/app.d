@@ -18,8 +18,8 @@ bool dump;
 Mode mode;
 
 enum Mode {
-    Exe,
-    Obj
+    exe,
+    obj
 }
 
 int main(string[] args) {
