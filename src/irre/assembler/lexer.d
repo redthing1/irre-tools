@@ -62,7 +62,6 @@ class Lexer {
             immutable auto c_type = classify_char(c);
             if ((c_type & CharType.ALPHA) > 0) { // start of identifier
                 res.tokens ~= read_token_of(CharType.IDENTIFIER);
-                // buf_push_Token(&tokens, make_token_of(working, CharType.IDENTIFIER));
             } else if ((c_type & CharType.NUMERIC) > 0) { // start of num literal
                 res.tokens ~= read_token_of(CharType.NUMERIC);
             } else if ((c_type & CharType.ARGSEP) > 0) {
@@ -84,15 +83,15 @@ class Lexer {
                 working.clear();
                 immutable auto pack_type = peek_chartype();
                 if (pack_type == CharType.QUOT) { // \'
-                    // buf_push_Token(&tokens, make_token_of(working, QUOT));
+                    res.tokens ~= read_token_of(CharType.QUOT);
                 } else if (pack_type == CharType.ALPHA) { // \x
-                    // buf_push_Token(&tokens, make_token_of(working, ALPHA));
+                    res.tokens ~= read_token_of(CharType.ALPHA);
                 }
             } else if ((c_type & CharType.DIRECTIVE_PREFIX) > 0) {
-                // buf_push_Token(&tokens, make_token_of(working, DIRECTIVE));
+                res.tokens ~= read_token_of(CharType.DIRECTIVE);
             } else {
-                stderr.writefln("unrecognized character: %c, [%d:%d]\n", c,
-                        line, cast(int)(pos - line_start) + 1);
+                stderr.writefln("unrecognized character: %c, [%d:%d]", c, line,
+                        cast(int)(pos - line_start) + 1);
                 take_char(); // eat the character
             }
         }

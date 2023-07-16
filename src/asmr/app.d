@@ -39,7 +39,7 @@ int main(string[] args) {
         // dump the tokens
         writeln("== TOKENS ==");
         foreach (i, token; lexed.tokens) {
-            writefln("%4d TOK: %10s [%3d]\n", i, token.content, cast(int) token.kind);
+            writefln("%4d TOK: %10s [%3d]", i, token.content, cast(int) token.kind);
         }
 
         auto parser = new Parser();
