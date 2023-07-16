@@ -46,7 +46,8 @@ class Hypervisor {
         case DebugInterrupts.BREAK:
             writefln("[int] BREAK");
             dump_registers(false); // minidump
-            onestep_prompt();
+            while (onestep_prompt()) {
+            }
             break;
         default: {
                 writefln("[int] unhandled interrupt %d", code);
