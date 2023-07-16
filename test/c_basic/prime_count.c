@@ -15,7 +15,7 @@ int is_prime(int m) {
 int main() {
     int result = 0;
 
-    int n = 100;
+    int n = 1000;
     
     // find all prime numbers <= n
     for (int i = 2; i <= n; i++) {
