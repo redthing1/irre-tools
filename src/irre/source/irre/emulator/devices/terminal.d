@@ -8,6 +8,10 @@ import irre.util;
 class TerminalDevice : MappedDevice {
     enum Command : WORD {
         FLUSH = 0x10,
+        READKEY = 0x11,
+        // SETCURSOR = 0x12,
+        // GETCURSOR = 0x13,
+        // SETATTR = 0x14,
     }
 
     this() {
@@ -38,6 +42,10 @@ class TerminalDevice : MappedDevice {
                     write(ch);
                 }
                 // clear the memory block
+                // TODO
+                return 0;
+            }
+        case Command.READKEY: {
                 // TODO
                 return 0;
             }
