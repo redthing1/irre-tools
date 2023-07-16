@@ -9,7 +9,7 @@ IRRE_UBYTE vm_memory[IRRE_DEMO_MEMORY_SIZE];
 
 typedef enum {
   DEMO_DEVICE_PING = 0x00001000,
-  DEMO_DEVICE_RANDOM = 0x00007007,
+  DEMO_DEVICE_RANDOM = 0x00005005,
 } DemoDevice;
 
 uint8_t *read_file(char *filename, size_t *size);
@@ -29,11 +29,11 @@ IRRE_UWORD handle_irre_device(IRRE_UWORD device_id, IRRE_UWORD device_command,
          __func__, device_id, device_command, device_data);
 
   switch (device_id) {
-  case DEMO_DEVICE_PING:
+  case DEMO_DEVICE_PING: {
     printf("[%s] ping(%d)\n", __func__, device_data);
     return device_data;
-    break;
-  case DEMO_DEVICE_RANDOM:
+  }
+  case DEMO_DEVICE_RANDOM: {
     // random call: command=address, data=count
     IRRE_UWORD random_address = device_command;
     IRRE_UWORD random_count = device_data;
@@ -44,10 +44,11 @@ IRRE_UWORD handle_irre_device(IRRE_UWORD device_id, IRRE_UWORD device_command,
       vm_state.m[random_address + i] = rand() % 256;
     }
     return 0;
-    break;
-  default:
+  }
+  default: {
     printf("[%s] unknown device id: $%08x\n", __func__, device_id);
     break;
+  }
   }
 
   return 0;
@@ -121,6 +122,19 @@ int main(int argc, char **argv) {
   printf("[%s] registers:\n", __func__);
   for (int i = 0; i < IRRE_REGISTER_COUNT; i++) {
     printf("[%s]   r%d: $%08x\n", __func__, i, vm_state.r[i]);
+  }
+
+  // debug: pretty dump memory
+  printf("[%s] memory:\n", __func__);
+  for (int i = 0; i < IRRE_DEMO_MEMORY_SIZE; i += 16) {
+    printf("[%s] %08x: ", __func__, i);
+    for (int j = 0; j < 16; j++) {
+      printf("%02x", vm_state.m[i + j]);
+      if (j % 2 == 1) {
+        printf(" ");
+      }
+    }
+    printf("\n");
   }
 
   // free the binary
