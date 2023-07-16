@@ -20,8 +20,9 @@ struct RegaHeader {
     enum OFFSET = 4;
 }
 
+/** IRRE-REGA binary format encoder */
 class RegaEncoder {
-    ubyte[] write(ProgramAst ast) {
+    ubyte[] encode_exe(ProgramAst ast) {
         auto wr = appender!(ubyte[]);
         auto data_block_size = 0;
         foreach (data_block; ast.data_blocks) {
@@ -35,7 +36,7 @@ class RegaEncoder {
         // write program (code and data blocks
         auto global_offset = 0;
         auto data_block = 0;
-        log_put(format("writing PROGRAM with %d instructions, %d data blocks",
+        log_put(format("writing REGA_EXE with %d instructions, %d data blocks",
                 ast.statements.length, ast.data_blocks.length));
         bool write_next_data_blocks() {
             if (data_block < ast.data_blocks.length
@@ -54,7 +55,7 @@ class RegaEncoder {
         foreach (statement; ast.statements) {
             write_next_data_blocks();
             auto info = InstructionEncoding.get_info(statement.op).get();
-            auto instruction = compile(statement, info);
+            auto instruction = compile_statement(statement, info);
 
             // write instruction word
             wr ~= instruction.op;
@@ -80,15 +81,16 @@ class RegaEncoder {
         return wr.data;
     }
 
-    private int get_arg_val(ValueArg arg) {
-        if (arg.hasValue) {
-            return arg.peek!(ValueImm).val;
-        } else {
-            return 0;
+    /** compile an abstract statement to a binary-encoded instruction */
+    private Instruction compile_statement(ref AbstractStatement statement, ref InstructionInfo info) {
+        int get_arg_val(ValueArg arg) {
+            if (arg.hasValue) {
+                return arg.peek!(ValueImm).val;
+            } else {
+                return 0;
+            }
         }
-    }
 
-    Instruction compile(ref AbstractStatement statement, ref InstructionInfo info) {
         auto op = statement.op;
         auto arg1 = get_arg_val(statement.a1);
         auto arg2 = get_arg_val(statement.a2);
@@ -117,7 +119,7 @@ class RegaEncoder {
         return Instruction(op, a1, a2, a3);
     }
 
-    ubyte[] write_header(RegaHeader head) {
+    private ubyte[] write_header(RegaHeader head) {
         auto wr = appender!(ubyte[]);
         wr ~= cast(ubyte[]) REGA_MAGIC; // magic
         wr ~= cast(ubyte[]) nativeToLittleEndian(head.program_size);
