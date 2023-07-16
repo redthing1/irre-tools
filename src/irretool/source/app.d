@@ -251,11 +251,11 @@ int cmd_emu(ProgramArgs args) {
         }
 
         if (enable_ift) {
-            writeln("\nift analysis");
+            writefln("\nift analysis (%s)", ift_parallel ? "parallel" : "serial");
             if (ift_data_types) {
                 ift_analyzer.included_data = ift_data_types.to!(IFTAnalyzer.IFTDataType);
             }
-            ift.analysis_parallelized = ift_parallel;
+            ift_analyzer.analysis_parallelized = ift_parallel;
             ift_analyzer.analyze();
             if (!ift_quiet) {
                 ift_analyzer.dump_analysis();
