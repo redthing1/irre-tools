@@ -27,6 +27,16 @@ class Parser {
     private Appender!(MacroDef[]) macros;
     private Appender!(LabelDef[]) labels;
 
+    this() {
+        // define builtins
+        define_builtins();
+    }
+
+    private void define_builtins() {
+        macros ~= BuiltinMacros.MACRO_ADI;
+        macros ~= BuiltinMacros.MACRO_SBI;
+    }
+
     public void load_lex(Lexer.Result lexed) {
         this.lexed = lexed;
 
@@ -34,11 +44,6 @@ class Parser {
         this.token_pos = 0;
         this.char_pos = 0;
         // this.offset = 0;
-    }
-
-    private void define_builtins() {
-        macros ~= BuiltinMacros.MACRO_ADI;
-        macros ~= BuiltinMacros.MACRO_SBI;
     }
 
     ubyte[] take_data_declaration() {
@@ -102,9 +107,6 @@ class Parser {
         // emit entry jump
         statements ~= AbstractStatement(OpCode.NOP);
         global_offset += INSTRUCTION_SIZE;
-
-        // define builtins
-        define_builtins();
 
         // parse lex result into instruction list
         while (token_pos < lexed.tokens.length) {
