@@ -1,6 +1,6 @@
 #include "../lib/corlib.h"
 
-const u32 DEMO_DEVICE_RANDOM = 0x00007007;
+const u32 DEMO_DEVICE_RANDOM = 0x00005005;
 
 #define NONCE_SIZE 128
 volatile u8 nonce[NONCE_SIZE] = {0};
