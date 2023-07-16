@@ -1,0 +1,7 @@
+name "irretool"
+description "irre multitool"
+authors "no"
+copyright "Copyright © 2022, no"
+license "proprietary"
+
+dependency "irre" path="../irre"

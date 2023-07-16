@@ -1,4 +1,4 @@
-module disasm.app;
+module emu;
 
 import std.stdio;
 import std.getopt;
