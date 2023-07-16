@@ -252,11 +252,12 @@ int cmd_emu(ProgramArgs args) {
 
         if (save_commits != null) {
             // write commits to file
+            import std.zlib;
             import mir.ser.msgpack: serializeMsgpack;
             auto serialized_trace = serializeMsgpack(commit_trace);
 
             writefln("serialized commits: %d bytes, saving to %s", serialized_trace.length, save_commits);
-            std.file.write(save_commits, serialized_trace);
+            std.file.write(save_commits, compress(serialized_trace));
         }
 
         do_ift_analysis(enable_ift, ift_quiet, ift_parallel, ift_data_types, checkpoint_file, commit_trace, compiled_data);
@@ -274,7 +275,8 @@ int cmd_runift(ProgramArgs args) {
 
     writefln("[IRRE] run_ift v%s", Meta.VERSION);
 
-    auto serialized_trace = cast(const(ubyte)[]) std.file.read(input);
+    import std.zlib;
+    auto serialized_trace = cast(const(ubyte)[]) uncompress(std.file.read(input));
     
     import irre.analysis.commit;
     alias CommitTrace = IrreInfoLog.CommitTrace;
