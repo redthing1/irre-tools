@@ -87,9 +87,6 @@ class Dumper {
                 builder ~= format("%04s", av);
                 break;
             }
-            if (!first) {
-                builder ~= ",";
-            }
         }
 
         append_arg(mnem, true);
@@ -104,10 +101,6 @@ class Dumper {
             append_arg(a3);
         }
         auto str = std.string.strip(cast (string) builder.data);
-        // strip trailing comma
-        if (str[$ - 1] == ',') {
-            str.popBack();
-        }
         return str;
     }
 }
