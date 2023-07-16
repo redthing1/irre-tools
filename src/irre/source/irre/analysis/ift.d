@@ -64,7 +64,7 @@ class IFTAnalyzer {
 
     void dump_analysis() {
         // 1. dump clobber commit
-        writefln(" clobber:");
+        writefln(" clobber (%s commits):", trace.commits.length);
 
         // memory
         writefln("  memory:");
