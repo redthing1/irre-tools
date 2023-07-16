@@ -49,8 +49,8 @@ int main(int argc, char **argv) {
     uint8_t encrypt[PLAINTEXT_LEN];
     uint8_t decrypt[PLAINTEXT_LEN];
 
-    ChaCha20XOR(key, 1, nonce, input, encrypt, PLAINTEXT_LEN);
-    ChaCha20XOR(key, 1, nonce, encrypt, decrypt, PLAINTEXT_LEN);
+    chacha20_xor(key, 1, nonce, input, encrypt, PLAINTEXT_LEN);
+    chacha20_xor(key, 1, nonce, encrypt, decrypt, PLAINTEXT_LEN);
 
 #ifdef DESKTOP
     printf("\nkey:");
@@ -97,6 +97,8 @@ int main(int argc, char **argv) {
     if (!compare_bytes(input, decrypt, PLAINTEXT_LEN)) {
         return 1;
     }
+
+    __DEBUGGER_BREAK();
 
     return 0;
 }
