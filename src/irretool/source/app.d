@@ -22,11 +22,6 @@ import irre.emulator.hypervisor;
 import irre.analysis.ift;
 import irre.analysis.minimizer;
 
-enum AssemblerMode {
-    exe,
-    obj,
-}
-
 bool verbose = false;
 
 void main(string[] raw_args) {
@@ -87,6 +82,11 @@ void main(string[] raw_args) {
      // dfmt on
 }
 
+enum AssemblerMode {
+    exe,
+    obj,
+}
+
 int cmd_asm(ProgramArgs args) {
     auto input = args.arg("input");
     auto output = args.arg("output");
@@ -137,7 +137,7 @@ int cmd_asm(ProgramArgs args) {
         program_ast = parser.to_ast();
 
         // if executable mode, then freeze symbols
-        if (mode == AssemblerMode.exe) {
+        if (mode == AssemblerMode.exe || mode == AssemblerMode.obj) {
             log_put("freezing all symbols in ast");
             auto freezer = new AstFreezer(program_ast);
             freezer.freeze_all_symbols();
@@ -176,8 +176,11 @@ int cmd_asm(ProgramArgs args) {
             break;
         }
     case AssemblerMode.obj: {
-            // TODO: OBJ encode
-            log_put("todo: obj encode");
+            // OBJ encode
+            auto encoder = new RegaEncoder();
+            auto compiled_data = encoder.encode_obj(program_ast);
+
+            std.file.write(output, compiled_data);
             break;
         }
     default:

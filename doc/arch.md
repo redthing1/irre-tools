@@ -431,6 +431,6 @@ The bits of each component of these instructions are laid out so that the lower 
 | `bvn` | 0x15&nbsp;rA&nbsp;rB&nbsp;v0         | Conditionally branch to the 32-bit unsigned address in `rA` if the value in `rB` is not equal to the value `v0`. |
 | `cal` | 0x1a&nbsp;rA         | Store the address of the following instruction in `lr` then branch to the 32-bit unsigned address in rA. |
 | `ret` | 0x1b         | Branch to the 32-bit unsigned address in `lr`, then set `lr` to `0`. If `lr` already contains `0`, the behavior is implementation-defined. |
-| `snd` | 0xfd&nbsp;rA&nbsp;rB&nbsp;rC         | Send command in `rC` to the device identifier in `rB` with argument in `rA`. |
+| `snd` | 0xfd&nbsp;rA&nbsp;rB&nbsp;rC         | Send command in `rC` to the device identifier in `rB` with argument in `rA`. Result is stored in `rA`. |
 
 To complement this somewhat limited set, most assemblers implement more complex psuedoinstructions built on top of these base instructions by taking advantage of the special temporary registers.

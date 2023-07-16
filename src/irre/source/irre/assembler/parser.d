@@ -106,6 +106,14 @@ class Parser {
                             }
                             break;
                         }
+                    case "global": {
+                        // global symbol directive
+                        immutable auto label_ref_tok = expect_token(CharType.IDENTIFIER);
+
+                        ast_builder.add_export_symbol(label_ref_tok.content);
+
+                        break;
+                    }
                     default:
                         throw parser_error_token(format("unknown directive %s",
                                 to!string(dir_type)), dir_token);
