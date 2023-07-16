@@ -42,9 +42,10 @@ enum OpCode : ARG {
     INT = 0x71,
 
     // set 3
-    JMI = 0x10, // unconditional jump
-    BIF = 0x11, // branch-if
-    CAL = 0x12, // branch-and-link
+    JMI = 0x10, // unconditional jump (imm)
+    JMP = 0x11, // unconditional jump (reg)
+    BIF = 0x12, // branch-if
+    CAL = 0x13, // branch-and-link
 }
 
 enum Register : ARG {
@@ -169,6 +170,7 @@ class InstructionEncoding {
             case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.REG, 1);
             // IRRE instruction set
             case OpCode.JMI: return InstructionInfo(OpCode.JMI, Operands.IMM, 1);
+            case OpCode.JMP: return InstructionInfo(OpCode.JMP, Operands.REG, 1);
             case OpCode.BIF: return InstructionInfo(OpCode.BIF, Operands.REG_IMM_IMM, 1);
             case OpCode.CAL: return InstructionInfo(OpCode.CAL, Operands.REG, 1);
             // dfmt on
