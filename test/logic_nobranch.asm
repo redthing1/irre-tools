@@ -1,6 +1,6 @@
 ; constructing a basic conditional jump
 
-#entry main
+%entry main
 
 ; "compare-jump"
 jeq@ rA v_cmp v_loc :

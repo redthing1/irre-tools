@@ -2,7 +2,7 @@
 ; n is specified in r1 in ::main
 ; result is placed in r7
 
-#entry :main
+%entry :main
 
 jl@ rA v_cmp v_loc : ; jump to v_loc if rA < v_cmp
     ; less means sign = 1

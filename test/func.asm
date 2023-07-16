@@ -1,6 +1,6 @@
 ; test basic add function with asmv2
 
-#entry :main
+%entry :main
 
 get_stk@ rA v_offset :
     set at v_offset
