@@ -36,3 +36,13 @@ mixin(make_test_prog!("ASMV5", "asm/asmv5.asm"));
 mixin(make_test_prog!("MACRO", "asm/macro.asm"));
 mixin(make_test_prog!("COND_BRANCH", "asm/cond_branch.asm"));
 mixin(make_test_prog!("COND_NOBRANCH", "asm/cond_nobranch.asm"));
+
+mixin(make_test_prog!("IFT1", "ift/ift1.asm"));
+mixin(make_test_prog!("IFT2", "ift/ift2.asm"));
+mixin(make_test_prog!("IFT3", "ift/ift3.asm"));
+mixin(make_test_prog!("IFT4", "ift/ift4.asm"));
+mixin(make_test_prog!("IFT5", "ift/ift5.asm"));
+
+static immutable PROGS_SET_SIMPLE = [PROG_BIGPROG, PROG_FUNC, PROG_MEM, PROG_COND_BRANCH, PROG_COND_NOBRANCH];
+static immutable PROGS_SET_ASMSYNTAX = [PROG_ASMV5, PROG_MACRO];
+static immutable PROGS_SET_IFT = [PROG_IFT1, PROG_IFT2, PROG_IFT3, PROG_IFT4, PROG_IFT5];

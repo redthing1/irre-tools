@@ -16,14 +16,16 @@ unittest {
 
 @("asmr.basic.simpleprogs")
 unittest {
-    auto progs = [PROG_BIGPROG, PROG_FUNC, PROG_MEM, PROG_COND_BRANCH, PROG_COND_NOBRANCH];
-    
-    ensure_programs_assemble(progs);    
+    ensure_programs_assemble(PROGS_SET_SIMPLE);
 }
 
 @("asmr.full.asmsyntax")
 unittest {
-    auto progs = [PROG_ASMV5];
-    ensure_programs_assemble(progs);    
+    ensure_programs_assemble(PROGS_SET_ASMSYNTAX);
 }
 
+@("asmr.full.miscprogs")
+unittest {
+    auto progs = PROGS_SET_IFT;
+    ensure_programs_assemble(progs);
+}
