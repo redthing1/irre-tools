@@ -4,9 +4,11 @@ public import irre.encoding.instructions;
 import irre.encoding.rega;
 import std.algorithm.mutation;
 import irre.emulator.device;
-import irre.analysis.commit;
 import irre.disassembler.reader;
 import irre.disassembler.dumper;
+import irre.analysis.irre_arch;
+
+import infoflow.models;
 
 enum MEMORY_SIZE = 64 * 1024; // 65K
 

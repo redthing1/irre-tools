@@ -9,11 +9,13 @@ import std.container.dlist;
 import core.time : MonoTime, Duration;
 
 import irre.util;
-import irre.analysis.commit;
 import irre.assembler.ast;
 import irre.encoding.instructions;
 import irre.encoding.rega;
-import irre.analysis.ift;
+import irre.analysis.irre_arch;
+
+import infoflow.analysis.ift;
+import infoflow.models;
 
 class ProgramMinimizer {
     mixin(IrreInfoLog.GenAliases!("IrreInfoLog"));
@@ -268,4 +270,3 @@ class ProgramMinimizer {
         writefln("  analysis time:          %7ss", (cast(double) log_analysis_time / 1_000_000));
     }
 }
-but you can submodule

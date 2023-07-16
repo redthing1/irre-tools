@@ -4,6 +4,8 @@ authors "no"
 copyright "Copyright © 2022, no"
 license "proprietary"
 
+dependency "infoflow" path="../../lib/infoflow"
+
 configuration "default" {
     versions "default"
 }
