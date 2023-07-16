@@ -49,6 +49,8 @@ int main(string[] args) {
                     // instruction statement
                     auto instruction = cast(string) statement;
 
+                    // strip commas
+                    instruction = instruction.replace(",", "");
                     // replace imm references in set
                     instruction = instruction.replace("::#", "#");
 

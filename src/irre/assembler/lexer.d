@@ -89,7 +89,7 @@ class Lexer {
             working.clear();
 
             immutable auto c_type = classify_char(c);
-            if ((c_type & CharType.ALPHA) > 0) { // start of identifier
+            if ((c_type & (CharType.ALPHA | CharType.IDENTIFIER_SPECIAL)) > 0) { // start of identifier
                 tokens ~= read_token_of(CharType.IDENTIFIER);
             } else if ((c_type & CharType.NUMERIC) > 0) { // start of num literal
                 tokens ~= read_token_of(CharType.NUMERIC);
