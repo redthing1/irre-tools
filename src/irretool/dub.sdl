@@ -6,29 +6,21 @@ license "proprietary"
 
 dependency "irre" path="../irre"
 dependency "commandr" version="~>0.2.0"
+dependency "mir-ion" version="~>1.0.39"
 
 configuration "app" {
-    versions "app"
-
-    targetType "executable"
+	targetType "executable"
+	versions "app"
 }
-
 configuration "ift_log" {
-    versions "app"
-    subConfiguration "irre" "ift_log"
-
-    targetType "executable"
+	targetType "executable"
+	subConfiguration "irre" "ift_log"
+	versions "app"
 }
-
 configuration "unittest" {
-    # test runner
-    dependency "silly" version="~>1.1.1"
-    # test code
-    sourcePaths "test"
-    importPaths "test"
-
-    // add irre test file path as string importable
-    stringImportPaths "../../test"
-
-    // preBuildCommands "pushd ../.. && python3 ./script/make_tests.py && popd"
+	dependency "silly" version="~>1.1.1"
+	targetType "library"
+	sourcePaths "test"
+	importPaths "test"
+	stringImportPaths "../../test"
 }
