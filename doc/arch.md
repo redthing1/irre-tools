@@ -421,17 +421,23 @@ The bits of each component of these instructions are laid out so that the lower 
 | `mov` | 0x0c&nbsp;rA&nbsp;rB          | Copy the value from rB into rA. |
 | `ldw` | 0x0d&nbsp;rA&nbsp;rB&nbsp;v0  | Read a 32-bit word from the memory address referred to by rB, signed offset by v0, and store the value into rA. If the address is not word-aligned, the result is implementation-defined. |
 | `stw` | 0x0e&nbsp;rA&nbsp;rB&nbsp;v0  | Store the value in rA as a 32-bit value at the memory address referred to by rB, signed offset by v0. If the address is not word-aligned, the result is implementation-defined. |
-| `asi` | 0x20&nbsp;rA&nbsp;v0&nbsp;v1  | Left logical shift v0 by v1 bits, then add that quantity to the value stored in rA. If v1 is outside the range (0, 32), the result is undefined. |
-| `sup` | 0x21&nbsp;rA&nbsp;v0         | Store the 16-bit unsigned value v0 into the upper 16 bits rA, leaving the lower 16 bits untouched. |
-| `sxt` | 0x22&nbsp;rA&nbsp;rB          | Copy the value from rB into rA, with sign extension. |
-| `hlt` | 0xff         | Halt execution. |
-| `int` | 0x71&nbsp;v0         | Raise an interrupt with the 24-bit unsigned code in v0. |
-| `jmi` | 0x10&nbsp;v0         | Unconditionally branch to the 24-bit unsigned address in v0. |
-| `jmp` | 0x11&nbsp;rA         | Unconditionally branch to the 32-bit unsigned address in rA. |
-| `bve` | 0x14&nbsp;rA&nbsp;rB&nbsp;v0         | Conditionally branch to the 32-bit unsigned address in `rA` if the value in `rB` is equal to the value `v0`. |
-| `bvn` | 0x15&nbsp;rA&nbsp;rB&nbsp;v0         | Conditionally branch to the 32-bit unsigned address in `rA` if the value in `rB` is not equal to the value `v0`. |
-| `cal` | 0x1a&nbsp;rA         | Store the address of the following instruction in `lr` then branch to the 32-bit unsigned address in rA. |
-| `ret` | 0x1b         | Branch to the 32-bit unsigned address in `lr`, then set `lr` to `0`. If `lr` already contains `0`, the behavior is implementation-defined. |
+| `ldb` | 0x0f&nbsp;rA&nbsp;rB&nbsp;v0  | Read a byte from the memory address referred to by rB, signed offset by v0, and store the value into rA. |
+| `stb` | 0x10&nbsp;rA&nbsp;rB&nbsp;v0  | Store the lower 8 bits of rA at the memory address referred to by rB, signed offset by v0. |
+--
+| `jmi` | 0x20&nbsp;v0         | Unconditionally branch to the 24-bit unsigned address in v0. |
+| `jmp` | 0x21&nbsp;rA         | Unconditionally branch to the 32-bit unsigned address in rA. |
+| `bve` | 0x24&nbsp;rA&nbsp;rB&nbsp;v0         | Conditionally branch to the 32-bit unsigned address in `rA` if the value in `rB` is equal to the value `v0`. |
+| `bvn` | 0x25&nbsp;rA&nbsp;rB&nbsp;v0         | Conditionally branch to the 32-bit unsigned address in `rA` if the value in `rB` is not equal to the value `v0`. |
+| `cal` | 0x2a&nbsp;rA         | Store the address of the following instruction in `lr` then branch to the 32-bit unsigned address in rA. |
+| `ret` | 0x2b         | Branch to the 32-bit unsigned address in `lr`, then set `lr` to `0`. If `lr` already contains `0`, the behavior is implementation-defined. |
+--
+| `sia` | 0x40&nbsp;rA&nbsp;v0&nbsp;v1  | Left logical shift v0 by v1 bits, then add that quantity to the value stored in rA. If v1 is outside the range (0, 32), the result is undefined. |
+| `sup` | 0x41&nbsp;rA&nbsp;v0         | Store the 16-bit unsigned value v0 into the upper 16 bits rA, leaving the lower 16 bits untouched. |
+| `sxt` | 0x42&nbsp;rA&nbsp;rB          | Copy the value from rB into rA, with sign extension. |
+| `seq` | 0x43&nbsp;rA&nbsp;rB&nbsp;v0          | Set rA to `1` if the value in `rB` is euqal to the value `v0`, otherwise set rA to `0`. |
+--
+| `int` | 0xf0&nbsp;v0         | Raise an interrupt with the 24-bit unsigned code in v0. 
 | `snd` | 0xfd&nbsp;rA&nbsp;rB&nbsp;rC         | Send command in `rC` to the device identifier in `rB` with argument in `rA`. Result is stored in `rA`. |
+| `hlt` | 0xff         | Halt execution. |
 
 To complement this somewhat limited set, most assemblers implement more complex psuedoinstructions built on top of these base instructions by taking advantage of the special temporary registers.

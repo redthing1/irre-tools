@@ -48,7 +48,7 @@ enum OpCode : ARG {
     DIV = 0x31, // divide
     MOD = 0x32, // modulo
 
-    ASI = 0x40, // add shifted immediate
+    SIA = 0x40, // shift immediate and add
     SUP = 0x41, // set upper 16
     SXT = 0x42, // sign extended move
     SEQ = 0x43, // set equal to immediate
