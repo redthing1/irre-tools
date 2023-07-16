@@ -266,7 +266,7 @@ class Parser {
         } else {
             // it was not an instruction, perhaps it's a macro
             auto macro_ref_token = expect_token(CharType.IDENTIFIER);
-            auto maybe_md = ast_builder.resolve_macro(macro_ref_token.content);
+            auto maybe_md = ast_builder.ast.resolve_macro(macro_ref_token.content);
             if (maybe_md.isNull) {
                 throw parser_error_token(format("macro could not be resolved: %s",
                         macro_ref_token.content), macro_ref_token);
