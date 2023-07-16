@@ -28,6 +28,26 @@ struct InfoNode {
     InfoType type; // information type: register or memory?
     UWORD data; // can be register id or memory address
     UWORD value; // can be register value or memory value
+
+    string toString() const {
+        import std.string : format;
+        import std.conv : to;
+        import std.array : appender, array;
+        
+        auto sb = appender!string;
+
+        switch (type) {
+            case InfoType.Register:
+                sb ~= format("%s=%04x", data.to!Register, value);
+                break;
+            case InfoType.Memory:
+                sb ~= format("mem[%04x]=%02x", data, value);
+                break;
+            default: assert(0);
+        }
+
+        return sb.array;
+    }
 }
 
 struct Commit {
@@ -125,7 +145,7 @@ struct Commit {
             for (auto i = 0; i < mem_addrs.length; i++) {
                 auto addr = mem_addrs[i];
                 auto value = mem_values[i];
-                sb ~= format(" mem[%04x] <- %04x", addr, value);
+                sb ~= format(" mem[%04x] <- %02x", addr, value);
             }
         }
 
@@ -137,7 +157,7 @@ struct Commit {
             switch (source.type) {
             case InfoType.Register : sb ~= format(" %s=%04x", source.data.to!Register, source.value);
                 break;
-            case InfoType.Memory : sb ~= format(" mem[%04x]=%04x", source.data, source.value);
+            case InfoType.Memory : sb ~= format(" mem[%04x]=%02x", source.data, source.value);
                 break;
             case InfoType.Immediate : sb ~= format(" i=%04x", source.value);
                 break;
