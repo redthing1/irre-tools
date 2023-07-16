@@ -49,7 +49,7 @@ int main(string[] args) {
         // dump the ast
         writeln("== AST ==");
         foreach (i, node; programAst.statements) {
-            writefln("4%d %s %s %s %s", i, to!string(node.op), to!string(node.a1), to!string(node.a2), to!string(node.a3));
+            writefln("4%d %04s $%04x $%04x $%04x", i, to!string(node.op), node.a1.peek!(ValueImm).val, node.a2.peek!(ValueImm).val, node.a3.peek!(ValueImm).val);
             
         }
     } catch (ParserException e) {
