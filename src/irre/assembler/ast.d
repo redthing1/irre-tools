@@ -54,9 +54,21 @@ struct ProgramAst {
     MacroDef[] macros;
     LabelDef[] labels;
     string entry_point_label;
+    SectionInfo[] sections;
+}
+
+enum SectionId {
+    Code = 0,
+    Data = 1
+}
+
+struct SectionInfo {
+    SectionId id;
+    int length;
 }
 
 struct LabelDef {
+    SectionId section;
     string name;
     int offset;
 }

@@ -24,6 +24,7 @@ class Parser {
     private int token_pos;
     private int char_pos;
     private AstBuilder ast_builder;
+    private SectionId current_section = SectionId.Code;
 
     this() {
         ast_builder = new AstBuilder();
@@ -63,35 +64,68 @@ class Parser {
             immutable auto next = peek_token();
             switch (next.kind) {
             case CharType.DIRECTIVE: {
-                    immutable auto dir = expect_token(CharType.DIRECTIVE);
-                    immutable auto dir_type = dir.content[1 .. $];
-                    if (dir_type == "entry") { // entrypoint directive
-                        // following label has the entry point
-                        expect_token(CharType.MARK);
-                        immutable auto label_ref_tok = expect_token(CharType.IDENTIFIER);
-                        // store entry label
-                        ast_builder.set_entry_label(label_ref_tok.content);
-                    } else if (dir_type == "d") {
-                        // data directive
-                        auto packed_data = take_data_declaration();
-                        DataBlock block = {data: packed_data};
-                        ast_builder.push_data_block(block);
-                        log_put(format("data block[%d] at offset %d",
-                                block.data.length, block.offset));
+                    auto dir_token = expect_token(CharType.DIRECTIVE);
+                    auto dir_type = dir_token.content[1 .. $];
+                    switch (dir_type) {
+                    case "entry": {
+                            // entrypoint directive
+                            expect_token(CharType.MARK);
+                            immutable auto label_ref_tok = expect_token(CharType.IDENTIFIER);
+                            // store entry label
+                            ast_builder.set_entry_label(label_ref_tok.content);
+                            log_put(format("entry point label: %s", label_ref_tok.content));
+                            break;
+                        }
+                    case "d": {
+                            // data directive
+                            assert(current_section == SectionId.Data,
+                                    "instructions are only allowed in data sections");
+                            auto packed_data = take_data_declaration();
+                            DataBlock block = {data: packed_data};
+                            ast_builder.push_data_block(block);
+                            log_put(format("data block[%d] at offset %d",
+                                    block.data.length, block.offset));
+                            break;
+                        }
+                    case "section": {
+                            // section directive
+                            expect_token(CharType.MARK);
+                            immutable auto section_type_tok = expect_token(CharType.IDENTIFIER);
+                            auto section_type = section_type_tok.content;
+                            // update current section
+                            switch (section_type) {
+                            case "code":
+                            case "text":
+                                current_section = SectionId.Code;
+                                break;
+                            case "data":
+                            case "bss":
+                                current_section = SectionId.Data;
+                                break;
+                            default:
+                                throw parser_error_token(format("unknown section type %s",
+                                        to!string(section_type)), section_type_tok);
+                            }
+                            break;
+                        }
+                    default:
+                        throw parser_error_token(format("unknown directive %s",
+                                to!string(dir_type)), dir_token);
                     }
                     break;
                 }
             case CharType.IDENTIFIER: {
-                    // immutable auto peek_iden = peek_token();
                     immutable auto peek_iden_succ = peek_token(1);
                     if (peek_iden_succ.kind == CharType.MARK && peek_iden_succ.content == ":") {
                         // label definition (only if single mark)
                         auto label_name = expect_token(CharType.IDENTIFIER);
                         expect_token(CharType.MARK); // eat the mark
-                        ast_builder.define_label(label_name.content); // create label
+                        ast_builder.define_label(current_section, label_name.content); // create label
                         break;
                     } else if (peek_iden_succ.kind == CharType.BIND) {
                         // macro definition
+                        assert(current_section == SectionId.Code,
+                                "macro definitions are only allowed in code sections");
                         auto macro_name = expect_token(CharType.IDENTIFIER);
                         expect_token(CharType.BIND); // eat the bind
                         // read the macro body into a MacroDef
@@ -100,6 +134,8 @@ class Parser {
                         break;
                     } else {
                         // this is an instruction
+                        assert(current_section == SectionId.Code,
+                                "instructions are only allowed in code sections");
                         auto next_statements = walk_statements();
                         foreach (statement; next_statements) {
                             ast_builder.push_statement(statement);
