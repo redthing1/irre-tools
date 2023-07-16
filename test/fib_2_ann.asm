@@ -5,6 +5,7 @@
 	; .type	fib,@function
 fib:
 	sbi sp sp #24		; set up stk
+	stw lr sp #20		; save original return address
 	mov r1 r0			; r1 = n
 	stw r0 sp #12		; store n
 	set r2 #1			; r2 = 1
@@ -22,24 +23,21 @@ fib:
 	add r0 r0 r1		; r0 = n - 1
 	set r1 ::fib		; r1 = &fib
 	stw r1 sp #4		; ? = r1
-	stw lr sp #20		; save original return address
 	cal r1				; fib()
-	ldw lr sp #20		; load original return address
 	ldw r1 sp #12		; r1 = n
 	set r2 #-2			; r2 = -2
 	add r1 r1 r2		; r1 = (n - 2)
 	stw r0 sp #0		; res1 = r0 ; fib(n-1)
 	mov r0 r1			; r0 = r1 ; (n - 2)
 	ldw r1 sp #4		; r1 = &fib
-	stw lr sp #20		; save original return address
 	cal r1				; fib()
-	ldw lr sp #20		; load original return address
 	ldw r1 sp #0		; r1 = res1
 	add r0 r1 r0		; r0 = res1 + res2
 	stw r0 sp #16		; result = r0 ; res1 + res2
 	; jmi ::.LBB0_3
 .LBB0_3:				; base case
 	ldw r0 sp #16		; r0 = result
+	ldw lr sp #20		; load original return address
 	adi sp sp #24		; tear down stack
 	ret
 .Lfunc_end0:
