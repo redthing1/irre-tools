@@ -22,13 +22,12 @@ install dependencies:
 
 ### quickstart build
 ```sh
-# build everything and export $VBCC and $IRRE
-. ./script/build_tools.sh
+./script/build_tools.sh
 ```
 
 tools you now have:
-+ `$IRRE/irretool` (irre multitool)
-+ `$VBCC/bin/vbccirre` (c->irre cross compiler)
++ `./src/irretool/irretool` (irre multitool)
++ `./tools/vbcc/bin/vbccirre` (c->irre cross compiler)
 
 ## compile a C program
 
@@ -50,10 +49,10 @@ int main() {
 
 now build and run:
 ```sh
-# build (creates my_prog.bin)
-./script/irre_cc.sh my_prog.c my_prog
-# run
-$IRRE/irretool -v emu my_prog.bin
+# compile to binary
+./script/irrecc -v -o my_prog.bin my_prog.c
+# run in emulator
+./src/irretool/irretool -v emu my_prog.bin
 ```
 
 ## run flow tracking
@@ -61,10 +60,10 @@ $IRRE/irretool -v emu my_prog.bin
 1. run a compiled program and log commits and snapshots
 
 ```
-$IRRE/irretool -v emu --commit-log --save-commits t1_trace.bin my_prog.bin
+./src/irretool/irretool -v emu --commit-log --save-commits t1_trace.bin my_prog.bin
 ```
 2. run analyzer
 
 ```
-$IRRE/irretool analyze --ift --pl --pl-threads 4 --ift-graph --ift-graph-analysis --ift-save-graph t1_graph.dot t1_trace.bin
+./src/irretool/irretool analyze --ift --pl --pl-threads 4 --ift-graph --ift-graph-analysis --ift-save-graph t1_graph.dot t1_trace.bin
 ```

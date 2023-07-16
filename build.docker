@@ -1,0 +1,16 @@
+FROM debian:bookworm-slim
+
+# install dependencies
+RUN apt-get update && apt-get install -y \
+    bash \
+    curl wget xz-utils \
+    build-essential make libc6-dev libcurl4 \
+    git libxml2 \
+    libssl-dev zlib1g-dev openssl \
+    && rm -rf /var/lib/apt/lists/* && apt autoremove -y && apt clean
+
+# install dlang
+RUN curl -fsS https://dlang.org/install.sh | bash -s install ldc-1.30.0 \
+    && echo "source ~/dlang/ldc-1.30.0/activate" >> ~/.bashrc
+
+CMD ["/bin/bash", "-l"] # run bash (required by redbuild)

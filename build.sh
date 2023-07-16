@@ -7,7 +7,6 @@ git submodule update --init --recursive
 pushd tools/vbcc
 export VBCC=`pwd`
 # make clean
-# yes "" | make TARGET=irre all bin/vbccirre
 make -j TARGET=irre DTAUTO=1 all bin/vbccirre
 popd
 
