@@ -12,33 +12,30 @@
 #define BOOL int
 #define true (1)
 #define false (0)
-
 #define bool BOOL
 
-/* intrinsics */
-
-/** intrinsic for SND I/O instruction: devices[dev_id].send(cmd, arg) */
-#define __DEV_MSG(dev_id, cmd, arg) asm inline volatile("\tsnd\t" #dev_id "\t" #cmd "\t" #arg)
+/** inline assembly function to call the SND instruction for I/O */
+__regsused("r0/r1/r2") int __dev_msg(__reg("r1") int dev_id, __reg("r2") int cmd,
+                                    __reg("r0") int arg) = "\tsnd r0 r1 r2"; // devices[dev_id].send(cmd, arg)
 
 /** intrinsic to break into the debugger */
-#define __DEBUGGER_BREAK() asm inline volatile("\tint\t$a0\t; debugger break")
-
-/* libc-like utility functions */
+void __debugger_break() = "\tint $a0\t; __debugger_break";
 
 /** copy data between two memory locations */
-void memcpy(volatile char *dst, volatile char *src, int count) {
+void __memcpy(volatile char *dst, volatile char *src, int count) {
     for (int i = 0; i < count; i++) {
         dst[i] = src[i];
     }
 }
 
 /** set data in memory */
-void memset(volatile char *dst, int val, int count) {
+void __memset(volatile char *dst, int val, int count) {
     for (int i = 0; i < count; i++) {
         dst[i] = val;
     }
 }
 
+/* RNG */
 int seed;
 int rng_a = 0xffffffff;
 int rng_c = 12345;
