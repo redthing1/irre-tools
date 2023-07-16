@@ -1,4 +1,4 @@
-module irretool.test.emu.vm;
+module irretool.test.emu.test_vm;
 
 import irretool.test.asmr.common;
 import irretool.test.emu.common;
