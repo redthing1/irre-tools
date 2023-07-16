@@ -10,6 +10,9 @@ import irre.disassembler.dumper;
 
 enum MEMORY_SIZE = 64 * 1024; // 65K
 
+alias Commit = IrreInfoLog.Commit;
+alias CommitTrace = IrreInfoLog.CommitTrace;
+
 class VirtualMachine {
     public UWORD[REGISTER_COUNT] reg;
     public UWORD[REGISTER_COUNT] prev_reg;
