@@ -40,3 +40,5 @@ trace.def
 trace.log
 
 callgrind.out*
+
+*.bin
