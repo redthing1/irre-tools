@@ -9,8 +9,11 @@ test1:
     set r4 #3
     set r5 #4
     add r6 r4 r5    ; 3 + 4
+    ; store in memory
+    stw r6 sp #-4
 
     add r0 r3 r6    ; (1 + 2) + (3 + 4)
+    stw r0 sp #-8
 
     ret
 
