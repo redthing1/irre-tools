@@ -27,7 +27,7 @@ irretool = sh.Command("./src/irretool/irretool")
 @app.command()
 def cli(
     input: List[str] = typer.Argument(..., help="Input source files"),
-    output: str = typer.Option(..., "-o", help="Output file"),
+    output: str = typer.Option(None, "-o", help="Output file"),
     verbose: bool = typer.Option(False, "-v", help="Verbose output"),
     debug: bool = typer.Option(False, "-g", "--debug", help="Debug output"),
 ):
@@ -43,6 +43,9 @@ def cli(
     # if verbose:
     #     print(cc_command)
     # cc_command(_fg=True)
+
+    if not output and len(input) == 1:
+        output = f"{input[0]}.bin"
 
     # use chcc to compile c to asm
     cc_args = [
