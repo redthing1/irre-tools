@@ -34,8 +34,8 @@ enum OpCode : ARG {
     MOV = 0x0c,
     LDW = 0x0d,
     STW = 0x0e,
-    LDB = 0x0f,
-    STB = 0x10,
+    // LDB = 0x0f,
+    // STB = 0x10,
 
     // set 2
     HLT = 0xff,
@@ -153,10 +153,10 @@ class InstructionEncoding {
             case OpCode.TCS: return InstructionInfo(OpCode.TCS, Operands.REG_REG_REG, 1);
             case OpCode.SET: return InstructionInfo(OpCode.SET, Operands.REG_IMM, 1);
             case OpCode.MOV: return InstructionInfo(OpCode.MOV, Operands.REG_REG, 1);
-            case OpCode.LDW: return InstructionInfo(OpCode.LDW, Operands.REG_REG, 1);
-            case OpCode.STW: return InstructionInfo(OpCode.STW, Operands.REG_REG, 1);
-            case OpCode.LDB: return InstructionInfo(OpCode.LDB, Operands.REG_REG, 1);
-            case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG, 1);
+            case OpCode.LDW: return InstructionInfo(OpCode.LDW, Operands.REG_REG_IMM, 1);
+            case OpCode.STW: return InstructionInfo(OpCode.STW, Operands.REG_REG_IMM, 1);
+            // case OpCode.LDB: return InstructionInfo(OpCode.LDB, Operands.REG_REG, 1);
+            // case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG, 1);
             // REGULAR_AD instruction set
             case OpCode.HLT: return InstructionInfo(OpCode.HLT, Operands.NONE, 1);
             case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.REG, 1);
