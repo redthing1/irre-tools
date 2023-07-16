@@ -400,14 +400,14 @@ class Parser {
             statement.a2 = parse_register_arg(raw_statement.a2);
         } else if ((info.operands & Operands.K_I2) > 0) {
             auto imm_arg = parse_value_arg(raw_statement.a2);
-            auto imm_val = imm_arg.peek!ValueImm.val;
+            auto imm_val = imm_arg.peek!ValueImm;
             // sometimes, imm's can be encoded as 16-bit.
-            // when I2 but not I3
-            if ((info.operands & Operands.K_I3) == 0) {
+            // when CONST and I2 but not I3
+            if ((imm_val !is null) && (info.operands & Operands.K_I3) == 0) {
                 // 16-bit imm
-                auto imm16 = cast(short) imm_val;
-                auto s0 = cast(ARG) (imm_val);
-                auto s1 = cast(ARG) (imm_val >> 8);
+                auto imm16 = cast(short) imm_val.val;
+                auto s0 = cast(ARG) (imm16);
+                auto s1 = cast(ARG) (imm16 >> 8);
                 statement.a2 = cast(ValueArg) ValueImm(s0);
                 statement.a3 = cast(ValueArg) ValueImm(s1);
             } else {
