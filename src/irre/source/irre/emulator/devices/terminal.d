@@ -3,6 +3,7 @@ module irre.emulator.devices.terminal;
 import irre.emulator.device;
 import std.string;
 import std.stdio;
+import irre.util;
 
 class TerminalDevice : MappedDevice {
     enum Command : WORD {
@@ -15,11 +16,11 @@ class TerminalDevice : MappedDevice {
 
     override void initialize(VirtualMachine vm, int id) {
         super.initialize(vm, id);
-        writefln("[TERM] device initialized.");
+        log_put(format("[TERM] device initialized."));
     }
 
     override WORD recieve(WORD command, WORD data) {
-        writefln("[TERM] recieved (comamnd: %d, data: %d)", command, data);
+        log_put(format("[TERM] recieved (comamnd: %08x, data: %d)", command, data));
         WORD result = super.recieve(command, data);
         if (result == 0)
             return result;
