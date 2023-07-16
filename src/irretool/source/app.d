@@ -55,6 +55,7 @@ void main(string[] raw_args) {
                 .add(new Flag(null, "commitlog", "enable commit log").full("commit-log"))
                 .add(new Flag(null, "ift", "enable ift analysis"))
                 .add(new Flag(null, "iftquiet", "quiet ift analysis").full("ift-quiet"))
+                .add(new Flag(null, "iftpl", "parallel ift analysis").full("ift-pl"))
                 .add(new Option(null, "iftdata", "ift data types").full("ift-data"))
                 .add(new Option(null, "checkpoint", "checkpoint file"))
         )
@@ -201,6 +202,7 @@ int cmd_emu(ProgramArgs args) {
     auto log_commits = args.flag("commitlog");
     auto enable_ift = args.flag("ift");
     auto ift_quiet = args.flag("iftquiet");
+    auto ift_parallel = args.flag("iftpl");
     auto ift_data_types = args.option("iftdata");
     auto checkpoint_file = args.option("checkpoint");
 
@@ -253,6 +255,7 @@ int cmd_emu(ProgramArgs args) {
             if (ift_data_types) {
                 ift_analyzer.included_data = ift_data_types.to!(IFTAnalyzer.IFTDataType);
             }
+            ift.analysis_parallelized = ift_parallel;
             ift_analyzer.analyze();
             if (!ift_quiet) {
                 ift_analyzer.dump_analysis();
