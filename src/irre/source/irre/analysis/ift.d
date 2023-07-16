@@ -137,7 +137,7 @@ class IFTAnalyzer {
 
             // writefln(" visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix);
 
-            if (curr.node.type == InfoType.Immediate) {
+            if (curr.node.type == InfoType.Immediate || curr.node.type == InfoType.Device) {
                 // we found raw source data, no dependencies
                 // this is a leaf source, so we want to record it
                 // all data comes from some sort of leaf source
