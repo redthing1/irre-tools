@@ -98,7 +98,9 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+#ifdef DEBUG
     __DEBUGGER_BREAK();
+#endif
 
     return 0;
 }
