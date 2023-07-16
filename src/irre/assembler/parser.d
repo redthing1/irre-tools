@@ -166,7 +166,6 @@ class Parser {
                             } else {
                                 // expand the macro
                                 // TODO: implementation
-                                break;
                             }
                         }
                     }
@@ -243,6 +242,11 @@ class Parser {
                     // will consist of: [NUMERIC_CONSTANT]
                     break;
                 }
+            case CharType.IDENTIFIER: {
+                // could be a macro arg
+                tokens ~= expect_token(CharType.IDENTIFIER);
+                break;
+            }
             default:
                 throw parser_error_token(format("unrecognized value arg for instruction '%s'",
                         mnem), next);
@@ -334,8 +338,8 @@ class Parser {
                     return cast(ValueArg) ValueImm(num);
                 }
             default:
-                throw parser_error_token(format("unrecognized token for value arg:  %s",
-                        to!string(next.kind)), next);
+                throw parser_error_token(format("unrecognized value arg of type %s for instruction '%s'",
+                        to!string(next.kind), raw_statement.mnem), next);
             }
         }
 
@@ -384,7 +388,7 @@ class Parser {
 
     void define_macro(string name) {
         writefln("DEFINE_MACRO %s", name);
-        auto def = new MacroDef(name);
+        auto def = MacroDef(name);
         while (peek_token().kind != CharType.MARK) { // MARK terminates arg list
             immutable auto arg_name = expect_token(CharType.IDENTIFIER);
             MacroArg.Type get_arg_type(char arg_prefix) {
@@ -405,39 +409,30 @@ class Parser {
         }
         expect_token(CharType.MARK); // eat the mark
         // read the macro body
-        auto statements = appender!(AbstractStatement[]);
-        // TODO: implement this
-        // while (true) {
-        //     immutable auto next = peek_token();
-        //     if (next.kind == MARK && streq(next.cont, "::")) {
-        //         expect_token(st, MARK); // end of macro def
-        //         break;
-        //     }
-        //     // otherwise, we should have instruction statements
-        //     // TODO: read statement
-        //     auto iden = expect_token(st, IDENTIFIER);
-        //     const char* mnem = iden.cont;
-        //     InstructionInfo info = get_instruction_info(mnem);
-        //     const char * a1 = NULL,  * a2 = NULL,  * a3 = NULL;
-        //     if (info.type == INSTR_INV) { // not a base instruction
-        //         // we don't support referencing macros within macros
-        //         printf("unrecognized mnemonic: %s\n", mnem);
-        //     } else {
-        //         if ((info.type & (INSTR_K_R1 | INSTR_K_I1)) > 0) {
-        //             a1 = take_token(st).cont;
-        //         }
-        //         if ((info.type & (INSTR_K_R2 | INSTR_K_I2)) > 0) {
-        //             a2 = take_token(st).cont;
-        //         }
-        //         if ((info.type & (INSTR_K_R3 | INSTR_K_I3)) > 0) {
-        //             a3 = take_token(st).cont;
-        //         }
-        //     }
-        //     SourceStatement raw_stmt = (SourceStatement) {
-        //         .mnem = mnem, .a1 = a1, .a2 = a2, .a3 = a3
-        //     };
-        //     buf_push_SourceStatement(&def.statements, raw_stmt);
-        // }
+        auto statements = appender!(SourceStatement[]);
+        while (true) {
+            immutable auto next = peek_token();
+            if (next.kind == CharType.MARK && next.content == "::") {
+                expect_token(CharType.MARK); // end of macro def
+                break;
+            }
+            // otherwise, we should have instruction statements
+            auto mnem_token = expect_token(CharType.IDENTIFIER);
+            auto maybe_raw_statement = take_raw_statement(mnem_token.content);
+            // TODO: consolidate this with the standard statement reader
+            // to allow calling macros from macros
+            // for now, just add the instruction
+
+            if (!maybe_raw_statement.isNull) {
+                writefln("ate statement %s", mnem_token.content);
+                statements ~= maybe_raw_statement.get();
+            } else {
+                // unrecognized mnemonic
+                throw parser_error_token(format("unrecognized mnemonic"), mnem_token);
+            }
+        }
+        def.statements = statements.data;
+        macros ~= def; // append to macro list
     }
 
     MacroDef resolve_macro(string name) {
