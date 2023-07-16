@@ -49,7 +49,8 @@ int main(string[] args) {
         }
 
         auto parser = new Parser();
-        auto programAst = parser.parse(lexed);
+        parser.load_lex(lexed);
+        auto programAst = parser.parse();
 
         if (dump) {
             // dump the ast

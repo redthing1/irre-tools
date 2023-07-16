@@ -26,10 +26,17 @@ class Parser {
     private Appender!(MacroDef[]) macros;
     private Appender!(LabelDef[]) labels;
 
-    /** given a lexer result, parse tokens into a program ast */
-    public ProgramAst parse(Lexer.Result lexer_result) {
-        this.lexed = lexer_result;
+    public void load_lex(Lexer.Result lexed) {
+        this.lexed = lexed;
 
+        // reset parse counting vars
+        this.token_pos = 0;
+        this.char_pos = 0;
+        // this.offset = 0;
+    }
+
+    /** given a lexer result, parse tokens into a program ast */
+    public ProgramAst parse() {
         string entry_label;
 
         auto statements = appender!(AbstractStatement[]);
@@ -214,7 +221,7 @@ class Parser {
         return statements.data;
     }
 
-    private Nullable!SourceStatement take_raw_statement() {
+    public Nullable!SourceStatement take_raw_statement() {
         immutable auto mnem_token = peek_token();
         immutable auto maybeInfo = InstructionEncoding.get_info(mnem_token.content);
         string a1, a2, a3;
@@ -310,7 +317,7 @@ class Parser {
     }
 
     /** given a source statement containing tokens, parse to an AST statement */
-    private AbstractStatement parse_statement(SourceStatement raw_statement) {
+    public AbstractStatement parse_statement(SourceStatement raw_statement) {
         auto maybeInfo = InstructionEncoding.get_info(raw_statement.mnem);
         auto info = maybeInfo.get();
         auto statement = AbstractStatement(info.op);

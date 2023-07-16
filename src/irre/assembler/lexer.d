@@ -69,8 +69,11 @@ class Lexer {
     populate a Lex.Result with tokens read from the text of an input program
     */
     public Result lex(string program) {
+        // initialize
         source = program;
         line = 1;
+        line_start = pos = 0;
+        working.clear();
 
         auto tokens = appender!(Token[]);
 
