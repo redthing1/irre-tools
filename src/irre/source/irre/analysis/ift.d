@@ -344,20 +344,28 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
             }
 
             // 2. backtrace all clobbered memory
+            // queue work
+            InfoNode[] mem_final_nodes;
             for (auto clobbered_i = 0; clobbered_i < clobber.mem_addrs.length; clobbered_i++) {
-                // get id of memory that is clobbered
                 auto mem_addr = clobber.mem_addrs[clobbered_i];
                 auto mem_val = clobber.mem_values[clobbered_i];
 
                 // create an info node for this point
                 auto mem_final_node = InfoNode(InfoType.Memory, mem_addr, mem_val);
+                mem_final_nodes ~= mem_final_node;
+            }
 
+            // do work
+            // auto mem_final_nodes_work = mem_final_nodes;
+            auto mem_final_nodes_work = parallel(mem_final_nodes);
+            foreach (final_node; mem_final_nodes_work) {
                 // now start backtracing
-                auto mem_sources = backtrace_information_flow(mem_final_node);
+                mixin(LOG_TRACE!(`format("backtracking information flow for node: %s", final_node)`));
+                auto mem_sources = backtrace_information_flow(final_node);
 
                 // writefln("sources for mem %s: %s", mem_addr, mem_sources);
 
-                clobbered_mem_sources[mem_addr] = mem_sources;
+                clobbered_mem_sources[final_node.data] = mem_sources;
             }
         }
 
