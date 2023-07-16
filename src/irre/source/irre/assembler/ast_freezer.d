@@ -57,7 +57,12 @@ class AstFreezer {
             auto maybe_val = arg.visit!((ValueImm imm) => Nullable!int(imm.val),
                     (ValueRef vref) => source_ast.get_label_global_offset(vref));
             if (maybe_val.isNull) {
-                throw new AstFreezerException(format("value arg %s could not be resolved", arg));
+                auto arg_as_value_ref = arg.visit!((ValueImm imm) => Nullable!ValueRef.init,
+                        (ValueRef vref) => Nullable!ValueRef(vref));
+                assert(!arg_as_value_ref.isNull, "arg should be either a value ref or a value imm");
+                // throw new AstFreezerException(format("value arg %s could not be resolved", arg));
+                throw new AstFreezerException(format("value arg %s could not be resolved. could be value ref %s",
+                            arg, arg_as_value_ref));
             }
             val = maybe_val.get;
         }
