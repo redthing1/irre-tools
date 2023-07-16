@@ -23,26 +23,26 @@ unittest {
     auto r0 = reg_src[Register.R0];
     assert(r0[0].node.type == InfoType.Immediate,
         format("expected node type for R0[0] to be Immediate, but was %s", r0[0].node.type));
-    assert(r0[0].commit_id == 1,
-        format("expected commit id for R0[0] to be 1, but was %d", r0[0].commit_id));
+    assert(r0[0].commit_id == 2,
+        format("expected commit id for R0[0] to be 2, but was %d", r0[0].commit_id));
     
     auto r0_1 = r0[1];
     assert(r0_1.node.type == InfoType.Immediate,
         format("expected node type for R0[1] to be Immediate, but was %s", r0_1.node.type));
-    assert(r0_1.commit_id == 2,
-        format("expected commit id for R0[1] to be 2, but was %d", r0_1.commit_id));
+    assert(r0_1.commit_id == 3,
+        format("expected commit id for R0[1] to be 3, but was %d", r0_1.commit_id));
     
     auto r0_2 = r0[2];
     assert(r0_2.node.type == InfoType.Immediate,
         format("expected node type for R0[2] to be Immediate, but was %s", r0_2.node.type));
-    assert(r0_2.commit_id == 4,
-        format("expected commit id for R0[2] to be 4, but was %d", r0_2.commit_id));
+    assert(r0_2.commit_id == 5,
+        format("expected commit id for R0[2] to be 5, but was %d", r0_2.commit_id));
     
     auto r0_3 = r0[3];
     assert(r0_3.node.type == InfoType.Immediate,
         format("expected node type for R0[3] to be Immediate, but was %s", r0_3.node.type));
-    assert(r0_3.commit_id == 5,
-        format("expected commit id for R0[3] to be 5, but was %d", r0_3.commit_id));
+    assert(r0_3.commit_id == 6,
+        format("expected commit id for R0[3] to be 6, but was %d", r0_3.commit_id));
     
 
     // check memory cell sources counts
