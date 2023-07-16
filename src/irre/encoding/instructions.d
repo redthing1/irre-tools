@@ -100,6 +100,7 @@ enum Operands {
     REG = K_R1,
     REG_IMM = REG | K_I2,
     REG_REG = REG | K_R2,
+    REG_IMM_IMM = REG_IMM | K_I3,
     REG_REG_IMM = REG_REG | K_I3,
     REG_REG_REG = REG_REG | K_R3,
 }
@@ -168,7 +169,7 @@ class InstructionEncoding {
             case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.REG, 1);
             // IRRE instruction set
             case OpCode.JMI: return InstructionInfo(OpCode.JMI, Operands.IMM, 1);
-            case OpCode.BIF: return InstructionInfo(OpCode.BIF, Operands.REG_IMM, 1);
+            case OpCode.BIF: return InstructionInfo(OpCode.BIF, Operands.REG_IMM_IMM, 1);
             case OpCode.CAL: return InstructionInfo(OpCode.CAL, Operands.REG, 1);
             // dfmt on
         default:

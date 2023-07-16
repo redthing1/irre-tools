@@ -76,6 +76,13 @@ class LegTranslator {
                 // we rewrite CMP rA rB -> TCU ad rA rB
                 tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
                 break;
+            case "b_eq":
+                // rewrite B_EQ v0 to BIF ad v0 #0
+                mnem = "bif";
+                auto tcu_val = 0;
+                tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
+                tokens ~= Token("#" ~ to!string(tcu_val), CharType.NUMERIC_CONSTANT);
+                break;
             default:
                 break;
             }
