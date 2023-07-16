@@ -2,7 +2,8 @@ module irre.assembler.parser;
 
 import irre.util;
 import irre.assembler.lexer;
-import irre.assembler.ast;
+public import irre.assembler.ast;
+import irre.assembler.builtins;
 import irre.encoding.instructions;
 import std.array;
 import std.string;
@@ -23,8 +24,20 @@ class Parser {
     private int char_pos;
     private int global_offset;
     private DataBlock[] data_blocks;
-    private Appender!(MacroDef[]) macros;
+    private MacroDef[] macros;
     private Appender!(LabelDef[]) labels;
+
+    this() {
+        // define builtins
+        define_builtins();
+    }
+
+    private void define_builtins() {
+        auto builtins = new BuiltinMacros();
+        macros ~= builtins.MACRO_ADI;
+        macros ~= builtins.MACRO_SBI;
+        macros ~= builtins.MACRO_YEET;
+    }
 
     public void load_lex(Lexer.Result lexed) {
         this.lexed = lexed;
@@ -33,36 +46,6 @@ class Parser {
         this.token_pos = 0;
         this.char_pos = 0;
         // this.offset = 0;
-    }
-
-    private void define_builtins() {
-        auto macro_adi = MacroDef("adi", [
-                MacroArg(MacroArg.Type.REGISTER, "rA"),
-                MacroArg(MacroArg.Type.REGISTER, "rB"),
-                MacroArg(MacroArg.Type.VALUE, "v0")
-                ], [
-                SourceStatement("set", [Token("at", CharType.IDENTIFIER)],
-                    [Token("v0", CharType.IDENTIFIER)]),
-                SourceStatement("add", [Token("rA", CharType.IDENTIFIER)],
-                    [Token("rB", CharType.IDENTIFIER)], [
-                        Token("at", CharType.IDENTIFIER)
-                    ]),
-                ]);
-        macros ~= macro_adi;
-        auto macro_sbi = MacroDef("sbi", [
-                MacroArg(MacroArg.Type.REGISTER, "rA"),
-                MacroArg(MacroArg.Type.REGISTER, "rB"),
-                MacroArg(MacroArg.Type.VALUE, "v0")
-                ], [
-                SourceStatement("set", [Token("at", CharType.IDENTIFIER)],
-                    [Token("v0", CharType.IDENTIFIER)]),
-                SourceStatement("sub", [Token("rA", CharType.IDENTIFIER)],
-                    [Token("rB", CharType.IDENTIFIER)], [
-                        Token("at", CharType.IDENTIFIER)
-                    ]),
-                ]);
-        macros ~= macro_adi;
-        macros ~= macro_sbi;
     }
 
     ubyte[] take_data_declaration() {
@@ -126,9 +109,6 @@ class Parser {
         // emit entry jump
         statements ~= AbstractStatement(OpCode.NOP);
         global_offset += INSTRUCTION_SIZE;
-
-        // define builtins
-        define_builtins();
 
         // parse lex result into instruction list
         while (token_pos < lexed.tokens.length) {
@@ -275,7 +255,11 @@ class Parser {
         } else {
             // it was not an instruction, perhaps it's a macro
             auto macro_ref_token = expect_token(CharType.IDENTIFIER);
-            auto md = resolve_macro(macro_ref_token.content);
+            auto maybe_md = resolve_macro(macro_ref_token.content);
+            if (maybe_md.isNull) {
+                throw parser_error_token(format("macro could not be resolved: %s", macro_ref_token.content), macro_ref_token);
+            }
+            auto md = maybe_md.get();
             // expand the macro
             auto unrolled_macro = expand_macro(md);
             statements ~= unrolled_macro;
@@ -495,14 +479,14 @@ class Parser {
     }
 
     /** resolve a macro */
-    private MacroDef resolve_macro(string name) {
+    public Nullable!MacroDef resolve_macro(string name) {
         // find the macro
-        foreach (macro_; macros.data) {
+        foreach (macro_; macros) {
             if (macro_.name == name) {
-                return macro_;
+                return Nullable!MacroDef(macro_);
             }
         }
-        throw parser_error(format("macro could not be resolved: %s", name));
+        return Nullable!MacroDef.init;
     }
 
     /** unroll a macro reference into a series of AST instructions */
