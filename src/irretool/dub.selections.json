@@ -2,10 +2,11 @@
 	"fileVersion": 1,
 	"versions": {
 		"commandr": "0.2.0",
+		"d-graphviz": "0.0.3",
 		"infoflow": {"path":"../../lib/infoflow"},
 		"irre": {"path":"../irre"},
 		"mir-algorithm": "3.13.9",
-		"mir-core": "1.1.109",
+		"mir-core": "1.1.111",
 		"mir-cpuid": "1.2.7",
 		"mir-ion": "1.0.50",
 		"msgpack-d": "1.0.3",

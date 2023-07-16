@@ -4,7 +4,9 @@ version (app)  : import std.stdio;
 import std.format;
 import std.conv;
 import std.file;
+import std.array;
 import std.string;
+import std.algorithm.comparison : min, max;
 
 import commandr;
 
@@ -24,7 +26,7 @@ import infoflow.analysis.ift;
 import irre.analysis.irre_arch;
 import irre.analysis.minimizer;
 
-bool verbose = false;
+auto verbose = 0;
 
 void main(string[] raw_args) {
     // dfmt off
@@ -56,16 +58,42 @@ void main(string[] raw_args) {
                 .add(new Flag(null, "iftpl", "parallel ift analysis").full("ift-pl"))
                 .add(new Option(null, "iftdata", "ift data types").full("ift-data"))
                 .add(new Option(null, "checkpoint", "checkpoint file")))
-        .add(new Command("ift", "do ift analysis")
+        .add(new Command("analyze", "do analysis")
                 .add(new Argument("input", "input file"))
+                .add(new Flag(null, "pl", "enable parallel analysis computation"))
+
+                .add(new Flag(null, "ift", "enable ift analysis"))
                 .add(new Flag(null, "iftquiet", "quiet ift analysis").full("ift-quiet"))
-                .add(new Flag(null, "iftpl", "parallel ift analysis").full("ift-pl"))
+                .add(new Flag(null, "iftgraph", "enable ift graph").full("ift-graph"))
+                .add(new Flag(null, "iftgraphanalysis", "enable ift graph analysis").full("ift-graph-analysis"))
+                .add(new Option(null, "iftsavegraph", "save ift graph").full("ift-save-graph"))
                 .add(new Option(null, "iftdata", "ift data types").full("ift-data"))
-                .add(new Option(null, "checkpoint", "checkpoint file")))
+                .add(new Flag(null, "iftskiprevisit", "aggressively skip ift info node revisit").full("ift-skip-revisit"))
+
+                .add(new Flag(null, "regtouch", "enable regtouch analysis"))
+
+                .add(new Flag(null, "optim", "enable graph optimization analysis"))
+                .add(new Option(null, "optimsavegraph", "save optimized graph").full("opt-save-graph"))
+
+                .add(new Option(null, "checkpoint", "checkpoint file"))
+		)
+        .add(new Command("dumptrace", "dump trace")
+                .add(new Argument("input", "input file"))
+
+                .add(new Flag("c", "commits", "dump commits"))
+                .add(new Flag("r", "registers", "dump registers"))
+                .add(new Flag("m", "memory", "dump memory"))
+        )
         .parse(raw_args);
 
-    verbose = args.flag("verbose");
-    IRRE_TOOLS_VERBOSITY = verbose ? Verbosity.Trace : Verbosity.Warning;
+    IRRE_TOOLS_VERBOSITY = (Verbosity.Warning + verbose).to!Verbosity;
+    verbose = min(args.occurencesOf("verbose"), 3);
+    // logger.verbosity = to!Verbosity(Verbosity.warn.to!int + verbose); // warn, info, trace
+
+    {
+        import infoflow.util;
+        INFOFLOW_VERBOSITY = to!InfoflowVerbosity(InfoflowVerbosity.error.to!int + verbose);
+    }
     
     args
         .on("asm", (args) {
@@ -77,8 +105,11 @@ void main(string[] raw_args) {
         .on("emu", (args) {
             cmd_emu(args);
         })
-        .on("ift", (args) {
-            cmd_runift(args);
+        .on("analyze", (args) {
+            cmd_runanalyze(args);
+        })
+        .on("dumptrace", (args) {
+            cmd_dumptrace(args);
         })
         ;
      // dfmt on
@@ -348,5 +379,208 @@ void do_ift_analysis(bool enable_ift, bool ift_quiet, bool ift_parallel, string 
 
             std.file.write(checkpoint_file, compiled_min_prog);
         }
+    }
+}
+
+auto load_commit_trace(string filename) {
+    // deserialize
+    import std.zlib;
+    import mir.deser.msgpack : deserializeMsgpack;
+    import infoflow.models.commit;
+
+    logger.info("loading commit trace from %s", filename);
+
+    auto serialized_trace = cast(const(ubyte)[]) uncompress(std.file.read(filename));
+    auto commit_trace = serialized_trace.deserializeMsgpack!CommitTrace();
+
+    return commit_trace;
+}
+
+void cmd_dumptrace(ProgramArgs args) {
+    auto input = args.arg("input");
+    auto dump_commits = args.flag("commits");
+    auto dump_registers = args.flag("registers");
+    auto dump_memory = args.flag("memory");
+
+    auto commit_trace = load_commit_trace(input);
+
+    // show summary
+    logger.info("commit trace summary:");
+    logger.info("  commits: %s", commit_trace.commits.length);
+    logger.info("  snapshots: %s", commit_trace.snapshots.length);
+
+    if (dump_registers || dump_memory) {
+        foreach (i, snapshot; commit_trace.snapshots) {
+            writefln("snapshot #%s", i);
+
+            if (dump_registers) {
+                writefln(" registers");
+                foreach (j, reg; snapshot.reg) {
+                    writefln("  reg %s = $%08x", j.to!IrreRegister, reg);
+                }
+            }
+            if (dump_memory) {
+                import std.algorithm.sorting : sort;
+                import std.range : array;
+
+                writefln(" memory");
+
+                writefln("  memory map");
+                foreach (map_item; snapshot.memory_map) {
+                    writefln("   section: $%08x %s (%s)", map_item.base_address, map_item.section_name, map_item
+                            .type);
+                }
+
+                writefln("  memory pages");
+                auto mem_page_addrs = snapshot.tracked_mem.pages.byKey.array;
+                foreach (page_addr; mem_page_addrs.sort()) {
+                    writefln("   page: $%08x", page_addr);
+
+                    // dump the page
+                    auto raw_mem_page = snapshot.tracked_mem.pages[page_addr].mem;
+
+                    // pretty dump memory
+                    auto memdump_sb = appender!(string);
+                    enum dump_w = 48;
+                    enum dump_grp = 4;
+
+                    for (auto k = 0; k < raw_mem_page.length; k += dump_w) {
+                        memdump_sb ~= "    ";
+                        auto base_addr = page_addr;
+                        memdump_sb ~= format("$%08x: ", k + base_addr);
+                        for (auto l = 0; l < dump_w; l++) {
+                            if (k + l >= raw_mem_page.length) {
+                                break;
+                            }
+                            for (auto m = 0; m < 4; m++) {
+                                if (k + l + m >= raw_mem_page.length) {
+                                    break;
+                                }
+                                memdump_sb ~= format("%02x", raw_mem_page[k + l + m]);
+                            }
+                            l += dump_grp;
+                            memdump_sb ~= " ";
+                        }
+                        memdump_sb ~= "\n";
+                    }
+                    memdump_sb ~= "\n";
+
+                    if (logger.verbosity >= Verbosity.trace) {
+                        writefln("%s", memdump_sb.data);
+                    }
+                }
+            }
+        }
+    }
+
+    if (dump_commits) {
+        writefln(" commits");
+        foreach (j, commit; commit_trace.commits) {
+            writefln("  commit #%s: %s", j, commit);
+        }
+    }
+}
+
+void cmd_runanalyze(ProgramArgs args) {
+    import std.parallelism : totalCPUs;
+
+    auto input = args.arg("input");
+    auto enable_parallel = args.flag("pl");
+    auto enable_ift = args.flag("ift");
+    auto ift_quiet = args.flag("iftquiet");
+    auto enable_ift_graph = args.flag("iftgraph");
+    auto enable_ift_graph_analysis = args.flag("iftgraphanalysis");
+    auto ift_data_types = args.option("iftdata");
+    auto enable_regtouch = args.flag("regtouch");
+    auto ift_save_graph = args.option("iftsavegraph");
+    auto enable_ift_skip_revisit = args.flag("iftskiprevisit");
+    auto enable_optim = args.flag("optim");
+    auto optim_save_graph = args.option("optimsavegraph");
+
+    auto commit_trace = load_commit_trace(input);
+
+    // do stuff
+    alias IFTAnalyzer = IrreIFTAnalysis.IFTAnalyzer;
+    alias IFTDumper = IrreIFTDump.IFTDumper;
+
+    auto ift_analyzer = new IFTAnalyzer(commit_trace, enable_parallel);
+    auto ift_dumper = new IFTDumper(ift_analyzer);
+
+    if (ift_data_types) {
+        ift_analyzer.included_data = ift_data_types.to!(IFTAnalyzer.IFTDataType);
+    }
+
+    ift_analyzer.aggressive_revisit_skipping = enable_ift_skip_revisit;
+
+    if (enable_ift) {
+        if (!ift_quiet) {
+            // show the commits
+            ift_dumper.dump_commits();
+
+            // show the clobber
+            ift_analyzer.calculate_clobber();
+            ift_dumper.dump_clobber();
+        }
+
+        writefln("\nanalysis features: "
+            ~ (enable_parallel ? format("parallel x%s", totalCPUs) : "serial")
+            ~ (enable_ift_graph ? " graph" : "")
+            ~ (enable_ift_graph_analysis ? " graph_analysis" : "")
+            ~ (enable_ift_skip_revisit ? " skip_revisit" : "")
+        );
+
+        writefln(" included data types: %s", ift_analyzer.included_data);
+
+        ift_analyzer.enable_ift_graph = enable_ift_graph;
+        ift_analyzer.enable_ift_graph_analysis = enable_ift_graph_analysis;
+
+        ift_analyzer.analyze();
+        if (!ift_quiet) {
+            ift_dumper.dump_analysis();
+        }
+
+        if (enable_ift_graph) {
+            if (!ift_quiet) {
+                ift_dumper.dump_graph();
+            }
+
+            if (ift_save_graph) {
+                ift_dumper.export_graph_to(ift_save_graph);
+            }
+        }
+
+        ift_dumper.dump_summary();
+    }
+
+    if (enable_regtouch) {
+        alias RegTouchAnalyzer = IrreRegTouchAnalysis.RegTouchAnalyzer;
+        auto regtouch_analyzer = new RegTouchAnalyzer(commit_trace, enable_parallel);
+
+        regtouch_analyzer.analyze();
+
+        writefln("\nregtouch analysis");
+        regtouch_analyzer.dump_analysis();
+    }
+
+    if (enable_optim) {
+        writefln("\noptimizer analysis");
+
+        alias IFTGraphOptimizer = IrreIFTOptimizer.IFTGraphOptimizer;
+        auto optimizer = new IFTGraphOptimizer(ift_analyzer);
+        optimizer.enable_prune_deterministic_subtrees = true;
+
+        optimizer.optimize();
+
+        // use the dumper to dump the optimized graph
+        writefln("\noptimizer results");
+        writefln(" optimized graph");
+        ift_dumper.dump_graph();
+
+        if (optim_save_graph) {
+            ift_dumper.export_graph_to(optim_save_graph);
+        }
+
+        writefln(" optimizer summary");
+        optimizer.dump_summary();
     }
 }
