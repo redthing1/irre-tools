@@ -13,9 +13,9 @@ trivially implementable as a strict subset of REGULAR.
   :CUSTOM_ID: leg-spec
   :END:
  
-information/documentation on the LEG architecture comes from
-[[https://web.archive.org/web/20200611030201/http://www.inf.ed.ac.uk/teaching/courses/ct/other/LLVMBackend-2015-03-26_v2.pdf][a
-presentation]] (p. 11) by its developers.
+information/documentation on the LEG architecture comes from these two presentations by its authors:
++ [[https://web.archive.org/web/20200611030201/http://www.inf.ed.ac.uk/teaching/courses/ct/other/LLVMBackend-2015-03-26_v2.pdf][presentation]] (p. 11-15)
++ [[https://web.archive.org/web/20200611031116/http://llvm.org/devmtg/2014-04/PDFs/Talks/Building%20an%20LLVM%20backend.pdf][presentation]] (p. 6-7)
  
 ** summary
 + simple, RISC-like architecture
@@ -27,6 +27,32 @@ presentation]] (p. 11) by its developers.
   + 32-bit register move, 16-bit constant moves
   + 32-bit load/store
   + integer comparison, branch, branch and link
++ calling convention
+  + arguments 1-4 passed in ~r0~ through ~r3~
+  + further arguments passed on stack
+  + return value in ~r0~
  
+** examples
+*** add function
++ function adding integers
+  + arguments passed in registers (~r0~ through ~r2~)
+  + return value stored in ~r0~
++ returns to the caller using ~b~ (branch)
+  + ~lr~ contains the return address
+ 
+#+begin_src c
+int add(int a, int b) {
+    int result = a + b;
+    return result;
+}
+#+end_src
+
+translates to
+#+begin_src asm
+.add:
+    add r0, r0, r1  
+    b lr
+#+end_src
+
 * building leg
-~
+
