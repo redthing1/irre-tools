@@ -339,17 +339,17 @@ class Parser {
         if ((info.operands & Operands.K_R1) > 0) {
             statement.a1 = read_register_arg(raw_statement.a1);
         } else if ((info.operands & Operands.K_I1) > 0) {
-            statement.a1 ~= read_value_arg(raw_statement.a1);
+            statement.a1 = read_value_arg(raw_statement.a1);
         }
         if ((info.operands & Operands.K_R2) > 0) {
             statement.a2 = read_register_arg(raw_statement.a2);
         } else if ((info.operands & Operands.K_I2) > 0) {
-            statement.a2 ~= read_value_arg(raw_statement.a2);
+            statement.a2 = read_value_arg(raw_statement.a2);
         }
         if ((info.operands & Operands.K_R3) > 0) {
             statement.a3 = read_register_arg(raw_statement.a3);
         } else if ((info.operands & Operands.K_I3) > 0) {
-            statement.a3 ~= read_value_arg(raw_statement.a3);
+            statement.a3 = read_value_arg(raw_statement.a3);
         }
 
         return statement;
