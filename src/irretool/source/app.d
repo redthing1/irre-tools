@@ -239,7 +239,7 @@ int cmd_emu(ProgramArgs args) {
         auto ift_analyzer = new IFTAnalyzer(hyp.vm.commit_trace);
         writeln("\ncommit log");
         if (!ift_quiet) {
-            writefln(ift_analyzer.dump_commits());
+            ift_analyzer.dump_commits();
         }
 
         if (enable_ift) {
@@ -249,7 +249,7 @@ int cmd_emu(ProgramArgs args) {
             }
             ift_analyzer.analyze();
             if (!ift_quiet) {
-                writefln(ift_analyzer.dump_analysis());
+                ift_analyzer.dump_analysis();
             }
 
             if (checkpoint_file != null) {
