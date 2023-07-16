@@ -3,3 +3,11 @@ description "irre lib"
 authors "no"
 copyright "Copyright © 2022, no"
 license "proprietary"
+
+configuration "default" {
+    versions "default"
+}
+
+configuration "ift_log" {
+    versions "ift_log"
+}
