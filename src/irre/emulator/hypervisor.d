@@ -60,6 +60,7 @@ class Hypervisor {
             dump_register(i);
         }
         if (!full) { // dump special registers even in a small dump
+            dump_register(Register.LR);
             dump_register(Register.AD);
             dump_register(Register.AT);
             dump_register(Register.SP);
