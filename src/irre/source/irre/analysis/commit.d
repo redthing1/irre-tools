@@ -47,7 +47,7 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
         Immediate = 1 << 4,
         Combined = Register | Memory | Immediate,
         Device = 1 << 6,
-        CSR = 1 << 7,
+        CSR = Register | (1 << 7),
         Reserved1,
         Reserved2,
         Reserved3,
