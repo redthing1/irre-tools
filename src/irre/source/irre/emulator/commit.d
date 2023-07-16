@@ -23,7 +23,8 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
             alias InfoNode = %s.InfoNode;
             alias InfoSource = %s.InfoSource;
             alias InfoSources = %s.InfoSources;
-        `, prefix, prefix, prefix, prefix, prefix, prefix, prefix);
+            alias ImmediatePos = %s.ImmediatePos;
+        `, prefix, prefix, prefix, prefix, prefix, prefix, prefix, prefix);
     }
 
     struct Snapshot {
