@@ -49,7 +49,10 @@ def cli(
         "-S",
         "-march",
         "irre",
+        "-fdefault-main"
     ]
+    if debug:
+        cc_args.append("-femit-debug")
     asm_output_file = f"{output}.ire"
     cc_command = chcc.bake(*cc_args, *input, f"-o", f"{asm_output_file}")
     if verbose:
