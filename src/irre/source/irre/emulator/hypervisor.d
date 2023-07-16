@@ -72,6 +72,7 @@ class Hypervisor {
 
     void halt_handler(UWORD code) {
         writefln("[halt] code %d", code);
+        dump_registers(true); // full dump
     }
 
     void commit_handler(Commit commit) {
