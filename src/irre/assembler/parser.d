@@ -253,7 +253,11 @@ class Parser {
         } else {
             // it was not an instruction, perhaps it's a macro
             auto macro_ref_token = expect_token(CharType.IDENTIFIER);
-            auto md = resolve_macro(macro_ref_token.content);
+            auto maybe_md = resolve_macro(macro_ref_token.content);
+            if (maybe_md.isNull) {
+                throw parser_error_token(format("macro could not be resolved: %s", macro_ref_token.content), macro_ref_token);
+            }
+            auto md = maybe_md.get();
             // expand the macro
             auto unrolled_macro = expand_macro(md);
             statements ~= unrolled_macro;
@@ -473,14 +477,14 @@ class Parser {
     }
 
     /** resolve a macro */
-    private MacroDef resolve_macro(string name) {
+    private Nullable!MacroDef resolve_macro(string name) {
         // find the macro
         foreach (macro_; macros.data) {
             if (macro_.name == name) {
-                return macro_;
+                return Nullable!MacroDef(macro_);
             }
         }
-        throw parser_error(format("macro could not be resolved: %s", name));
+        return Nullable!MacroDef.init;
     }
 
     /** unroll a macro reference into a series of AST instructions */
