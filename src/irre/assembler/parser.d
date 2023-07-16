@@ -1,5 +1,6 @@
 module irre.assembler.parser;
 
+import irre.util;
 import irre.assembler.lexer;
 import irre.encoding.instructions;
 import std.array;
@@ -70,6 +71,7 @@ class Parser {
     private int token_pos;
     private int char_pos;
     private int offset;
+    private byte[] data;
     private Appender!(MacroDef[]) macros;
     private Appender!(LabelDef[]) labels;
 
@@ -87,7 +89,47 @@ class Parser {
             auto next = peek_token();
             switch (next.kind) {
             case CharType.DIRECTIVE: {
-                    // TODO
+                    auto dir = expect_token(CharType.DIRECTIVE);
+                    if (dir.content == "#entry") { // entrypoint directive
+                        // following label has the entry point
+                        expect_token(CharType.MARK);
+                        auto label_ref = expect_token(CharType.IDENTIFIER);
+                        entry_label = label_ref.content; // store entry label
+                    } else if (dir.content == "#d") { // data directive
+                        expect_token(CharType.PACK_START); // eat pack start
+                        // check pack type indicator
+                        auto pack_type_indicator = expect_token(CharType.ALPHA | CharType.QUOT);
+                        auto pack_len = 0uL; // size of packed data
+
+                        switch (pack_type_indicator.kind) {
+                        case CharType.ALPHA: { // byte pack
+                                auto pack = expect_token(CharType.NUMERIC_CONSTANT);
+                                pack_len = pack.content.length;
+                                if (pack_len % 2 != 0) {
+                                    // odd number of half-bytes, invalid
+                                    throw parser_error("invalid data (must be an even size)");
+                                }
+                                pack_len = pack_len / 2; // divide by two because 0xff = 1 byte
+                                auto pack_data = datahex(pack.content); // convert data from hex
+                                // write the pack data to the binary
+                                data ~= pack_data;
+                                break;
+                            }
+                        case CharType.QUOT: { // data string
+                                auto pack = take_token(); // any following token is valid
+                                pack_len = pack.content.length;
+                                // copy string from token to data
+                                data ~= cast(byte[]) pack.content;
+                                break;
+                            }
+                        default:
+                            throw parser_error(format("unrecognized pack type %s", pack_type_indicator.content));
+                        }
+
+                        // update offset
+                        offset += pack_len;
+                        // printf("data block, len: $%04x\n", cast(UWORD) pack_len);
+                    }
                     break;
                 }
             case CharType.IDENTIFIER: {
