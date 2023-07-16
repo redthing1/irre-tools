@@ -2,6 +2,7 @@ module asmr.app;
 
 import std.stdio;
 import std.getopt;
+import std.conv;
 import std.file;
 import irre.meta;
 import irre.assembler.lexer;
@@ -39,7 +40,7 @@ int main(string[] args) {
         // dump the tokens
         writeln("== TOKENS ==");
         foreach (i, token; lexed.tokens) {
-            writefln("%4d TOK: %10s [%3d]", i, token.content, cast(int) token.kind);
+            writefln("%4d TOK: %10s [%10s]", i, token.content, to!string(token.kind));
         }
 
         auto parser = new Parser();

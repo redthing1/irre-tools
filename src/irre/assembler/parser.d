@@ -6,6 +6,7 @@ import irre.encoding.instructions;
 import std.array;
 import std.string;
 import std.conv;
+import std.stdio;
 
 struct RefValueSource {
     string label;
@@ -125,7 +126,8 @@ class Parser {
                                 break;
                             }
                         default:
-                            throw parser_error(format("unrecognized pack type %s", pack_type_indicator.content));
+                            throw parser_error(format("unrecognized pack type %s",
+                                    pack_type_indicator.content));
                         }
 
                         // update offset
@@ -147,7 +149,7 @@ class Parser {
                         break;
                     } else { // instruction
                         immutable auto mnem = iden.content;
-                        immutable auto maybeInfo = InstructionMetadata.get_info(mnem);
+                        immutable auto maybeInfo = InstructionEncoding.get_info(mnem);
                         auto instr_size = INSTRUCTION_SIZE;
                         string a1, a2, a3;
                         if (maybeInfo.isNull) { // didn't match standard instruction names
@@ -190,11 +192,90 @@ class Parser {
     }
 
     AbstractStatement read_statement(string mnem, string a1, string a2, string a3) {
-        auto maybeInfo = InstructionMetadata.get_info(mnem);
+        auto maybeInfo = InstructionEncoding.get_info(mnem);
         auto info = maybeInfo.get();
         auto statement = AbstractStatement(info.op);
 
-        // TODO: read args
+        int parse_numeric(string num) { // interpret numeric constant
+            char pfx = num[0];
+            // create a new string without the prefix
+            string num_str = num[1 .. $]; // convert base
+            int val = 0;
+            switch (pfx) {
+            case '$': {
+                    // interpret as base-16
+                    val = to!int(num_str, 16);
+                    break;
+                }
+            case '.': {
+                    // interpret as base-10
+                    val = to!int(num_str);
+                    break;
+                }
+            default:
+                // invalid numeric type (by prefix)
+                throw parser_error(format("invalid numeric prefix: %c", pfx));
+            }
+            return val;
+        }
+
+        ValueSource read_value_arg() {
+            immutable auto next = peek_token();
+            auto vs = ValueSource(ValueSource.Kind.IMMEDIATE, 0);
+            if (next.kind == CharType.MARK) {
+                expect_token(CharType.MARK); // eat the mark
+                immutable auto label_ref_tok = expect_token(CharType.IDENTIFIER);
+                vs.kind = ValueSource.Kind.REFERENCE;
+                vs.val_ref = RefValueSource(label_ref_tok.content, 0);
+                immutable auto pk_offset = peek_token();
+                if (pk_offset.kind == CharType.OFFSET) {
+                    expect_token(CharType.OFFSET); // eat the offset token
+                    auto num_tok = expect_token(CharType.NUMERIC_CONSTANT);
+                    immutable auto offset_val = parse_numeric(num_tok.content);
+                    vs.val_ref.offset = offset_val;
+                }
+                return vs;
+            } else if (next.kind == CharType.NUMERIC_CONSTANT) {
+                // interpret numeric token
+                auto num_tok = expect_token(CharType.NUMERIC_CONSTANT);
+                vs.kind = ValueSource.Kind.IMMEDIATE;
+                vs.val = parse_numeric(num_tok.content);
+                return vs;
+            } else {
+                throw parser_error(format("unrecognized token for value arg:  %s", next.content));
+            }
+        }
+
+        // read args
+        if ((info.operands & Operands.K_R1) > 0) {
+            statement.a1 = ValueSource(ValueSource.Kind.IMMEDIATE,
+                    InstructionEncoding.get_register(a1));
+        }
+        if ((info.operands & Operands.K_R2) > 0) {
+            statement.a2 = ValueSource(ValueSource.Kind.IMMEDIATE,
+                    InstructionEncoding.get_register(a2));
+        }
+        if ((info.operands & Operands.K_R3) > 0) {
+            statement.a3 = ValueSource(ValueSource.Kind.IMMEDIATE,
+                    InstructionEncoding.get_register(a3));
+        }
+
+        if ((info.operands & Operands.K_I1) > 0) {
+            if (!a1.empty)
+                statement.a1 = ValueSource(ValueSource.Kind.IMMEDIATE, parse_numeric(a1));
+            else
+                statement.a1 = read_value_arg();
+        } else if ((info.operands & Operands.K_I2) > 0) {
+            if (!a2.empty)
+                statement.a2 = ValueSource(ValueSource.Kind.IMMEDIATE, parse_numeric(a2));
+            else
+                statement.a2 = read_value_arg();
+        } else if ((info.operands & Operands.K_I3) > 0) {
+            if (!a3.empty)
+                statement.a3 = ValueSource(ValueSource.Kind.IMMEDIATE, parse_numeric(a3));
+            else
+                statement.a3 = read_value_arg();
+        }
 
         return statement;
     }
@@ -235,6 +316,10 @@ class Parser {
     }
 
     private Token peek_token() {
+        // if at end, unknown
+        if (token_pos >= lexed.tokens.length) {
+            return Token(string.init, CharType.UNKNOWN);
+        }
         return lexed.tokens[token_pos];
     }
 
@@ -242,6 +327,7 @@ class Parser {
         auto token = peek_token();
         token_pos++;
         char_pos += token.content.length;
+        // writefln("took token [%d]: %s", token_pos - 1, token.content);
         return token;
     }
 
