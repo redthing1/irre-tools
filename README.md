@@ -9,7 +9,7 @@ toy handwritten assembler, emulator, compiler, toolchain for a lightweight RISC 
 
 documentation and specifications ([arch](doc/arch.md), [asm](doc.asm.md)) are available in [doc](doc/).
 
-## build
+## hacking
 
 grab submodules:
 ```sh
@@ -20,13 +20,21 @@ install dependencies:
 + c compiler
 + dlang compiler + dub
 
-to use another D compiler, such as `dmd`, set the environment variable ex. `DC=dmd` when running `configure`.
-
-## hacking
-
-build everything (quickstart):
+### quickstart build
 ```sh
+# build everything and export $VBCC and $IRRE
 . ./script/build_tools.sh
+```
+
+tools you now have:
++ `$IRRE/irretool` (irre multitool)
++ `$VBCC/bin/vbccirre` (c->irre cross compiler)
+
+### full build
+build the irre multitool `irretool`
+```sh
+cd src/irretool
+dub build
 ```
 
 build the custom vbcc port for IRRE:
