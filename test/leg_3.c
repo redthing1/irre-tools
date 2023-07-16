@@ -5,5 +5,5 @@ int main() {
     for (int i = 0; i < 4; i++) {
         c += 0x10;
     }
-    return c;
+    return c; // 0x40
 }
