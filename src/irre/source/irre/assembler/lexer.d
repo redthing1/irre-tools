@@ -84,6 +84,11 @@ class Lexer {
                 skip_until('\n'); // ignore the rest of the line
                 skip_chars(CharType.SPACE); // skip any remaining space
             }
+            // start/end comments with /* */
+            if (peek_char() == '/' && peek_char(1) == '*') {
+                skip_until("*/");
+                skip_chars(CharType.SPACE);
+            }
             if (pos >= source.length) {
                 break;
             }
@@ -176,11 +181,18 @@ class Lexer {
         return type;
     }
 
-    private char peek_char() {
-        if (pos >= source.length) {
+    // private char peek_char() {
+    //     if (pos >= source.length) {
+    //         return '\n'; // empty
+    //     }
+    //     return source[pos];
+    // }
+    private char peek_char(int offset = 0) {
+        auto offset_pos = pos + offset;
+        if (offset_pos >= source.length) {
             return '\n'; // empty
         }
-        return source[pos];
+        return source[offset_pos];
     }
 
     private CharType peek_chartype() {
@@ -219,6 +231,12 @@ class Lexer {
 
     private void skip_until(char until) {
         while (pos < source.length && peek_char() != until) {
+            take_char();
+        }
+    }
+
+    private void skip_until(string until) {
+        while (pos < source.length && !working.to!string.endsWith(until)) {
             take_char();
         }
     }
