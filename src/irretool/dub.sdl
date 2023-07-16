@@ -3,5 +3,18 @@ description "irre multitool"
 authors "no"
 copyright "Copyright © 2022, no"
 license "proprietary"
+
 dependency "irre" path="../irre"
 dependency "commandr" version="~>0.2.0"
+
+configuration "app" {
+    versions "app"
+}
+
+configuration "unittest" {
+    # test runner
+    dependency "silly" version="~>1.1.1"
+    # test code
+    sourcePaths "test"
+    importPaths "test"
+}
