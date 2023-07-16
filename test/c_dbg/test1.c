@@ -1,6 +1,8 @@
-#include "../lib/corlib.h"
-
 #define BLOCK_SIZE (4)
+
+#define bool int
+
+#define __DEBUGGER_BREAK() asm inline volatile("\tint\t$a0\t; debugger break")
 
 char arr1[BLOCK_SIZE] = {1, 2, 3, 4};
 char arr2[BLOCK_SIZE] = {9, 8, 7, 6};
@@ -29,7 +31,7 @@ bool compare_second(char *block1, char *block2) {
 }
 
 int main() {
-    __debugger_break();
+    __DEBUGGER_BREAK();
     add_second(arr1, arr2, add_buf);
 
     // if (!compare_blocks(add_buf, arr3)) {
