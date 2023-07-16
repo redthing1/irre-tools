@@ -1,14 +1,24 @@
 
 // test inline assembly
 
-int asm_add(int a, int b) {
-    asm("nop\n\
-    mov r14 r0\n\
-    mov r15 r1\n\
-    add r0 r14 r15");
+__regsused("r1") int asm_increment(__reg("r1") int n) {
+    __asm("\tadi r0 r1 #1");
+}
+
+__regsused("r1/r4") void asm_add5_ref(__reg("r1") int* n) {
+    __asm(
+        "\tldw r4 r1 #0\n"
+        "\tadi r4 r4 #5\n"
+        "\tstw r4 r1 #0\n"
+    );
 }
 
 int main()
 {
-    return asm_add(2, 3);
+    int a = 2;
+    int b = 3;
+    b = asm_increment(b); // b = 4
+    asm_add5_ref(&a); // a = 7
+
+    return a + b; // 11
 }
