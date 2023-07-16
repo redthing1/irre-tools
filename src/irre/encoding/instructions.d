@@ -178,8 +178,8 @@ class InstructionEncoding {
             case OpCode.JMI: return InstructionInfo(OpCode.JMI, Operands.IMM, 1);
             case OpCode.JMP: return InstructionInfo(OpCode.JMP, Operands.REG, 1);
             case OpCode.BIF: return InstructionInfo(OpCode.BIF, Operands.REG_IMM_IMM, 1);
-            case OpCode.BEQ: return InstructionInfo(OpCode.BEQ, Operands.REG_REG_REG, 1);
-            case OpCode.BNE: return InstructionInfo(OpCode.BNE, Operands.REG_REG_REG, 1);
+            case OpCode.BEQ: return InstructionInfo(OpCode.BEQ, Operands.REG_REG_IMM, 1);
+            case OpCode.BNE: return InstructionInfo(OpCode.BNE, Operands.REG_REG_IMM, 1);
             case OpCode.CAL: return InstructionInfo(OpCode.CAL, Operands.REG, 1);
             case OpCode.RET: return InstructionInfo(OpCode.RET, Operands.NONE, 1);
             // REGULAR_EXT device api

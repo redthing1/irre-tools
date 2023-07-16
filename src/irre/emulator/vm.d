@@ -194,9 +194,9 @@ class VirtualMachine {
             }
         case OpCode.BEQ: {
                 immutable UWORD addr = reg[ins.a1];
-                // branch to @rA if rB == rC
+                // branch to @rA if rB == vC
                 immutable WORD a = reg[ins.a2];
-                immutable WORD b = reg[ins.a3];
+                immutable byte b = ins.a3;
                 if (a == b) {
                     reg[Register.PC] = addr;
                     branched = true;
@@ -205,9 +205,9 @@ class VirtualMachine {
             }
         case OpCode.BNE: {
                 immutable UWORD addr = reg[ins.a1];
-                // branch to @rA if rB != rC
+                // branch to @rA if rB != vC
                 immutable WORD a = reg[ins.a2];
-                immutable WORD b = reg[ins.a3];
+                immutable byte b = ins.a3;
                 if (a != b) {
                     reg[Register.PC] = addr;
                     branched = true;
