@@ -393,7 +393,7 @@ class Parser {
         auto val = 0;
         if (arg.hasValue) {
             val = arg.visit!((ValueImm imm) => imm.val,
-                    (ValueRef ref_) => resolve_label(ref_.label).offset + offset);
+                    (ValueRef ref_) => resolve_label(ref_.label).offset + ref_.offset);
         }
         return ValueImm(val);
     }
