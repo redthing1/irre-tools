@@ -1,6 +1,7 @@
 #include "irre.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define IRRE_DEMO_MEMORY_SIZE (1024 * 64) // 64 KB
 IrreState vm_state;
@@ -8,6 +9,7 @@ IRRE_UBYTE vm_memory[IRRE_DEMO_MEMORY_SIZE];
 
 typedef enum {
   DEMO_DEVICE_PING = 0x00001000,
+  DEMO_DEVICE_RANDOM = 0x00007007,
 } DemoDevice;
 
 uint8_t *read_file(char *filename, size_t *size);
@@ -22,7 +24,7 @@ void handle_irre_error(IrreError err) {
 }
 
 IRRE_UWORD handle_irre_device(IRRE_UWORD device_id, IRRE_UWORD device_command,
-                        IRRE_UWORD device_data) {
+                              IRRE_UWORD device_data) {
   printf("[%s] device message: (id=$%08x, command=$%08x, data=$%08x)\n",
          __func__, device_id, device_command, device_data);
 
@@ -30,6 +32,18 @@ IRRE_UWORD handle_irre_device(IRRE_UWORD device_id, IRRE_UWORD device_command,
   case DEMO_DEVICE_PING:
     printf("[%s] ping(%d)\n", __func__, device_data);
     return device_data;
+    break;
+  case DEMO_DEVICE_RANDOM:
+    // random call: command=address, data=count
+    IRRE_UWORD random_address = device_command;
+    IRRE_UWORD random_count = device_data;
+    printf("[%s] random(address=$%08x, count=%d)\n", __func__, random_address,
+           random_count);
+    // fill the memory with random bytes
+    for (IRRE_UWORD i = 0; i < random_count; i++) {
+      vm_state.m[random_address + i] = rand() % 256;
+    }
+    return 0;
     break;
   default:
     printf("[%s] unknown device id: $%08x\n", __func__, device_id);
@@ -42,6 +56,8 @@ IRRE_UWORD handle_irre_device(IRRE_UWORD device_id, IRRE_UWORD device_command,
 int main(int argc, char **argv) {
   bool debug = false;
   char *filename = NULL;
+
+  srand(time(NULL));
 
   if (argc < 2) {
     printf("usage: %s <filename> [debug]\n", argv[0]);
