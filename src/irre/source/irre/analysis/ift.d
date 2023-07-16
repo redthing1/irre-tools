@@ -65,6 +65,42 @@ class IFTAnalyzer {
                 clobber.mem_values ~= snap_final.mem[mem_addr];
             }
         }
+
+        // 3. do a reverse pass through all commits, looking for special cases
+        //    things like devices and mmio, external sources of data
+
+        for (auto i = (cast(long) trace.commits.length - 1); i >= 0; i--) {
+            auto commit = trace.commits[i];
+
+            // look at sources of this commit
+            for (auto j = 0; j < commit.sources.length; j++) {
+                auto source = commit.sources[j];
+
+                if (source.type == InfoType.Device) {
+                    // one of this instruction's sources is a device
+                    // this means that the output nodes are clobbered
+
+                    // there are no commands in this ISA to directly clobber memory
+                    // so we'll only check registers
+
+                    // find the registers that are clobbered by this commit
+                    for (auto k = 0; k < commit.reg_ids.length; k++) {
+                        auto reg_id = commit.reg_ids[k];
+                        auto reg_val = commit.reg_values[k];
+                        if (clobber.reg_ids.canFind(reg_id)) {
+                            // this register is already clobbered
+                            // so we don't need to do anything
+                            continue;
+                        }
+
+                        // this register is not clobbered yet
+                        // so we need to add it to the clobber list
+                        clobber.reg_ids ~= reg_id;
+                        clobber.reg_values ~= reg_val;
+                    }
+                }
+            }
+        }
     }
 
     long find_commit_last_touching(InfoNode node, long from_commit) {
