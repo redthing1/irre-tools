@@ -1,6 +1,6 @@
 module irre.assembler.parser;
 
-import assembler.lexer;
+import irre.assembler.lexer;
 
 struct AbstractStatement {
     // OPCODE op;
