@@ -138,13 +138,16 @@ class Hypervisor {
             dump_stack();
             break;
         case "s1":
+            writefln("[cmd] ONESTEP = 1, DEBUG = 1");
             onestep_mode = true;
+            debug_mode = true;
             break;
         case "s0":
+            writefln("[cmd] ONESTEP = 0");
             onestep_mode = false;
             break;
         default:
-            writefln("command '%s' not recognized.", command);
+            writefln("[cmd] command '%s' not recognized.", command);
             break;
         }
     }
