@@ -202,7 +202,7 @@ class VirtualMachine {
         //             last_branch_status = BranchStatus.NOT_TAKEN;
         //         }
         //         break;
-            }
+        //     }
         case OpCode.BVE: {
                 immutable UWORD addr = reg[ins.a1];
                 // branch to @rA if rB == vC
