@@ -55,17 +55,18 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
 
         this(CommitTrace commit_trace) {
             trace = commit_trace;
+
+            // sanity check the trace
+            assert(trace.commits.length > 0, "trace must have at least one commit");
+            assert(trace.snapshots.length == 2,
+                "trace must have exactly two snapshots, initial and final");
+            
+            snap_init = trace.snapshots[0];
+            snap_final = trace.snapshots[1];
         }
 
         @property long last_commit_ix() const {
             return (cast(long) trace.commits.length) - 1;
-        }
-
-        void pre_analysis() {
-            snap_init = trace.snapshots[0];
-            snap_final = trace.snapshots[1];
-
-            calculate_clobber();
         }
 
         /**
@@ -78,6 +79,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
             log_visited_info_nodes = 0;
             log_commits_walked = 0;
 
+            // calculate diffs and clobber
             calculate_clobber();
             analyze_flows();
 
@@ -95,7 +97,6 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
 
         void calculate_clobber() {
             // calculate the total clobber commit between the initial and final state
-
             // 1. reset clobber
             clobber = Commit();
 
