@@ -177,8 +177,8 @@ class VirtualMachine {
                 immutable WORD tc = reg[ins.a1]; // reg value
                 immutable byte check = ins.a3; // imm value
                 bool cond = false;
-                if (check < 0) cond = reg <= check;
-                if (check > 0) cond = reg >= check;
+                if (check < 0) cond = tc <= check;
+                if (check > 0) cond = tc >= check;
                 if (check == 0) cond = tc == 0;
                 if (cond) {
                     reg[Register.PC] = addr;
