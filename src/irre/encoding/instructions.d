@@ -44,7 +44,7 @@ enum OpCode : ARG {
     // set 3
     JMI = 0x10, // unconditional jump (imm)
     JMP = 0x11, // unconditional jump (reg)
-    BIF = 0x13, // branch if equal (imm)
+    // BIF = 0x13, // branch if equal (imm)
     BVE = 0x14, // branch if value-equal (reg)
     BVN = 0x15, // branch if value-not-equal (reg)
     CAL = 0x1a, // branch, link in LR
@@ -177,7 +177,7 @@ class InstructionEncoding {
             // IRRE instruction set
             case OpCode.JMI: return InstructionInfo(OpCode.JMI, Operands.IMM, 1);
             case OpCode.JMP: return InstructionInfo(OpCode.JMP, Operands.REG, 1);
-            case OpCode.BIF: return InstructionInfo(OpCode.BIF, Operands.REG_IMM_IMM, 1);
+            // case OpCode.BIF: return InstructionInfo(OpCode.BIF, Operands.REG_IMM_IMM, 1);
             case OpCode.BVE: return InstructionInfo(OpCode.BVE, Operands.REG_REG_IMM, 1);
             case OpCode.BVN: return InstructionInfo(OpCode.BVN, Operands.REG_REG_IMM, 1);
             case OpCode.CAL: return InstructionInfo(OpCode.CAL, Operands.REG, 1);
