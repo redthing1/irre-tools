@@ -82,27 +82,31 @@ class LegTranslator {
                 // we rewrite CMP rA rB -> TCU ad rA rB
                 tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
                 break;
-            case "b_eq":
-                // rewrite B_EQ v0 to BIF ad v0 #0
-                mnem = "bif";
-                auto tc_val = 0;
-                tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
-                tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
-                break;
-            case "b_lt":
-                // rewrite B_LT v0 to BIF ad v0 #-1
-                mnem = "bif";
-                auto tc_val = -1;
-                tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
-                tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
-                break;
             case "b_gt":
-                // rewrite B_LT v0 to BIF ad v0 #1
-                mnem = "bif";
-                auto tc_val = 1;
-                tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
-                tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
+                mnem = "yeet";
+                tokens = [tokens[0]];
                 break;
+                // case "b_eq":
+                //     // rewrite B_EQ v0 to BIF ad v0 #0
+                //     mnem = "bif";
+                //     auto tc_val = 0;
+                //     tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
+                //     tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
+                //     break;
+                // case "b_lt":
+                //     // rewrite B_LT v0 to BIF ad v0 #-1
+                //     mnem = "bif";
+                //     auto tc_val = -1;
+                //     tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
+                //     tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
+                //     break;
+                // case "b_gt":
+                //     // rewrite B_LT v0 to BIF ad v0 #1
+                //     mnem = "bif";
+                //     auto tc_val = 1;
+                //     tokens.insertInPlace(1, Token("ad", CharType.IDENTIFIER));
+                //     tokens ~= Token("#" ~ to!string(tc_val), CharType.NUMERIC_CONSTANT);
+                //     break;
             default:
                 break;
             }
@@ -131,6 +135,15 @@ class LegTranslator {
         parser.load_lex(lexed);
         auto maybe_source_statement = parser.take_raw_statement();
         if (maybe_source_statement.isNull) {
+            // maybe it's a macro?
+            if (lexed.tokens.length > 0) {
+                immutable auto macro_name = lexed.tokens[0].content;
+                auto maybe_macro = parser.resolve_macro(macro_name);
+                if (!maybe_macro.isNull) {
+                    log_put(format("  MACRO %s", macro_name));
+                    return raw_instruction;
+                }
+            }
             log_put(format("  unimplemented instruction"));
             return "; UNIMPLEMENTED: " ~ raw_instruction;
         }
