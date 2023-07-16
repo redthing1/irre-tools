@@ -1,8 +1,6 @@
 module app;
 
-version(app):
-
-import std.stdio;
+version (app)  : import std.stdio;
 import std.format;
 import std.conv;
 import std.file;
@@ -56,6 +54,8 @@ void main(string[] raw_args) {
                 .add(new Flag("s", "step", "step mode"))
                 .add(new Flag(null, "commitlog", "enable commit log").full("commit-log"))
                 .add(new Flag(null, "ift", "enable ift analysis"))
+                .add(new Flag(null, "iftquiet", "quiet ift analysis").full("ift-quiet"))
+                .add(new Option(null, "iftdata", "ift data types").full("ift-data"))
                 .add(new Option(null, "checkpoint", "checkpoint file"))
         )
         .parse(raw_args);
@@ -200,6 +200,8 @@ int cmd_emu(ProgramArgs args) {
     auto step_mode = args.flag("step");
     auto log_commits = args.flag("commitlog");
     auto enable_ift = args.flag("ift");
+    auto ift_quiet = args.flag("iftquiet");
+    auto ift_data_types = args.option("iftdata");
     auto checkpoint_file = args.option("checkpoint");
 
     writefln("[IRRE] emulator v%s", Meta.VERSION);
@@ -236,11 +238,19 @@ int cmd_emu(ProgramArgs args) {
     if (log_commits) {
         auto ift_analyzer = new IFTAnalyzer(hyp.vm.commit_trace);
         writeln("\ncommit log");
-        ift_analyzer.dump_commits();
+        if (!ift_quiet) {
+            writefln(ift_analyzer.dump_commits());
+        }
+
         if (enable_ift) {
             writeln("\nift analysis");
+            if (ift_data_types) {
+                ift_analyzer.included_data = ift_data_types.to!(IFTAnalyzer.IFTDataType);
+            }
             ift_analyzer.analyze();
-            ift_analyzer.dump_analysis();
+            if (!ift_quiet) {
+                writefln(ift_analyzer.dump_analysis());
+            }
 
             if (checkpoint_file != null) {
                 // we can save a checkpoint
