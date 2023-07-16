@@ -308,7 +308,9 @@ void do_ift_analysis(bool enable_ift, bool ift_quiet, bool ift_parallel, string 
     }
 
     if (enable_ift) {
-        writefln("\nift analysis (%s)", ift_parallel ? "parallel" : "serial");
+        import std.parallelism: totalCPUs;
+        writefln("\nift analysis (%s)", ift_parallel ? format("parallel x%s", totalCPUs) : "serial");
+
         if (ift_data_types) {
             ift_analyzer.included_data = ift_data_types.to!(IFTAnalyzer.IFTDataType);
         }
