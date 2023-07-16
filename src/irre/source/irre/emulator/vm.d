@@ -180,10 +180,16 @@ class VirtualMachine {
                 break;
             }
         case OpCode.SET: {
-                immutable short signed_val = cast(short)(ins.a2 | (ins.a3 << 8));
-                immutable WORD signext_imm = signed_val;
-                reg[ins.a1] = signext_imm;
-                commit_reg(ins.a1, reg[ins.a1], [Commit.Source(InfoType.Immediate, ImmediatePosBC, signed_val)]);
+                immutable UWORD val = (ins.a2 | (ins.a3 << 8));
+                reg[ins.a1] = val;
+                commit_reg(ins.a1, reg[ins.a1], [Commit.Source(InfoType.Immediate, ImmediatePosBC, val)]);
+                break;
+            }
+        case OpCode.SUP: {
+                immutable UWORD val = (ins.a2 | (ins.a3 << 8));
+                immutable UWORD shifted_val = val << 16; // upper 16 bits of a word
+                reg[ins.a1] = (reg[ins.a1] & 0x0000FFFF) | shifted_val; // set only upper 16 bits of a1
+                commit_reg(ins.a1, reg[ins.a1], [Commit.Source(InfoType.Immediate, ImmediatePosBC, val)]);
                 break;
             }
         case OpCode.MOV: {
@@ -229,12 +235,13 @@ class VirtualMachine {
                 break;
             }
         case OpCode.ASI: {
+            immutable UWORD existing = reg[ins.a1];
             immutable ubyte val = ins.a2;
             immutable byte shift = ins.a3;
 
             if (shift >= 0 && shift < 32) {
                 UWORD shifted = val << shift;
-                reg[ins.a1] = reg[ins.a1] + shifted;
+                reg[ins.a1] = existing + shifted;
             }
 
             auto source_regs = commit_source_regs([ins.a1], [reg[ins.a1]]);

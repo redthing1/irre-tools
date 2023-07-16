@@ -30,7 +30,7 @@ enum OpCode : ARG {
     ASH = 0x08, // arithmetic shift
     TCU = 0x09,
     TCS = 0x0a,
-    SET = 0x0b, // set
+    SET = 0x0b, // set lower 16
     MOV = 0x0c, // move
     LDW = 0x0d, // load word
     STW = 0x0e, // store word
@@ -52,6 +52,7 @@ enum OpCode : ARG {
 
     // set 4
     ASI = 0x20, // add shifted immediate
+    SUP = 0x21, // set upper 16
 
     // regular-ext device api
     SND = 0xfd, // send
@@ -177,6 +178,7 @@ class InstructionEncoding {
             // case OpCode.LDB: return InstructionInfo(OpCode.LDB, Operands.REG_REG, 1);
             // case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG, 1);
             case OpCode.ASI: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
+            case OpCode.SUP: return InstructionInfo(OpCode.SUP, Operands.REG_IMM, 1);
             // REGULAR_AD instruction set
             case OpCode.HLT: return InstructionInfo(OpCode.HLT, Operands.NONE, 1);
             case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.IMM, 1);
