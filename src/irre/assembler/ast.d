@@ -8,7 +8,7 @@ import std.array;
 
 struct ValueRef {
     string label;
-    int offset;
+    int ref_offset;
 }
 
 struct ValueImm {
