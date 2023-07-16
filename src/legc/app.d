@@ -6,6 +6,7 @@ import std.conv;
 import std.file;
 import std.algorithm.searching;
 import std.range;
+import std.array;
 import irre.meta;
 import irre.assembler.lexer;
 import irre.assembler.parser;
@@ -35,7 +36,7 @@ int main(string[] args) {
         auto in_lines = in_file.byLine();
         foreach (line; in_lines) {
             // convert the line
-            char[] conv_line;
+            string conv_line;
             // check if starts with tab
             if (line.startsWith('\t')) {
                 // statement
@@ -43,18 +44,23 @@ int main(string[] args) {
                 auto statement = line.drop(1);
                 writefln("STATEMENT: %s", statement);
                 if (statement.startsWith('.')) {
-                    conv_line = "; " ~ statement;
+                    conv_line = cast(string) ("; " ~ statement);
                 } else {
                     // instruction statement
-                    conv_line = statement;
+                    auto instruction = cast(string) statement;
+
+                    // replace imm references in set
+                    instruction = instruction.replace("::#", "#");
+
+                    conv_line = instruction;
                 }
                 // re-add the tab
-                conv_line = '\t' ~ conv_line;
+                conv_line = cast(string) ('\t' ~ conv_line);
             } else {
                 // label
                 auto label = line;
                 writefln("LABEL: %s", label);
-                conv_line = label;
+                conv_line = cast(string) label;
             }
 
             ou_file.writeln(conv_line);
