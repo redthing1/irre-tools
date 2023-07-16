@@ -7,7 +7,7 @@ import irre.encoding.instructions;
 import std.stdio;
 import std.conv;
 
-enum SIMPLE_REGISTER_COUNT = 8;
+enum SIMPLE_REGISTER_COUNT = 6;
 
 class Hypervisor {
     public VirtualMachine vm;
@@ -37,6 +37,11 @@ class Hypervisor {
             if (debug_mode) {
                 dump(false); // minidump
             }
+            if (onestep_mode) {
+                // pause
+                write("[emu]$ ");
+                auto input = readln();
+            }
         }
         // done.
 
@@ -60,6 +65,7 @@ class Hypervisor {
             dump_register(i);
         }
         if (!full) { // dump special registers even in a small dump
+            dump_register(Register.RV);
             dump_register(Register.LR);
             dump_register(Register.AD);
             dump_register(Register.AT);
