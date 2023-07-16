@@ -210,6 +210,11 @@ struct InfoSource {
 
         return sb.array;
     }
+
+    /** returns whether this is a final/deterministic source */
+    bool is_final() const {
+        return node.type == InfoType.Immediate;
+    }
 }
 alias InfoSources = InfoSource[];
 
