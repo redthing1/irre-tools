@@ -42,6 +42,13 @@ class IFTAnalyzer {
         return (cast(long) trace.commits.length) - 1;
     }
 
+    void pre_analysis() {
+        snap_init = trace.snapshots[0];
+        snap_final = trace.snapshots[1];
+
+        calculate_clobber();
+    }
+
     /**
      * analyze the commit trace
      * @return the analysis result
@@ -49,13 +56,10 @@ class IFTAnalyzer {
     void analyze() {
         MonoTime tmr_start = MonoTime.currTime;
 
-        snap_init = trace.snapshots[0];
-        snap_final = trace.snapshots[1];
-
         log_visited_info_nodes = 0;
         log_commits_walked = 0;
 
-        analyze_clobber();
+        calculate_clobber();
         analyze_flows();
 
         MonoTime tmr_end = MonoTime.currTime;
@@ -70,8 +74,11 @@ class IFTAnalyzer {
         }
     }
 
-    void analyze_clobber() {
+    void calculate_clobber() {
         // calculate the total clobber commit between the initial and final state
+
+        // 1. reset clobber
+        clobber = Commit();
 
         if (included_data & IFTDataType.Registers) {
             // 1. find regs that changed
@@ -331,9 +338,7 @@ class IFTAnalyzer {
         }
     }
 
-    void dump_analysis() {
-        import std.array: appender;
-
+    void dump_clobber() {
         // 1. dump clobber commit
         writefln(" clobber (%s commits):", trace.commits.length);
 
@@ -352,6 +357,10 @@ class IFTAnalyzer {
             auto reg_value = clobber.reg_values[i];
             writefln("   reg %s <- $%04x", reg_id, reg_value);
         }
+    }
+
+    void dump_analysis() {
+        import std.array: appender;
 
         // dump backtraces
         writefln(" backtraces:");
