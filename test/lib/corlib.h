@@ -77,11 +77,15 @@ size_t strlen(volatile char *str) {
 /** compare two strings */
 int memcmp(const void *str1, const void *str2, size_t n) {
     for (int i = 0; i < n; i++) {
-        if (((char *)str1)[i] != ((char *)str2)[i]) {
+        char c1 = ((char *)str1)[i];
+        char c2 = ((char *)str2)[i];
+        if (c1 < c2) {
+            return -1;
+        } else if (c1 > c2) {
             return 1;
         }
     }
-    return 0;
+    return 0; // equal
 }
 
 int seed;
