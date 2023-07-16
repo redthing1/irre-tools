@@ -7,7 +7,6 @@ IRRE=src/irretool
 INPUT_FILE=$1
 OUTPUT_BASE=$2
 
-
 # if DEBUG is set, add some args
 if [ -n "$DEBUG" ]; then
     CC_ARGS="-debug=$DEBUG"

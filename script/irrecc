@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+import argparse
+import multiprocessing
+import time
+from typing import List
+import sh
+import typer
+
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+
+APP_NAME = "irrecc"
+app = typer.Typer(
+    name=APP_NAME,
+    help=f"{APP_NAME}: C compiler driver for IRRE platform",
+    no_args_is_help=True,
+    context_settings=CONTEXT_SETTINGS,
+)
+
+vbcc = sh.Command("./tools/vbcc/bin/vbccirre")
+irretool = sh.Command("./src/irretool/irretool")
+
+@app.command()
+def cli(
+    input: List[str] = typer.Argument(..., help="Input source files"),
+    output: str = typer.Option(..., "-o", help="Output file"),
+    verbose: bool = typer.Option(False, "-v", help="Verbose output"),
+    debug: bool = typer.Option(False, "-g", help="Debug output"),
+):
+    # use vbccirre to compile c to asm
+    cc_args = [
+        "-c99",
+        "-default-main",
+    ]
+    if debug:
+        cc_args.append("-debug")
+    asm_output_file = f"{output}.ire"
+    cc_command = vbcc.bake(*cc_args, *input, f"-o={asm_output_file}")
+    if verbose:
+        print(cc_command)
+    cc_command(_fg=True)
+
+    # use irretool to compile ire assembly to binary
+    irre_command = irretool.bake("asm", f"{output}.ire", f"{output}")
+    if verbose:
+        print(irre_command)
+    irre_command(_fg=True)
+
+
+if __name__ == "__main__":
+    app()
