@@ -33,11 +33,9 @@ class VirtualMachine {
         auto head = decoder.read_header(compiled_data[0 .. RegaHeader.OFFSET]);
 
         // copy the program into memory
-        auto copy_size = head.data_size + head.code_size;
+        auto copy_size = head.program_size;
         auto program_slice = compiled_data[RegaHeader.OFFSET .. RegaHeader.OFFSET + copy_size];
         program_slice.copy(mem); // copy everything after the header
-
-        reg[Register.PC] = head.data_size; // jump to code section
 
         return head;
     }

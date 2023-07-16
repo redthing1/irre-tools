@@ -12,11 +12,8 @@ class Reader {
         // read header
         auto head = decoder.read_header(compiled_data[0 .. RegaHeader.OFFSET]);
 
-        // read data
-        auto program_data = compiled_data[RegaHeader.OFFSET .. RegaHeader.OFFSET + head.data_size];
-
         // read statements
-        auto code_start_offset = RegaHeader.OFFSET + head.data_size;
+        auto code_start_offset = RegaHeader.OFFSET;
         auto code_data = compiled_data[code_start_offset .. $];
         auto raw_instructions = decoder.read_code(code_data);
 
@@ -27,7 +24,7 @@ class Reader {
             statements ~= statement;
         }
 
-        auto ast = ProgramAst(statements.data, program_data);
+        auto ast = ProgramAst(statements.data);
         return ast;
     }
 

@@ -22,8 +22,7 @@ class Parser {
     private int token_pos;
     private int char_pos;
     private int global_offset;
-    // private DataBlock[] data_blocks;
-    private ubyte[] data;
+    private DataBlock[] data_blocks;
     private Appender!(MacroDef[]) macros;
     private Appender!(LabelDef[]) labels;
 
@@ -146,8 +145,7 @@ class Parser {
                     } else if (dir_type == "d") {
                         // data directive
                         auto packed_data = take_data_declaration();
-                        // data_blocks ~= DataBlock(global_offset, packed_data);
-                        data ~= packed_data;
+                        data_blocks ~= DataBlock(global_offset, packed_data);
                     }
                     break;
                 }
