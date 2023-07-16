@@ -14,6 +14,7 @@ class TerminalDevice : MappedDevice {
     }
 
     override void initialize(VirtualMachine vm, int id) {
+        super.initialize(vm, id);
         writefln("[TERM] device initialized.");
     }
 
@@ -26,8 +27,8 @@ class TerminalDevice : MappedDevice {
         switch (command) {
         case Command.FLUSH: {
                 // read the buffer and write it to console
-                auto buffer = new WORD[mapped_block_size];
-                vm.read_words(map_address, buffer, mapped_block_size);
+                auto buffer = new ubyte[mapped_block_size];
+                vm.read_bytes(map_address, buffer, mapped_block_size);
                 // write the buffer
                 for (int i = 0; i < buffer.length; i++) {
                     if (buffer[i] == 0) break;

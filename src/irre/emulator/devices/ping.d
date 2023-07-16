@@ -9,8 +9,6 @@ class PingDevice : Device {
         PING = 0x01,
     }
 
-    override void initialize(VirtualMachine vm, int id) { }
-
     override WORD recieve(WORD command, WORD data) {
         writefln("[PING] recieved (command: %d, data: %d)", command, data);
         return 0; // success
