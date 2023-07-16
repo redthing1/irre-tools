@@ -44,10 +44,12 @@ class Hypervisor {
     void interrupt(UWORD code) {
         switch (code) {
         case DebugInterrupts.BREAK:
+            writefln("[int] BREAK");
+            dump_registers(false); // minidump
             onestep_prompt();
             break;
         default: {
-                writefln("[DBG] unhandled interrupt %d", code);
+                writefln("[int] unhandled interrupt %d", code);
                 break;
             }
         }
@@ -73,17 +75,19 @@ class Hypervisor {
             auto statement = reader.decompile(instr);
             if (debug_mode) {
                 auto statement_dump = dumper.format_statement(statement);
-                writefln("[EXEC] %s", statement_dump);
+                writefln("[exec] %s", statement_dump);
             }
             exec_st = vm.step();
             // post-instruction
             if (debug_mode) {
                 if (vm.took_branch) {
-                    writefln("[DBG] took branch");
+                    writefln("[dbg] took branch");
                 }
                 dump_registers(false); // minidump
             }
-            while (onestep_prompt()) {
+            if (onestep_mode) {
+                while (onestep_prompt()) {
+                }
             }
         }
         // done.
