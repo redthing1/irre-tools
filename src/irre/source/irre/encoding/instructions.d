@@ -202,22 +202,21 @@ class InstructionEncoding {
             case OpCode.BVN: return InstructionInfo(OpCode.BVN, Operands.REG_REG_IMM, 1);
             case OpCode.CAL: return InstructionInfo(OpCode.CAL, Operands.REG, 1);
             case OpCode.RET: return InstructionInfo(OpCode.RET, Operands.NONE, 1);
-            case OpCode.HLT: return InstructionInfo(OpCode.HLT, Operands.NONE, 1);
-            case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.IMM, 1);
-
+            
             // IRRE math extensions
             case OpCode.MUL: return InstructionInfo(OpCode.MUL, Operands.REG_REG_REG, 1);
             case OpCode.DIV: return InstructionInfo(OpCode.DIV, Operands.REG_REG_REG, 1);
             case OpCode.MOD: return InstructionInfo(OpCode.MOD, Operands.REG_REG_REG, 1);
 
             // IRRE utility extensions
-            case OpCode.ASI: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
+            case OpCode.SIA: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
             case OpCode.SUP: return InstructionInfo(OpCode.SUP, Operands.REG_IMM, 1);
             case OpCode.SXT: return InstructionInfo(OpCode.SXT, Operands.REG_REG, 1);
             case OpCode.SEQ: return InstructionInfo(OpCode.SEQ, Operands.REG_REG_IMM, 1);
 
-            // REGULAR_EXT device api
+            case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.IMM, 1);
             case OpCode.SND: return InstructionInfo(OpCode.SND, Operands.REG_REG_REG, 1);
+            case OpCode.HLT: return InstructionInfo(OpCode.HLT, Operands.NONE, 1);
             // dfmt on
         default:
             auto info = InstructionInfo();
