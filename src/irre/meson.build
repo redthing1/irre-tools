@@ -1,5 +1,5 @@
 sources = [
-    'sample.d'
+    'meta.d'
 ]
 
 libirre = shared_library('irre', sources)

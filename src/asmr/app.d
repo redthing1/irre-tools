@@ -2,9 +2,8 @@ module asmr.app;
 
 import std.stdio;
 
-import irre.sample;
+import irre.meta;
 
 void main() {
-	auto ver = SampleInfo.get_version();
-	writefln("assembler sample v: %s", ver);
+	writefln("[IRRE] assembler v%s", Meta.VERSION);
 }
