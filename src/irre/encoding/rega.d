@@ -94,14 +94,14 @@ class RegaEncoder {
         bool fst_imm = (info.operands & Operands.K_I1) > 0;
         bool snd_imm = (info.operands & Operands.K_I2) > 0;
         bool trd_imm = (info.operands & Operands.K_I3) > 0;
-        bool can_imm16 = snd_imm && !trd_imm;
-        bool can_imm24 = fst_imm && !snd_imm && !trd_imm;
+        bool big_imm16 = snd_imm && !trd_imm;
+        bool big_imm24 = fst_imm && !snd_imm && !trd_imm;
 
-        if (can_imm24) {
+        if (big_imm24) {
             a1 = cast(ARG)((arg1 >> 0) & 0xff);
             a2 = cast(ARG)((arg1 >> 8) & 0xff);
             a3 = cast(ARG)((arg1 >> 16) & 0xff);
-        } else if (can_imm16) {
+        } else if (big_imm16) {
             a2 = cast(ARG)((arg2 >> 0) & 0xff);
             a3 = cast(ARG)((arg2 >> 8) & 0xff);
         }
