@@ -19,6 +19,9 @@ class LegTranslator {
     string[] translate(string[] source_lines) {
         auto out_lines = appender!(string[]);
 
+        // add an entry main directive
+        out_lines ~= "%entry: main";
+
         foreach (line; source_lines) {
             // convert the line
             string conv_line;
