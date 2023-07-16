@@ -13,6 +13,7 @@ sources = [
     'emulator/hypervisor.d',
     'emulator/device.d',
     'emulator/devices/terminal.d',
+    'emulator/devices/ping.d',
 
     'encoding/instructions.d',
     'encoding/rega.d',

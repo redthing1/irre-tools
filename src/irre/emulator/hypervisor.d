@@ -4,6 +4,7 @@ import irre.emulator.vm;
 import irre.disassembler.reader;
 import irre.disassembler.dumper;
 import irre.encoding.instructions;
+import irre.emulator.devices.ping;
 import irre.emulator.devices.terminal;
 import std.stdio;
 import std.conv;
@@ -25,6 +26,8 @@ class Hypervisor {
     }
 
     void add_default_devices() {
+        // ping
+        vm.attach_device(new PingDevice());
         // terminal
         vm.attach_device(new TerminalDevice());
     }
