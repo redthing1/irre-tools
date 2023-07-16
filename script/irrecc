@@ -49,7 +49,7 @@ def cli(
         "-S"
     ]
     asm_output_file = f"{output}.ire"
-    cc_command = chcc.bake(*cc_args, *input, f"-o", "{asm_output_file}")
+    cc_command = chcc.bake(*cc_args, *input, f"-o", f"{asm_output_file}")
     if verbose:
         print(cc_command)
     cc_command(_fg=True)
