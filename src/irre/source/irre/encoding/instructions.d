@@ -209,7 +209,7 @@ class InstructionEncoding {
             case OpCode.MOD: return InstructionInfo(OpCode.MOD, Operands.REG_REG_REG, 1);
 
             // IRRE utility extensions
-            case OpCode.SIA: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
+            case OpCode.SIA: return InstructionInfo(OpCode.SIA, Operands.REG_IMM_IMM, 1);
             case OpCode.SUP: return InstructionInfo(OpCode.SUP, Operands.REG_IMM, 1);
             case OpCode.SXT: return InstructionInfo(OpCode.SXT, Operands.REG_REG, 1);
             case OpCode.SEQ: return InstructionInfo(OpCode.SEQ, Operands.REG_REG_IMM, 1);

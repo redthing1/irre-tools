@@ -366,7 +366,7 @@ class VirtualMachine {
                 commit_mem([addr + offset], [mem[addr + offset]], sources);
                 break;
             }
-        case OpCode.ASI: {
+        case OpCode.SIA: {
                 immutable UWORD existing = reg[ins.a1];
                 immutable ubyte val = ins.a2;
                 immutable byte shift = ins.a3;
