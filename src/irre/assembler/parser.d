@@ -3,7 +3,7 @@ module irre.assembler.parser;
 import irre.util;
 import irre.assembler.lexer;
 public import irre.assembler.ast;
-import irre.assembler.astbuilder;
+public import irre.assembler.astbuilder;
 import irre.assembler.builtins;
 import irre.encoding.instructions;
 import std.array;
@@ -23,29 +23,26 @@ class Parser {
     private Lexer.Result lexed;
     private int token_pos;
     private int char_pos;
-    private int global_offset;
-    private DataBlock[] data_blocks;
-    private MacroDef[] macros;
-    private Appender!(LabelDef[]) labels;
     private AstBuilder ast_builder;
 
     this() {
+        ast_builder = new AstBuilder();
         // define builtins
         define_builtins();
     }
 
     private void define_builtins() {
         auto builtins = new BuiltinMacros();
-        macros ~= builtins.MACRO_ADI;
-        macros ~= builtins.MACRO_SBI;
-        macros ~= builtins.MACRO_YEET;
-        macros ~= builtins.MACRO_CMP;
-        macros ~= builtins.MACRO_BEQ;
-        macros ~= builtins.MACRO_BNE;
-        macros ~= builtins.MACRO_BLT;
-        macros ~= builtins.MACRO_BGE;
-        macros ~= builtins.MACRO_BGT;
-        macros ~= builtins.MACRO_BLE;
+        ast_builder.push_macro(builtins.MACRO_ADI);
+        ast_builder.push_macro(builtins.MACRO_SBI);
+        ast_builder.push_macro(builtins.MACRO_YEET);
+        ast_builder.push_macro(builtins.MACRO_CMP);
+        ast_builder.push_macro(builtins.MACRO_BEQ);
+        ast_builder.push_macro(builtins.MACRO_BNE);
+        ast_builder.push_macro(builtins.MACRO_BLT);
+        ast_builder.push_macro(builtins.MACRO_BGE);
+        ast_builder.push_macro(builtins.MACRO_BGT);
+        ast_builder.push_macro(builtins.MACRO_BLE);
     }
 
     public void load_lex(Lexer.Result lexed) {
@@ -54,18 +51,12 @@ class Parser {
         // reset parse counting vars
         this.token_pos = 0;
         this.char_pos = 0;
-        // this.offset = 0;
     }
 
-    /** given a lexer result, parse tokens into a program ast */
+    /** given a lexer result, parse tokens into a program ast. this should only ever be called once. */
     public ProgramAst parse() {
-        string entry_label;
-
-        auto statements = appender!(AbstractStatement[]);
-
         // emit entry instruction (padding that may be replaced)
-        statements ~= AbstractStatement(OpCode.NOP);
-        global_offset += INSTRUCTION_SIZE;
+        ast_builder.push_statement(AbstractStatement(OpCode.NOP));
 
         // parse lex result into instruction list
         while (token_pos < lexed.tokens.length) {
@@ -77,14 +68,14 @@ class Parser {
                     if (dir_type == "entry") { // entrypoint directive
                         // following label has the entry point
                         expect_token(CharType.MARK);
-                        immutable auto label_ref = expect_token(CharType.IDENTIFIER);
-                        entry_label = label_ref.content; // store entry label
+                        immutable auto label_ref_tok = expect_token(CharType.IDENTIFIER);
+                        // store entry label
+                        ast_builder.set_entry_label(label_ref_tok.content);
                     } else if (dir_type == "d") {
                         // data directive
                         auto packed_data = take_data_declaration();
-                        auto block = DataBlock(global_offset, packed_data);
-                        global_offset += packed_data.length;
-                        data_blocks ~= block;
+                        DataBlock block = {data: packed_data};
+                        ast_builder.push_data_block(block);
                         log_put(format("data block[%d] at offset %d",
                                 block.data.length, block.offset));
                     }
@@ -97,21 +88,22 @@ class Parser {
                         // label definition (only if single mark)
                         auto label_name = expect_token(CharType.IDENTIFIER);
                         expect_token(CharType.MARK); // eat the mark
-                        define_label(label_name.content); // create label
+                        ast_builder.define_label(label_name.content); // create label
                         break;
                     } else if (peek_iden_succ.kind == CharType.BIND) {
                         // macro definition
                         auto macro_name = expect_token(CharType.IDENTIFIER);
                         expect_token(CharType.BIND); // eat the bind
-                        define_macro(macro_name.content); // define the macro
+                        // read the macro body into a MacroDef
+                        auto macro_def = walk_through_macro(macro_name.content);
+                        ast_builder.push_macro(macro_def);
                         break;
                     } else {
                         // this is an instruction
                         auto next_statements = walk_statements();
-                        statements ~= next_statements;
-                        // we can get away with updating offset later
-                        // because macros aren't legal in these blocks
-                        global_offset += next_statements.length * INSTRUCTION_SIZE;
+                        foreach (statement; next_statements) {
+                            ast_builder.push_statement(statement);
+                        }
                     }
                     break;
                 }
@@ -123,36 +115,20 @@ class Parser {
             }
         }
 
-        // check if an entry point label was defined
-        if (entry_label) {
-            // resolve the label specified as entry
-            immutable auto entry_label_def = resolve_label(entry_label);
-            immutable auto entry_addr = entry_label_def.offset;
-            log_put(format("entry point: (%s) %06x", entry_label, entry_addr));
-            // replace the padding instruction with a jump to entry point
-            statements.data[0] = AbstractStatement(OpCode.JMI, cast(ValueArg) ValueImm(entry_addr));
-        }
-        // resolve statements, rewriting them
-        auto resolved_statements = resolve_statements(statements);
+        // // check if an entry point label was defined
+        // if (entry_label) {
+        //     // resolve the label specified as entry
+        //     immutable auto entry_label_def = resolve_label(entry_label);
+        //     immutable auto entry_addr = entry_label_def.offset;
+        //     log_put(format("entry point: (%s) %06x", entry_label, entry_addr));
+        //     // replace the padding instruction with a jump to entry point
+        //     statements.data[0] = AbstractStatement(OpCode.JMI, cast(ValueArg) ValueImm(entry_addr));
+        // }
 
-        auto ast = ProgramAst(resolved_statements, data_blocks);
-        return ast;
-    }
+        // // resolve statements, rewriting them
+        // auto resolved_statements = resolve_statements(statements);
 
-    /** convert all value references in instructions to immediate values (compute all offsets, replacing symbols) */
-    private AbstractStatement[] resolve_statements(
-            ref const Appender!(AbstractStatement[]) statements) {
-        auto resolved_statements = appender!(AbstractStatement[]);
-        foreach (unresolved; statements.data) {
-            auto statement = AbstractStatement(unresolved.op);
-            // resolve args
-            statement.a1 = resolve_value_arg(unresolved.a1);
-            statement.a2 = resolve_value_arg(unresolved.a2);
-            statement.a3 = resolve_value_arg(unresolved.a3);
-            resolved_statements ~= statement;
-        }
-
-        return resolved_statements.data;
+        return ast_builder.build();
     }
 
     /** get all the tokens that make up the next register arg */
@@ -267,7 +243,7 @@ class Parser {
         } else {
             // it was not an instruction, perhaps it's a macro
             auto macro_ref_token = expect_token(CharType.IDENTIFIER);
-            auto maybe_md = resolve_macro(macro_ref_token.content);
+            auto maybe_md = ast_builder.resolve_macro(macro_ref_token.content);
             if (maybe_md.isNull) {
                 throw parser_error_token(format("macro could not be resolved: %s",
                         macro_ref_token.content), macro_ref_token);
@@ -415,35 +391,9 @@ class Parser {
         return statement;
     }
 
-    /** resolve any references in this arg and convert it to an immediate */
-    private ValueImm resolve_value_arg(const ValueArg arg) {
-        auto val = 0;
-        if (arg.hasValue) {
-            val = arg.visit!((ValueImm imm) => imm.val,
-                    (ValueRef ref_) => resolve_label(ref_.label).offset + ref_.offset);
-        }
-        return ValueImm(val);
-    }
-
-    /** define a label */
-    private void define_label(string name) {
-        labels ~= LabelDef(name, global_offset);
-    }
-
-    /** resolve a label */
-    private LabelDef resolve_label(string name) {
-        // find the label
-        foreach (label; labels.data) {
-            if (label.name == name) {
-                return label;
-            }
-        }
-        throw parser_error(format("label could not be resolved: %s", name));
-    }
-
-    /** define a macro */
-    private void define_macro(string name) {
-        // writefln("DEFINE_MACRO %s", name);
+    /** walk through and parse a macro definition */
+    private MacroDef walk_through_macro(string name) {
+        // writefln("walk_through_macro %s", name);
         auto def = MacroDef(name);
         while (peek_token().kind != CharType.MARK) { // MARK terminates arg list
             immutable auto arg_name = expect_token(CharType.IDENTIFIER);
@@ -488,18 +438,8 @@ class Parser {
             }
         }
         def.statements = statements.data;
-        macros ~= def; // append to macro list
-    }
 
-    /** resolve a macro */
-    public Nullable!MacroDef resolve_macro(string name) {
-        // find the macro
-        foreach (macro_; macros) {
-            if (macro_.name == name) {
-                return Nullable!MacroDef(macro_);
-            }
-        }
-        return Nullable!MacroDef.init;
+        return def;
     }
 
     /** unroll a macro reference into a series of AST instructions */

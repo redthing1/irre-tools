@@ -82,6 +82,9 @@ int main(string[] args) {
     } catch (ParserException e) {
         writefln("parser error: %s at %s", e.msg, e.info);
         return 3;
+    } catch (AstBuilderException e) {
+        writefln("ast builder error: %s at %s", e.msg, e.info);
+        return 3;
     }
 
     auto encoder = new RegaEncoder();
