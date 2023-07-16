@@ -18,7 +18,7 @@ main:
 	jmi ::.LBB0_1
 .LBB0_1:			; LOOP
 	ldw rv sp #0	; load i
-	set r1 #0 		; r1 = (loop_end - 1)
+	set r1 #3 		; r1 = (loop_end - 1)
 	tcu ad rv r1	; cmp i, rv
 	bif ad ::.LBB0_4 #1	; if (i > rv) goto END
 	jmi ::.LBB0_2
