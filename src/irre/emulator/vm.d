@@ -5,7 +5,7 @@ import irre.encoding.rega;
 import std.algorithm.mutation;
 import irre.emulator.device;
 
-enum REGISTER_COUNT = 32;
+enum REGISTER_COUNT = 37;
 enum MEMORY_SIZE = 64 * 1024; // 65K
 
 class VirtualMachine {
