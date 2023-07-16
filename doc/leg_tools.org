@@ -1,0 +1,32 @@
+#+TITLE: LEG architecture tools
+
+* leg tools
+the [[https://github.com/xdrie/llvm-leg][LEG toolchain]] can compile C
+to the LEG architecture.
+ 
+this is extremely useful for REGULAR because LEG is a minimal
+register-based RISC machine, as is REGULAR, and LEG appears to be
+trivially implementable as a strict subset of REGULAR.
+ 
+* leg architecture spec
+  :PROPERTIES:
+  :CUSTOM_ID: leg-spec
+  :END:
+ 
+information/documentation on the LEG architecture comes from
+[[https://web.archive.org/web/20200611030201/http://www.inf.ed.ac.uk/teaching/courses/ct/other/LLVMBackend-2015-03-26_v2.pdf][a
+presentation]] (p. 11) by its developers.
+ 
+** summary
++ simple, RISC-like architecture
+  + tiny subset of ARM
++ 12 32-bit integer registers
+  + ~r0~ through ~r9~, and ~sp~ (stack pointer) and ~lr~ (return address)
++ instructions
+  + 32-bit arithmetic (add, sub, mul, mad (?))
+  + 32-bit register move, 16-bit constant moves
+  + 32-bit load/store
+  + integer comparison, branch, branch and link
+ 
+* building leg
+~
