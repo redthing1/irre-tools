@@ -9,6 +9,11 @@
 #define UINT (unsigned int)
 #define VOID (void)
 
+#define int32_t int
+#define uint32_t unsigned int
+#define int64_t long
+#define uint64_t unsigned long
+
 #define BOOL int
 #define true (1)
 #define false (0)
