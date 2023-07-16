@@ -2,65 +2,19 @@ module irre.assembler.parser;
 
 import irre.util;
 import irre.assembler.lexer;
+import irre.assembler.ast;
 import irre.encoding.instructions;
 import std.array;
 import std.string;
 import std.conv;
 import std.stdio;
-import std.variant;
 import std.typecons;
-
-struct ValueRef {
-    string label;
-    int offset;
-}
-
-struct ValueImm {
-    int val;
-}
-
-alias ValueArg = Algebraic!(ValueImm, ValueRef);
-
-struct AbstractStatement {
-    OpCode op;
-    ValueArg a1, a2, a3;
-}
-
-struct SourceStatement {
-    string mnem;
-    Token[] a1, a2, a3;
-}
-
-struct ProgramAst {
-    AbstractStatement[] statements;
-    const ubyte[] data;
-}
+import std.variant;
 
 class ParserException : Exception {
     this(string msg, string file = __FILE__, size_t line = __LINE__) {
         super(msg, file, line);
     }
-}
-
-struct LabelDef {
-    string name;
-    int offset;
-}
-
-struct MacroArg {
-    enum Type {
-        VALUE = 0,
-        REGISTER = 1,
-    }
-
-    Type type;
-    string name;
-}
-
-struct MacroDef {
-    string name;
-    MacroArg[] args;
-    SourceStatement[] statements;
 }
 
 class Parser {
@@ -266,7 +220,7 @@ class Parser {
         }
 
         expect_token(CharType.IDENTIFIER); // eat the mnemonic token
-        
+
         // fill in arguments
         auto statement = SourceStatement(mnem_token.content);
         auto info = maybeInfo.get();
@@ -440,7 +394,8 @@ class Parser {
             } else {
                 // unrecognized mnemonic
                 auto mnem_token = expect_token(CharType.IDENTIFIER);
-                throw parser_error_token(format("unrecognized mnemonic within macro '%s'", name), mnem_token);
+                throw parser_error_token(format("unrecognized mnemonic within macro '%s'",
+                        name), mnem_token);
             }
         }
         def.statements = statements.data;

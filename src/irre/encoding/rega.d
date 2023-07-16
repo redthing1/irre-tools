@@ -1,6 +1,6 @@
 module irre.encoding.rega;
 
-import irre.assembler.parser;
+import irre.assembler.ast;
 import irre.encoding.instructions;
 import std.array;
 import std.bitmanip;
