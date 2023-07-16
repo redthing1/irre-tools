@@ -44,6 +44,10 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
         Memory,
         Immediate,
         Device,
+        Reserved1,
+        Reserved2,
+        Reserved3,
+        Reserved4,
     }
 
     enum ImmediatePositions : TRegWord {
