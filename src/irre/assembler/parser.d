@@ -241,7 +241,7 @@ class Parser {
                     break;
                 }
             default:
-                throw parser_error(format("unrecognized token for value arg:  %s", next.content));
+                throw parser_error(format("unrecognized token for value arg: %s (for instruction '%s')", next.content, mnem));
             }
             return tokens;
         }
