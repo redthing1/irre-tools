@@ -84,7 +84,7 @@ class VirtualMachine {
                 break;
             }
         case OpCode.LSH: {
-                WORD shift = reg[ins.a3];
+                immutable WORD shift = reg[ins.a3];
                 if (shift >= 0) {
                     reg[ins.a1] = reg[ins.a2] << shift;
                 } else {
@@ -93,11 +93,11 @@ class VirtualMachine {
                 break;
             }
         case OpCode.ASH: {
-                WORD shift = reg[ins.a3];
+                immutable WORD shift = reg[ins.a3];
                 if (shift >= 0) {
                     reg[ins.a1] = (cast(WORD) reg[ins.a2]) << shift;
                 } else {
-                    reg[ins.a1] = (cast(WORD) reg[ins.a2]) >>  - shift;
+                    reg[ins.a1] = (cast(WORD) reg[ins.a2]) >> -shift;
                 }
                 break;
             }
