@@ -315,36 +315,32 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
         }
 
         void analyze_flows() {
-            // // for now, we'll only flow back from the R0 TRegSet
-            // // get the clobber node for R0
-            // auto find_r0_final = clobber.reg_ids.countUntil(TRegSet.R0);
-            // assert(find_r0_final >= 0, "could not find R0 in clobber list");
-
-            // // create an info node for this point
-            // auto r0_final_node = InfoNode(InfoType.Register,
-            //     clobber.reg_ids[find_r0_final], clobber.reg_values[find_r0_final]);
-
-            // // now start backtracing
-            // auto r0_sources = backtrace_information_flow(r0_final_node);
-
-            // writefln("found %d sources for R0: %s", r0_sources.length, r0_sources);
+            import std.parallelism;
 
             // 1. backtrace all clobbered registers
+            
+            // queue work
+            InfoNode[] reg_final_nodes;
             for (auto clobbered_i = 0; clobbered_i < clobber.reg_ids.length; clobbered_i++) {
-                // get id of TRegSet that is clobbered
                 auto reg_id = clobber.reg_ids[clobbered_i].to!TRegSet;
                 auto reg_val = clobber.reg_values[clobbered_i];
 
                 // create an info node for this point
                 auto reg_final_node = InfoNode(InfoType.Register, reg_id, reg_val);
+                reg_final_nodes ~= reg_final_node;
+            }
 
+            // do work
+            // auto reg_final_nodes_work = reg_final_nodes;
+            auto reg_final_nodes_work = parallel(reg_final_nodes);
+            foreach (final_node; reg_final_nodes_work) {
                 // now start backtracing
-                mixin(LOG_TRACE!(`format("backtracking information flow for node: %s", reg_final_node)`));
-                auto reg_sources = backtrace_information_flow(reg_final_node);
+                mixin(LOG_TRACE!(`format("backtracking information flow for node: %s", final_node)`));
+                auto reg_sources = backtrace_information_flow(final_node);
 
                 // writefln("sources for reg %s: %s", reg_id, reg_sources);
 
-                clobbered_regs_sources[reg_id] = reg_sources;
+                clobbered_regs_sources[cast(TRegSet)final_node.data] = reg_sources;
             }
 
             // 2. backtrace all clobbered memory
