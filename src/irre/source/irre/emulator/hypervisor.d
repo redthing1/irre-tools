@@ -54,6 +54,13 @@ class Hypervisor {
             while (onestep_prompt()) {
             }
             break;
+        case VirtualMachine.DebugInterrupts.ILLEGAL_INSTRUCTION:
+            writefln("[int] ILLEGAL INSTRUCTION");
+            dump_registers(true); // full dump
+            dump_stack();
+            while (onestep_prompt()) {
+            }
+            break;
         default: {
                 writefln("[int] unhandled interrupt %d", code);
                 break;

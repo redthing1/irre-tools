@@ -43,6 +43,7 @@ class VirtualMachine {
     public enum DebugInterrupts {
         BREAK = 0xa0,
         MEMFAULT = 0xa1,
+        ILLEGAL_INSTRUCTION = 0xa2,
     }
 
     public void initialize() {
@@ -490,7 +491,8 @@ class VirtualMachine {
             executing = false;
             break;
         default:
-            // unhandled op
+            // unhandled op (illegal instruction)
+            interrupt(DebugInterrupts.ILLEGAL_INSTRUCTION);
             break;
         }
         if (last_branch_status != BranchStatus.TAKEN) {
