@@ -10,8 +10,8 @@ RESULTS_1 = {}
 
 # 1 to 12 threads
 THREAD_COUNTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-# INPUT_TRACE = "fib4_trace.bin"
-INPUT_TRACE = "fib3_trace.bin"
+INPUT_TRACE = "fib4_trace.bin"
+# INPUT_TRACE = "fib3_trace.bin"
 
 #   analysis time:            24.39s
 TIME_REGEX = re.compile(
