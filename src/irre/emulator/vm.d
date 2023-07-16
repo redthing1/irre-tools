@@ -16,6 +16,7 @@ class VirtualMachine {
     public ulong ticks;
     public Device[int] devices;
     private int device_id_counter = 0;
+    public void delegate(UWORD) custom_interrupt_handler;
 
     public void initialize() {
         // allocate memory buffer
@@ -69,7 +70,8 @@ class VirtualMachine {
     }
 
     public void interrupt(UWORD code) {
-        // TODO: handle interrupt
+        // call custom handler hook
+        custom_interrupt_handler(code);
     }
 
     public bool execute_instruction(Instruction ins) {
@@ -253,7 +255,7 @@ class VirtualMachine {
                 break;
             }
         case OpCode.INT: {
-                UWORD code = reg[ins.a1];
+                immutable UWORD code = cast(UWORD) ((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
                 interrupt(code);
                 break;
             }
