@@ -33,6 +33,7 @@ represents a token
 struct Token {
     string content;
     CharType kind;
+    int line;
 }
 
 class LexerException : Exception {
@@ -216,6 +217,6 @@ class Lexer {
 
     private Token read_token_of(CharType type) {
         take_chars(type);
-        return Token(to!string(working[]), type);
+        return Token(to!string(working[]), type, line);
     }
 }

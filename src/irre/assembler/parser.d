@@ -103,14 +103,15 @@ class Parser {
 
                         switch (pack_type_indicator.kind) {
                         case CharType.ALPHA: { // byte pack (x)
-                                auto pack = expect_token(CharType.NUMERIC_CONSTANT);
-                                pack_len = pack.content.length;
+                                auto pack_token = expect_token(CharType.NUMERIC_CONSTANT);
+                                pack_len = pack_token.content.length;
                                 if (pack_len % 2 != 0) {
                                     // odd number of half-bytes, invalid
-                                    throw parser_error("invalid data (must be an even size)");
+                                    throw parser_error_token("invalid data (must be an even size)",
+                                            pack_token);
                                 }
                                 pack_len = pack_len / 2; // divide by two because 0xff = 1 byte
-                                auto pack_data = datahex(pack.content); // convert data from hex
+                                auto pack_data = datahex(pack_token.content); // convert data from hex
                                 // write the pack data to the binary
                                 data ~= pack_data;
                                 break;
@@ -123,8 +124,8 @@ class Parser {
                                 break;
                             }
                         default:
-                            throw parser_error(format("unrecognized pack type %s",
-                                    pack_type_indicator.content));
+                            throw parser_error_token(format("unrecognized pack type %s",
+                                    pack_type_indicator.content), pack_type_indicator);
                         }
 
                         // update offset
@@ -146,7 +147,8 @@ class Parser {
                         break;
                     } else {
                         // instruction
-                        immutable auto mnem = iden.content;
+                        immutable auto mnem_token = iden;
+                        immutable auto mnem = mnem_token.content;
                         auto maybe_raw_statement = take_raw_statement(mnem);
                         if (!maybe_raw_statement.isNull) {
                             // standard instruction
@@ -159,7 +161,8 @@ class Parser {
                             if (!md.name) {
                                 // no matching macro was found
                                 // this, we don't recognize this statement
-                                throw parser_error(format("unrecognized macro: %s", mnem));
+                                throw parser_error_token(format("unrecognized macro: %s",
+                                        mnem), mnem_token);
                             } else {
                                 // expand the macro
                                 // TODO: implementation
@@ -169,10 +172,10 @@ class Parser {
                     }
                     break;
                 }
-            default: {
-                    throw parser_error(format("unexpected token %s of type: %s",
-                            next.content, to!string(next.kind)));
-                }
+            default:
+                throw parser_error_token(format("unexpected of type: %s",
+                        to!string(next.kind)), next);
+
             }
         }
 
@@ -241,7 +244,8 @@ class Parser {
                     break;
                 }
             default:
-                throw parser_error(format("unrecognized token for value arg: %s (for instruction '%s')", next.content, mnem));
+                throw parser_error_token(format("unrecognized value arg for instruction '%s'",
+                        mnem), next);
             }
             return tokens;
         }
@@ -330,8 +334,8 @@ class Parser {
                     return cast(ValueArg) ValueImm(num);
                 }
             default:
-                throw parser_error(format("unrecognized token (%s) for value arg:  %s",
-                        to!string(next.kind), next.content));
+                throw parser_error_token(format("unrecognized token for value arg:  %s",
+                        to!string(next.kind)), next);
             }
         }
 
@@ -390,8 +394,8 @@ class Parser {
                 case 'v':
                     return MacroArg.Type.VALUE;
                 default:
-                    throw parser_error(format("unrecognized macro arg prefix %c on argument %d of macro %s",
-                            arg_prefix, def.args.length + 1, def.name));
+                    throw parser_error_token(format("unrecognized macro arg prefix %c on argument %d of macro %s",
+                            arg_prefix, def.args.length + 1, def.name), arg_name);
                 }
             }
 
@@ -475,12 +479,17 @@ class Parser {
             // expected token found
             return take_token();
         } else {
-            throw parser_error(format("expected %s but got %s, which is %s",
-                    to!string(type), token.content, to!string(token.kind)));
+            throw parser_error_token(format("expected %s but instead got %s",
+                    to!string(type), to!string(token.kind)), token);
         }
     }
 
     private ParserException parser_error(string message) {
         return new ParserException(format("%s at charpos %d", message, char_pos));
+    }
+
+    private ParserException parser_error_token(string message, Token token) {
+        return new ParserException(format("%s on line %d at token %s", message,
+                token.line, token.content));
     }
 }
