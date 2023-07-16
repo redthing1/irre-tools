@@ -22,6 +22,7 @@ struct Commit {
     UWORD reg_value;
     UWORD mem_addr;
     UWORD mem_value;
+    UWORD pc;
 
     static Commit from_reg(UWORD reg_id, UWORD reg_value) {
         Commit c;

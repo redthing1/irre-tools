@@ -21,6 +21,9 @@ class VirtualMachine {
     public bool log_commits;
     public CommitTrace commit_trace;
 
+    // aliases
+    enum reg_pc = cast(int) Register.PC;
+
     enum BranchStatus {
         NO_BRANCH,
         NOT_TAKEN,
@@ -179,7 +182,7 @@ class VirtualMachine {
                 break;
             }
         case OpCode.JMI: {
-                immutable UWORD addr = cast(UWORD) ((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
+                immutable UWORD addr = cast(UWORD)((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
                 break;
@@ -190,23 +193,23 @@ class VirtualMachine {
                 last_branch_status = BranchStatus.TAKEN;
                 break;
             }
-        // case OpCode.BIF: {
-        //         immutable UWORD addr = cast(UWORD) (ins.a2);
-        //         // branch to vB if rA == vC
-        //         immutable WORD tc = reg[ins.a1]; // reg value
-        //         immutable byte check = ins.a3; // imm value
-        //         bool cond = false;
-        //         if (check < 0) cond = tc <= check;
-        //         if (check > 0) cond = tc >= check;
-        //         if (check == 0) cond = tc == 0;
-        //         if (cond) {
-        //             reg[Register.PC] = addr;
-        //             last_branch_status = BranchStatus.TAKEN;
-        //         } else {
-        //             last_branch_status = BranchStatus.NOT_TAKEN;
-        //         }
-        //         break;
-        //     }
+            // case OpCode.BIF: {
+            //         immutable UWORD addr = cast(UWORD) (ins.a2);
+            //         // branch to vB if rA == vC
+            //         immutable WORD tc = reg[ins.a1]; // reg value
+            //         immutable byte check = ins.a3; // imm value
+            //         bool cond = false;
+            //         if (check < 0) cond = tc <= check;
+            //         if (check > 0) cond = tc >= check;
+            //         if (check == 0) cond = tc == 0;
+            //         if (cond) {
+            //             reg[Register.PC] = addr;
+            //             last_branch_status = BranchStatus.TAKEN;
+            //         } else {
+            //             last_branch_status = BranchStatus.NOT_TAKEN;
+            //         }
+            //         break;
+            //     }
         case OpCode.BVE: {
                 immutable UWORD addr = reg[ins.a1];
                 // branch to @rA if rB == vC
@@ -271,7 +274,7 @@ class VirtualMachine {
                 break;
             }
         case OpCode.INT: {
-                immutable UWORD code = cast(UWORD) ((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
+                immutable UWORD code = cast(UWORD)((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
                 interrupt(code);
                 break;
             }
@@ -284,7 +287,8 @@ class VirtualMachine {
         }
         if (last_branch_status != BranchStatus.TAKEN) {
             // as long as we didn't take a branch, we can increment as normal
-            reg[cast(int) Register.PC] += cast(uint) INSTRUCTION_SIZE; // increment PC
+            reg[reg_pc] += cast(uint) INSTRUCTION_SIZE; // increment PC
+            // commit_reg(reg_pc, reg[reg_pc]);
         }
     }
 
@@ -317,20 +321,27 @@ class VirtualMachine {
     }
 
     public void commit_snapshot() {
-        if (!log_commits) return;
+        if (!log_commits)
+            return;
 
         commit_trace.snapshots ~= snapshot();
     }
 
     public void commit_reg(UWORD reg_id, UWORD reg_val) {
-        if (!log_commits) return;
+        if (!log_commits)
+            return;
 
-        commit_trace.commits ~= Commit.from_reg(reg_id, reg_val);
+        auto commit = Commit.from_reg(reg_id, reg_val);
+        commit.pc = reg[reg_pc];
+        commit_trace.commits ~= commit;
     }
 
     public void commit_mem(UWORD mem_addr, UWORD mem_val) {
-        if (!log_commits) return;
+        if (!log_commits)
+            return;
 
-        commit_trace.commits ~= Commit.from_mem(mem_addr, mem_val);
+        auto commit = Commit.from_mem(mem_addr, mem_val);
+        commit.pc = reg[reg_pc];
+        commit_trace.commits ~= commit;
     }
 }
