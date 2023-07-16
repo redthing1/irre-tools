@@ -53,6 +53,7 @@ enum OpCode : ARG {
     // logic extensions
     ASI = 0x20, // add shifted immediate
     SUP = 0x21, // set upper 16
+    SXT = 0x22, // sign extended move
 
     // math extensions
     MUL = 0x30, // multiply
@@ -201,6 +202,7 @@ class InstructionEncoding {
             
             case OpCode.ASI: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
             case OpCode.SUP: return InstructionInfo(OpCode.SUP, Operands.REG_IMM, 1);
+            case OpCode.SXT: return InstructionInfo(OpCode.SXT, Operands.REG_REG, 1);
 
             case OpCode.MUL: return InstructionInfo(OpCode.MUL, Operands.REG_REG_REG, 1);
             case OpCode.DIV: return InstructionInfo(OpCode.DIV, Operands.REG_REG_REG, 1);

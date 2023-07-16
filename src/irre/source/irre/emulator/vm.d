@@ -230,7 +230,16 @@ class VirtualMachine {
                 break;
             }
         case OpCode.MOV: {
+                // move value from a2 to a1
                 reg[ins.a1] = reg[ins.a2];
+                commit_reg(ins.a1, reg[ins.a1], commit_source_regs([ins.a2], [
+                            reg[ins.a2]
+                        ]));
+                break;
+            }
+        case OpCode.SXT: {
+                // move value from a2 to a1, sign extend
+                reg[ins.a1] = (cast(WORD) reg[ins.a2]);
                 commit_reg(ins.a1, reg[ins.a1], commit_source_regs([ins.a2], [
                             reg[ins.a2]
                         ]));

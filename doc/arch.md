@@ -423,6 +423,7 @@ The bits of each component of these instructions are laid out so that the lower 
 | `stw` | 0x0e&nbsp;rA&nbsp;rB&nbsp;v0  | Store the value in rA as a 32-bit value at the memory address referred to by rB, signed offset by v0. If the address is not word-aligned, the result is implementation-defined. |
 | `asi` | 0x20&nbsp;rA&nbsp;v0&nbsp;v1  | Left logical shift v0 by v1 bits, then add that quantity to the value stored in rA. If v1 is outside the range (0, 32), the result is undefined. |
 | `sup` | 0x21&nbsp;rA&nbsp;v0         | Store the 16-bit unsigned value v0 into the upper 16 bits rA, leaving the lower 16 bits untouched. |
+| `sxt` | 0x22&nbsp;rA&nbsp;rB          | Copy the value from rB into rA, with sign extension. |
 | `hlt` | 0xff         | Halt execution. |
 | `int` | 0x71&nbsp;v0         | Raise an interrupt with the 24-bit unsigned code in v0. |
 | `jmi` | 0x10&nbsp;v0         | Unconditionally branch to the 24-bit unsigned address in v0. |
