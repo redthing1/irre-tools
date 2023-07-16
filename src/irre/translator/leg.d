@@ -29,7 +29,12 @@ class LegTranslator {
                 auto statement = line.drop(1);
                 writefln("STATEMENT: %s", statement);
                 if (statement.startsWith('.')) {
-                    conv_line = cast(string)("; " ~ statement);
+                    auto directive = cast(string) statement;
+                    auto prefix = "; ";
+                    if (directive.startsWith(".size\tmain")) {
+                        prefix = "hlt ;";
+                    }
+                    conv_line = prefix ~ directive;
                 } else {
                     // instruction statement
                     auto instruction = cast(string) statement;
