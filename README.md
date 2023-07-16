@@ -3,6 +3,11 @@ continuation of regularvm
 
 ## build
 
+grab submodules:
+```sh
+git submodule update --init --recursive
+```
+
 install dependencies:
 + `meson`
 + `ninja`
@@ -17,11 +22,12 @@ to use another D compiler, such as `dmd`, set the environment variable ex. `DC=d
 
 ## hacking
 
-see the [leg tools](doc/leg_tools.org) page for instructions on setting up a `clang-leg` compiler.
-
-then, use the [`regular` branch of llvm-leg](https://github.com/xdrie/llvm-leg/tree/regular).
-
-once you have LLVM/Clang built, store the path of `lvvm-leg` in `$LLVM_LEG_PATH`.
+build the custom vbcc port for IRRE:
+```sh
+cd tools/vbcc
+make TARGET=irre bin/vbccirre # press enter for default answers
+export VBCC=$(pwd)
+```
 
 ### compile a C program
 
@@ -41,14 +47,9 @@ int main() {
 
 ```
 
-build to a `.s` file with Clang:
+build to a `.s` file with VBCC-IRRE:
 ```sh
-$LLVM_LEG_PATH/build/bin/clang -cc1 -triple leg-unknown-unknown -S -o my_prog.s my_prog.c
-```
-
-run `irre-legc` to translate LEG to IRRE:
-```sh
-./build/meson-out/irre-legc my_prog.s my_prog.asm
+$VBCC/bin/vbccirre -c99 -default-main -o=my_prog.asm my_prog.c
 ```
 
 run `irre-asm` to assemble IRRE to bin:
@@ -73,4 +74,4 @@ which should output something like:
 program halted with code $0007
 ```
 
-and that's all she wrote, folks.
+that's all she wrote, folks.
