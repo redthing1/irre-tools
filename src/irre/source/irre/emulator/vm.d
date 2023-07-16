@@ -179,7 +179,7 @@ class VirtualMachine {
                 immutable short signed_val = cast(short)(ins.a2 | (ins.a3 << 8));
                 immutable WORD signext_imm = signed_val;
                 reg[ins.a1] = signext_imm;
-                commit_reg(ins.a1, reg[ins.a1], [Commit.Source(Commit.Type.Immediate, 0, signed_val)]);
+                commit_reg(ins.a1, reg[ins.a1], [Commit.Source(InfoType.Immediate, 0, signed_val)]);
                 break;
             }
         case OpCode.MOV: {
@@ -195,7 +195,7 @@ class VirtualMachine {
                 
                 // complex commit
                 auto source_regs = commit_source_regs([ins.a2], [reg[ins.a2]]);
-                auto source_imm = Commit.Source(Commit.Type.Immediate, 0, offset);
+                auto source_imm = Commit.Source(InfoType.Immediate, 0, offset);
                 auto source_mem = commit_source_mem(
                     [addr + offset + 0, addr + offset + 1, addr + offset + 2, addr + offset + 3],
                     [mem[addr + offset + 0], mem[addr + offset + 1], mem[addr + offset + 2], mem[addr + offset + 3]]);
@@ -218,7 +218,7 @@ class VirtualMachine {
 
                 // complex commit
                 auto source_regs = commit_source_regs([ins.a1, ins.a2], [reg[ins.a1], reg[ins.a2]]);
-                auto source_imm = Commit.Source(Commit.Type.Immediate, 0, offset);
+                auto source_imm = Commit.Source(InfoType.Immediate, 0, offset);
                 auto sources = source_regs ~ source_imm;
                 // memory is modified, source is registers source data, address, and offset
                 commit_mem([pos0, pos1, pos2, pos3], [mem[pos0], mem[pos1], mem[pos2], mem[pos3]], sources);
@@ -228,7 +228,7 @@ class VirtualMachine {
                 immutable UWORD addr = cast(UWORD)((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
                 reg[Register.PC] = addr;
                 last_branch_status = BranchStatus.TAKEN;
-                commit_reg(Register.PC, reg[Register.PC], [Commit.Source(Commit.Type.Immediate, 0, addr)]);
+                commit_reg(Register.PC, reg[Register.PC], [Commit.Source(InfoType.Immediate, 0, addr)]);
                 break;
             }
         case OpCode.JMP: {
@@ -404,7 +404,7 @@ class VirtualMachine {
         for (auto i = 0; i < reg_ids.length; i += 1) {
             auto reg_id = reg_ids[i];
             auto reg_value = reg_values[i];
-            sources ~= Commit.Source(Commit.Type.Register, reg_id, reg_value);
+            sources ~= Commit.Source(InfoType.Register, reg_id, reg_value);
         }
         return sources;
     }
@@ -414,7 +414,7 @@ class VirtualMachine {
         for (auto i = 0; i < mem_addrs.length; i += 1) {
             auto mem_addr = mem_addrs[i];
             auto mem_value = mem_values[i];
-            sources ~= Commit.Source(Commit.Type.Memory, mem_addr, mem_value);
+            sources ~= Commit.Source(InfoType.Memory, mem_addr, mem_value);
         }
         return sources;
     }

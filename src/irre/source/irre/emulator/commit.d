@@ -17,29 +17,28 @@ struct Snapshot {
     }
 }
 
-struct Commit {
-    // what changed?
-    enum Type {
-        Combined,
-        Register,
-        Memory,
-        Immediate,
-    }
+enum InfoType {
+    Combined,
+    Register,
+    Memory,
+    Immediate,
+}
 
-    private enum string[Type] _type_abbreviations = [
-        Type.Combined: "cmb",
-        Type.Register: "reg",
-        Type.Memory: "mem",
-        Type.Immediate: "imm",
-    ];
+struct Commit {
+    private enum string[InfoType] _type_abbreviations = [
+            InfoType.Combined: "cmb",
+            InfoType.Register: "reg",
+            InfoType.Memory: "mem",
+            InfoType.Immediate: "imm",
+        ];
 
     struct Source {
-        public Type type; // register or memory source?
+        public InfoType type; // register or memory source?
         public UWORD data; // can be register id or memory address
         public UWORD value; // can be register value or memory value
     }
 
-    Type type;
+    InfoType type;
     UWORD[] reg_ids;
     UWORD[] reg_values;
     UWORD[] mem_addrs;
@@ -50,7 +49,7 @@ struct Commit {
 
     static Commit from_regs(UWORD[] reg_ids, UWORD[] reg_values) {
         Commit c;
-        c.type = Type.Register;
+        c.type = InfoType.Register;
         c.reg_ids = reg_ids;
         c.reg_values = reg_values;
         return c;
@@ -62,7 +61,7 @@ struct Commit {
 
     static Commit from_mem(UWORD[] mem_addrs, BYTE[] mem_values) {
         Commit c;
-        c.type = Type.Memory;
+        c.type = InfoType.Memory;
         c.mem_addrs = mem_addrs;
         c.mem_values = mem_values;
         return c;
@@ -83,7 +82,7 @@ struct Commit {
         sb ~= format(" @0x%04x", pc);
 
         // commit data
-        if (type == Type.Register) {
+        if (type == InfoType.Register) {
             // auto reg_id_show = reg_id.to!Register;
             // sb ~= format(" %04s <- %04x", reg_id_show, reg_value);
             for (auto i = 0; i < reg_ids.length; i++) {
@@ -106,17 +105,13 @@ struct Commit {
             auto source = sources[i];
             string source_type_str = _type_abbreviations[source.type];
             switch (source.type) {
-            case Type.Register:
-                sb ~= format(" %s=%04x", source.data.to!Register, source.value);
+            case InfoType.Register : sb ~= format(" %s=%04x", source.data.to!Register, source.value);
                 break;
-            case Type.Memory:
-                sb ~= format(" mem[%04x]=%04x", source.data, source.value);
+            case InfoType.Memory : sb ~= format(" mem[%04x]=%04x", source.data, source.value);
                 break;
-            case Type.Immediate:
-                sb ~= format(" i=%04x", source.value);
+            case InfoType.Immediate : sb ~= format(" i=%04x", source.value);
                 break;
-            default:
-                assert(0);
+            default : assert(0);
             }
         }
         sb ~= format(">");
