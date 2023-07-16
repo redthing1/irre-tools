@@ -95,6 +95,9 @@ template InfoLog(TRegWord, TMemWord, TRegSet, int register_count) {
                 case InfoType.Device:
                     sb ~= format("dev#%02x(%02x)", data, value);
                     break;
+                case InfoType.CSR:
+                    sb ~= format("csr#%02x(%02x)", data, value);
+                    break;
                 default: assert(0, format("unhandled info node to string for type %s", type));
             }
 
