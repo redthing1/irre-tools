@@ -1,7 +1,3 @@
-project('irre-tools',
-    'd'
-)
-
 asm_sources = [
     'asmr/app.d'
 ]
