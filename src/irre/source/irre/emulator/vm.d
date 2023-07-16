@@ -10,8 +10,13 @@ import irre.disassembler.dumper;
 
 enum MEMORY_SIZE = 64 * 1024; // 65K
 
-alias Commit = IrreInfoLog.Commit;
-alias CommitTrace = IrreInfoLog.CommitTrace;
+mixin(IrreInfoLog.GenAliases!("IrreInfoLog"));
+alias ImmediatePositions = IrreInfoLog.ImmediatePositions;
+alias ImmediatePosA = IrreInfoLog.ImmediatePosA;
+alias ImmediatePosB = IrreInfoLog.ImmediatePosB;
+alias ImmediatePosC = IrreInfoLog.ImmediatePosC;
+alias ImmediatePosABC = IrreInfoLog.ImmediatePosABC;
+alias ImmediatePosBC = IrreInfoLog.ImmediatePosBC;
 
 class VirtualMachine {
     public UWORD[REGISTER_COUNT] reg;

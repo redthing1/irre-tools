@@ -236,6 +236,8 @@ int cmd_emu(ProgramArgs args) {
 
     // dump commits
     if (log_commits) {
+        alias IFTAnalyzer = IrreIFTAnalysis.IFTAnalyzer;
+
         auto ift_analyzer = new IFTAnalyzer(hyp.vm.commit_trace);
         writeln("\ncommit log");
         if (!ift_quiet) {

@@ -16,6 +16,8 @@ import irre.encoding.rega;
 import irre.analysis.ift;
 
 class ProgramMinimizer {
+    mixin(IrreInfoLog.GenAliases!("IrreInfoLog"));
+    
     ProgramAst source_program;
     IrreIFTAnalysis.IFTAnalyzer ift;
     long log_freeze1s;

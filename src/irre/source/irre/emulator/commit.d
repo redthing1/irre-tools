@@ -12,6 +12,20 @@ alias IrreInfoLog = InfoLog!(
     cast(int) irre.encoding.instructions.REGISTER_COUNT);
 
 template InfoLog(TRegWord, TMemWord, TRegisterSet, int register_count) {
+    template GenAliases(string prefix) {
+        import std.format;
+
+        enum GenAliases = format(`
+            alias Snapshot = %s.Snapshot;
+            alias Commit = %s.Commit;
+            alias CommitTrace = %s.CommitTrace;
+            alias InfoType = %s.InfoType;
+            alias InfoNode = %s.InfoNode;
+            alias InfoSource = %s.InfoSource;
+            alias InfoSources = %s.InfoSources;
+        `, prefix, prefix, prefix, prefix, prefix, prefix, prefix);
+    }
+
     struct Snapshot {
         public TRegWord[register_count] reg;
         public TMemWord[] mem;
