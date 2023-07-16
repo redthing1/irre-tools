@@ -12,10 +12,12 @@ import irre.emulator.hypervisor;
 
 string input_file;
 bool verbose;
+bool debug_mode;
+bool step_mode;
 
 int main(string[] args) {
     writefln("[IRRE] emulator v%s", Meta.VERSION);
-    auto help = getopt(args, "verbose|v", &verbose);
+    auto help = getopt(args, "verbose|v", &verbose, "debug", &debug_mode, "step", &step_mode);
 
     if (help.helpWanted || args.length != 2) {
         defaultGetoptPrinter("./irre-emu [OPTIONS] <input>", help.options);
@@ -37,6 +39,8 @@ int main(string[] args) {
 
     // create a hypervisor
     auto hyp = new Hypervisor(vm);
+    hyp.debug_mode = debug_mode;
+    hyp.onestep_mode = step_mode;
 
     // start the emulator
     hyp.run();
