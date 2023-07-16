@@ -179,6 +179,7 @@ class VirtualMachine {
                 }
                 reg[Register.PC] = addr;
                 branched = true;
+                reg[Register.LR] = 0; // clear LR
                 break;
             }
         case OpCode.INT: {
