@@ -8,5 +8,8 @@ volatile u8 nonce[NONCE_SIZE] = {0};
 int main() {
     // fill the nonce with random bytes
     u8 *nonce_ptr = nonce;
-    __device_send(DEMO_DEVICE_RANDOM, (u32)nonce_ptr, NONCE_SIZE);
+    int ret = __device_send(DEMO_DEVICE_RANDOM, (u32)nonce_ptr, NONCE_SIZE);
+
+    __DEBUGGER_BREAK();
+    return ret;
 }
