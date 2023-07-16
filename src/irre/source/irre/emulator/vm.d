@@ -497,7 +497,7 @@ class VirtualMachine {
                 if (device_id in devices) {
                     auto device = devices[device_id];
                     immutable WORD result = device.recieve(device_command, device_data);
-                    reg[ins.a1] = result;
+                    reg[ins.a3] = result;
                 } else {
                     // requested a device that was not found
                     // TODO: UNK_DEVICE interrupt
@@ -505,11 +505,11 @@ class VirtualMachine {
 
                 // commit
                 auto source_regs = make_reg_sources([ins.a1, ins.a2, ins.a3], [
-                    reg[ins.a1], reg[ins.a2], reg[ins.a3]
+                    device_id, device_command, device_data
                 ]);
                 auto source_device = InfoNode(InfoType.Device, device_id, device_command);
                 auto sources = source_regs ~ source_device;
-                commit_regs([ins.a1], [reg[ins.a1]], sources);
+                commit_regs([ins.a3], [reg[ins.a3]], sources);
 
                 break;
             }
