@@ -76,7 +76,7 @@ class ProgramMinimizer {
             auto freezable = true;
             foreach (source; ift.clobbered_regs_sources[reg_id]) {
                 // check whether this source node is freezable too
-                bool is_this_freezable = source.is_final;
+                bool is_this_freezable = source.is_deterministic;
                 // another case is if it comes from the initial snapshot
                 if (source.commit_id == -1) {
                     // it came from the initial snapshot
