@@ -107,6 +107,9 @@ int main(int argc, char **argv) {
     printf("[%s]   r%d: $%08x\n", __func__, i, vm_state.r[i]);
   }
 
+  // free the binary
+  free(binary);
+
   return 0;
 }
 
