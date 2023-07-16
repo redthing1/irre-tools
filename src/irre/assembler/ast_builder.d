@@ -1,7 +1,11 @@
 module irre.assembler.ast_builder;
 
+import std.array;
 import irre.assembler.ast;
+import irre.encoding.instructions;
 import std.typecons;
+import std.string;
+import std.variant;
 
 class AstBuilderException : Exception {
     this(string msg, string file = __FILE__, size_t line = __LINE__) {
@@ -73,7 +77,7 @@ class AstBuilder {
     /** resolve a macro */
     public Nullable!MacroDef resolve_macro(string name) {
         // find the macro
-        foreach (macro_; macros) {
+        foreach (macro_; ast.macros) {
             if (macro_.name == name) {
                 return Nullable!MacroDef(macro_);
             }
@@ -84,7 +88,7 @@ class AstBuilder {
     /** resolve a label */
     private LabelDef resolve_label(string name) {
         // find the label
-        foreach (label; labels.data) {
+        foreach (label; ast.labels) {
             if (label.name == name) {
                 return label;
             }
