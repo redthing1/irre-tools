@@ -152,12 +152,6 @@ class VirtualMachine {
                 branched = true;
                 break;
             }
-        case OpCode.JMP: {
-                immutable UWORD addr = reg[ins.a1];
-                reg[Register.PC] = addr;
-                branched = true;
-                break;
-            }
         case OpCode.BIF: {
                 immutable UWORD addr = ins.a2;
                 // branch to vB if rA == vC
@@ -172,6 +166,17 @@ class VirtualMachine {
                 immutable UWORD addr = reg[ins.a1];
                 // store next instruction in LR
                 reg[Register.LR] = reg[Register.PC] + cast(uint) INSTRUCTION_SIZE;
+                reg[Register.PC] = addr;
+                branched = true;
+                break;
+            }
+        case OpCode.RET: {
+                immutable UWORD addr = reg[Register.LR];
+                if (addr == 0) {
+                    // attempted to RET to 0
+                    // this is a HALT FAULT
+                    executing = false;
+                }
                 reg[Register.PC] = addr;
                 branched = true;
                 break;
