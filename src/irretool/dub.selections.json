@@ -1,6 +1,7 @@
 {
 	"fileVersion": 1,
 	"versions": {
+		"colorize": "1.0.5",
 		"commandr": "0.2.0",
 		"d-graphviz": "0.0.3",
 		"infoflow": {"path":"../../lib/infoflow"},

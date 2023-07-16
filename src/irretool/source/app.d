@@ -9,6 +9,7 @@ import std.string;
 import std.algorithm.comparison : min, max;
 
 import commandr;
+import fastlog;
 
 import irre.util;
 import irre.meta;
@@ -86,7 +87,7 @@ void main(string[] raw_args) {
         )
         .parse(raw_args);
 
-    IRRE_TOOLS_VERBOSITY = (Verbosity.Warning + verbose).to!Verbosity;
+    IRRE_TOOLS_VERBOSITY = (irre.util.Verbosity.Warning + verbose).to!(irre.util.Verbosity);
     verbose = min(args.occurencesOf("verbose"), 3);
     // logger.verbosity = to!Verbosity(Verbosity.warn.to!int + verbose); // warn, info, trace
 
@@ -282,104 +283,7 @@ int cmd_emu(ProgramArgs args) {
     // start the emulator
     hyp.run();
 
-    // dump commits
-    if (log_commits) {
-        auto commit_trace = hyp.vm.commit_trace;
-
-        if (save_commits != null) {
-            // write commits to file
-            import std.zlib;
-            import mir.ser.msgpack: serializeMsgpack;
-            auto serialized_trace = serializeMsgpack(commit_trace);
-
-            writefln("serialized commits: %d bytes, saving to %s", serialized_trace.length, save_commits);
-            std.file.write(save_commits, compress(serialized_trace));
-        }
-
-        do_ift_analysis(enable_ift, ift_quiet, ift_parallel, ift_data_types, checkpoint_file, commit_trace, compiled_data);
-    }
-
     return 0;
-}
-
-int cmd_runift(ProgramArgs args) {
-    auto input = args.arg("input");
-    auto ift_quiet = args.flag("iftquiet");
-    auto ift_parallel = args.flag("iftpl");
-    auto ift_data_types = args.option("iftdata");
-    auto checkpoint_file = args.option("checkpoint");
-
-    writefln("[IRRE] run_ift v%s", Meta.VERSION);
-
-    import std.zlib;
-    auto serialized_trace = cast(const(ubyte)[]) uncompress(std.file.read(input));
-    
-    import infoflow.models;
-    alias CommitTrace = IrreInfoLog.CommitTrace;
-
-    // deserialize
-    import mir.deser.msgpack: deserializeMsgpack;
-    // static immutable trace_symbol_table = serialized_trace.
-    //     deserializeMsgpack!CommitTrace();
-    auto commit_trace = serialized_trace.deserializeMsgpack!CommitTrace();
-
-    do_ift_analysis(true, ift_quiet, ift_parallel, ift_data_types, checkpoint_file, commit_trace, serialized_trace);
-
-    return 0;
-}
-
-void do_ift_analysis(bool enable_ift, bool ift_quiet, bool ift_parallel, string ift_data_types,
-    string checkpoint_file, CommitTrace commit_trace, const(ubyte)[] compiled_data) {
-
-    alias IFTAnalyzer = IrreIFTAnalysis.IFTAnalyzer;
-
-    auto ift_analyzer = new IFTAnalyzer(commit_trace, ift_parallel);
-    writeln("\ncommit log");
-    if (!ift_quiet) {
-        ift_analyzer.dump_commits();
-
-        // some very simple operation, to find clobber
-        ift_analyzer.calculate_clobber();
-        ift_analyzer.dump_clobber();
-    }
-
-    if (enable_ift) {
-        import std.parallelism: totalCPUs;
-        writefln("\nift analysis (%s)", ift_parallel ? format("parallel x%s", totalCPUs) : "serial");
-
-        if (ift_data_types) {
-            ift_analyzer.included_data = ift_data_types.to!(IFTAnalyzer.IFTDataType);
-        }
-        ift_analyzer.analyze();
-        if (!ift_quiet) {
-            ift_analyzer.dump_analysis();
-        }
-        ift_analyzer.dump_summary();
-
-        if (checkpoint_file != null) {
-            // we can save a checkpoint
-            // 1. read the entire binary in as a series of instructions
-            auto reader = new Reader();
-            auto program_ast = reader.read(compiled_data);
-
-            // 2. create a minimizer
-            auto minimizer = new ProgramMinimizer(program_ast, ift_analyzer);
-            auto prog_min = minimizer.create_minimized();
-
-            auto dumper = new Dumper(Dumper.DumpStyle.Detailed);
-            writefln("minimized program:");
-            dumper.dump_statements(prog_min);
-
-            minimizer.dump_summary();
-
-            // 3. write checkpoint
-            // EXE encode
-            auto encoder = new RegaEncoder();
-            auto compiled_min_prog = encoder.encode_exe(prog_min);
-
-            std.file.write(checkpoint_file, compiled_min_prog);
-        }
-    }
 }
 
 auto load_commit_trace(string filename) {
@@ -465,7 +369,7 @@ void cmd_dumptrace(ProgramArgs args) {
                     }
                     memdump_sb ~= "\n";
 
-                    if (logger.verbosity >= Verbosity.trace) {
+                    if (logger.verbosity >= fastlog.Verbosity.trace) {
                         writefln("%s", memdump_sb.data);
                     }
                 }
