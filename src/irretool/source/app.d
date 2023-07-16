@@ -20,6 +20,7 @@ import irre.encoding.rega;
 import irre.emulator.vm;
 import irre.emulator.hypervisor;
 import irre.analysis.ift;
+import irre.analysis.minimizer;
 
 enum AssemblerMode {
     exe,
@@ -52,6 +53,7 @@ void main(string[] raw_args) {
                 .add(new Flag("s", "step", "step mode"))
                 .add(new Flag(null, "commitlog", "enable commit log").full("commit-log"))
                 .add(new Flag(null, "ift", "enable ift analysis"))
+                .add(new Option(null, "checkpoint", "checkpoint file"))
         )
         .parse(raw_args);
 
@@ -109,7 +111,7 @@ int cmd_asm(ProgramArgs args) {
     }
 
     Parser parser;
-    ProgramAst programAst;
+    ProgramAst program_ast;
 
     try {
         // parse the tokens
@@ -118,14 +120,14 @@ int cmd_asm(ProgramArgs args) {
         parser.parse();
 
         // create an ast
-        programAst = parser.to_ast();
+        program_ast = parser.to_ast();
 
         // if executable mode, then freeze symbols
         if (mode == AssemblerMode.exe) {
             log_put("freezing all symbols in ast");
-            auto freezer = new AstFreezer(programAst);
+            auto freezer = new AstFreezer(program_ast);
             freezer.freeze_all_symbols();
-            programAst = freezer.get_frozen_ast();
+            program_ast = freezer.get_frozen_ast();
         }
 
         // if (dump_ast) {
@@ -134,9 +136,9 @@ int cmd_asm(ProgramArgs args) {
             writeln("\n======== AST ========");
             auto dumper = new Dumper(Dumper.DumpStyle.Detailed);
             writeln(".code --------");
-            dumper.dump_statements(programAst);
+            dumper.dump_statements(program_ast);
             writeln(".data --------");
-            dumper.dump_data(programAst);
+            dumper.dump_data(program_ast);
             writeln("=====================\n");
         }
 
@@ -154,7 +156,7 @@ int cmd_asm(ProgramArgs args) {
     case AssemblerMode.exe: {
             // EXE encode
             auto encoder = new RegaEncoder();
-            auto compiled_data = encoder.encode_exe(programAst);
+            auto compiled_data = encoder.encode_exe(program_ast);
 
             std.file.write(output, compiled_data);
             break;
@@ -180,10 +182,10 @@ int cmd_disasm(ProgramArgs args) {
     auto compiled_data = cast(const(ubyte)[]) std.file.read(input);
 
     auto reader = new Reader();
-    auto programAst = reader.read(compiled_data);
+    auto program_ast = reader.read(compiled_data);
 
     auto dumper = new Dumper(clean ? Dumper.DumpStyle.Clean : Dumper.DumpStyle.Detailed);
-    dumper.dump_statements(programAst);
+    dumper.dump_statements(program_ast);
 
     return 0;
 }
@@ -194,6 +196,7 @@ int cmd_emu(ProgramArgs args) {
     auto step_mode = args.flag("step");
     auto log_commits = args.flag("commitlog");
     auto enable_ift = args.flag("ift");
+    auto checkpoint_file = args.option("checkpoint");
 
     writefln("[IRRE] emulator v%s", Meta.VERSION);
 
@@ -234,6 +237,20 @@ int cmd_emu(ProgramArgs args) {
             writeln("\nift analysis");
             ift_analyzer.analyze();
             ift_analyzer.dump_analysis();
+
+            if (checkpoint_file != null) {
+                // we can save a checkpoint
+                // 1. read the entire binary in as a series of instructions
+                auto reader = new Reader();
+                auto program_ast = reader.read(compiled_data);
+
+                // 2. create a minimizer
+                auto minimizer = new ProgramMinimizer(program_ast, ift_analyzer);
+                auto prog_min = minimizer.create_minimized();
+
+                writefln("minimized program:");
+                dumper.dump_statements(prog_min);
+            }
         }
     }
 
