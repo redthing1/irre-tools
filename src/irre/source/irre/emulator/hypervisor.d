@@ -21,10 +21,6 @@ class Hypervisor {
     public Reader reader;
     public Dumper dumper;
 
-    public enum DebugInterrupts {
-        BREAK = 0xa0,
-    }
-
     this(VirtualMachine vm) {
         this.vm = vm;
         reader = new Reader();
@@ -44,9 +40,16 @@ class Hypervisor {
 
     void interrupt(UWORD code) {
         switch (code) {
-        case DebugInterrupts.BREAK:
+        case VirtualMachine.DebugInterrupts.BREAK:
             writefln("[int] BREAK");
             dump_registers(false); // minidump
+            while (onestep_prompt()) {
+            }
+            break;
+        case VirtualMachine.DebugInterrupts.MEMFAULT:
+            writefln("[int] MEMFAULT");
+            dump_registers(true); // full dump
+            dump_stack();
             while (onestep_prompt()) {
             }
             break;

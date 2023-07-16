@@ -40,6 +40,11 @@ class VirtualMachine {
         TAKEN,
     }
 
+    public enum DebugInterrupts {
+        BREAK = 0xa0,
+        MEMFAULT = 0xa1,
+    }
+
     public void initialize() {
         // allocate memory buffer
         mem = new BYTE[MEMORY_SIZE];
@@ -98,6 +103,13 @@ class VirtualMachine {
     public void interrupt(UWORD code) {
         // call custom handler hook
         custom_interrupt_handler(code);
+    }
+
+    private void check_address(UWORD addr) {
+        if (addr < 0 || addr >= MEMORY_SIZE) {
+            // memory fault
+            interrupt(DebugInterrupts.MEMFAULT);
+        }
     }
 
     public void execute_instruction(Instruction ins) {
@@ -248,6 +260,7 @@ class VirtualMachine {
         case OpCode.LDW: {
                 immutable UWORD addr = reg[ins.a2];
                 immutable byte offset = ins.a3;
+                check_address(addr + offset);
                 reg[ins.a1] = mem[addr + offset + 0] << 0 | mem[addr + offset + 1]
                     << 8 | mem[addr + offset + 2] << 16 | mem[addr + offset + 3] << 24;
 
@@ -271,6 +284,7 @@ class VirtualMachine {
         case OpCode.STW: {
                 immutable UWORD addr = reg[ins.a2];
                 immutable byte offset = ins.a3;
+                check_address(addr + offset);
                 auto pos0 = addr + offset + 0;
                 auto pos1 = addr + offset + 1;
                 auto pos2 = addr + offset + 2;
@@ -295,6 +309,7 @@ class VirtualMachine {
         case OpCode.LDB: {
                 immutable UWORD addr = reg[ins.a2];
                 immutable byte offset = ins.a3;
+                check_address(addr + offset);
                 reg[ins.a1] = mem[addr + offset];
 
                 // complex commit
@@ -309,6 +324,7 @@ class VirtualMachine {
         case OpCode.STB: {
                 immutable UWORD addr = reg[ins.a2];
                 immutable byte offset = ins.a3;
+                check_address(addr + offset);
                 mem[addr + offset] = cast(BYTE)(reg[ins.a1] & 0xff);
 
                 // complex commit
