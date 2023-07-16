@@ -17,25 +17,24 @@ git submodule update --init --recursive
 ```
 
 install dependencies:
-+ `meson`
-+ `ninja`
-
-```sh
-./configure
-cd build
-ninja
-```
++ c compiler
++ dlang compiler + dub
 
 to use another D compiler, such as `dmd`, set the environment variable ex. `DC=dmd` when running `configure`.
 
 ## hacking
+
+build everything (quickstart):
+```sh
+. ./script/build_tools.sh
+```
 
 build the custom vbcc port for IRRE:
 ```sh
 export VBCC=$(pwd)/tools/vbcc
 cd tools/vbcc
 mkdir -p bin
-make TARGET=irre bin/vbccirre # press enter for default answers
+make TARGET=irre all bin/vbccirre # press enter for default answers
 ```
 
 ### compile a C program
