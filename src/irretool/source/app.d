@@ -37,17 +37,20 @@ void main(string[] raw_args) {
                 .add(new Argument("output", "output file"))
                 .add(new Flag("d", "dump", "dump the program"))
                 .add(new Option("m", "mode", "the mode to assemble in")
-                    .defaultValue("exe")))
+                    .defaultValue("exe"))
+        )
         // disasm command with input argument, and clean flag
         .add(new Command("disasm", "disassemble a file")
                 .add(new Argument("input", "input file"))
-                .add(new Flag("c", "clean", "clean/pretty print program")))
+                .add(new Flag("c", "clean", "clean/pretty print program"))
+        )
         // emu command with only input argument, and debug, step flags
         .add(new Command("emu", "emulate a binary program")
                 .add(new Argument("input", "input file"))
                 .add(new Flag("d", "debug", "debug mode"))
-                .add(new Flag("s", "step", "step mode")))
+                .add(new Flag("s", "step", "step mode"))
                 .add(new Flag("c", "commitlog", "enable commit log"))
+        )
         .parse(raw_args);
 
     verbose = args.flag("verbose");
@@ -218,6 +221,18 @@ int cmd_emu(ProgramArgs args) {
 
     // start the emulator
     hyp.run();
+
+    // dump commits
+    if (log_commits) {
+        if (hyp.vm.commit_trace.commits.length > 0) {
+            writeln("\n======== COMMIT LOG ========");
+            foreach (i, commit; hyp.vm.commit_trace.commits) {
+                writefln("%4d %s", i, commit);
+            }
+        } else {
+            writeln("no commits");
+        }
+    }
 
     return 0;
 }
