@@ -28,7 +28,7 @@ def cli(
     input: List[str] = typer.Argument(..., help="Input source files"),
     output: str = typer.Option(..., "-o", help="Output file"),
     verbose: bool = typer.Option(False, "-v", help="Verbose output"),
-    debug: bool = typer.Option(False, "-g", help="Debug output"),
+    debug: bool = typer.Option(False, "-g", "--debug", help="Debug output"),
 ):
     # use vbccirre to compile c to asm
     cc_args = [
@@ -36,7 +36,7 @@ def cli(
         "-default-main",
     ]
     if debug:
-        cc_args.append("-debug")
+        cc_args.append("-debug=1")
     asm_output_file = f"{output}.ire"
     cc_command = vbcc.bake(*cc_args, *input, f"-o={asm_output_file}")
     if verbose:
