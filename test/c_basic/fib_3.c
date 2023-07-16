@@ -23,5 +23,5 @@ int main() {
     // return fib(7); // 13
     // return fib(8); // 21
     // return fib(12); // 144
-    return fib(26); // 121393
+    return fib(26); // 121393 ($1da31)
 }
