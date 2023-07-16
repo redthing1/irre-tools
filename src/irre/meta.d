@@ -3,7 +3,6 @@ module irre.meta;
 /**
 irre metadata
 */
-class Meta
-{
+class Meta {
     enum VERSION = "3.0";
 }
