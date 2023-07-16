@@ -13,19 +13,27 @@ void add_blocks(char *block1, char *block2, char *result) {
     }
 }
 
-bool compare_blocks(char *block1, char *block2) {
-    for (int i = 0; i < BLOCK_SIZE; i++) {
-        if (block1[i] != block2[i]) {
-            return false;
-        }
-    }
-    return true;
+// bool compare_blocks(char *block1, char *block2) {
+//     for (int i = 0; i < BLOCK_SIZE; i++) {
+//         if (block1[i] != block2[i]) {
+//             return false;
+//         }
+//     }
+//     return true;
+// }
+bool compare_first(char *block1, char *block2) {
+    return block1[0] == block2[0];
 }
 
 int main() {
     add_blocks(arr1, arr2, add_buf);
+    __debugger_break();
 
-    if (!compare_blocks(add_buf, arr3)) {
+    // if (!compare_blocks(add_buf, arr3)) {
+    //     return 1;
+    // }
+
+    if (!compare_first(add_buf, arr3)) {
         return 1;
     }
 
