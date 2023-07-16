@@ -21,8 +21,8 @@ class VirtualMachine {
         // allocate memory buffer
         mem = new BYTE[MEMORY_SIZE];
 
-        // set RSP to last word
-        reg[Register.RSP] = MEMORY_SIZE - WORD.sizeof;
+        // set SP to last word
+        reg[Register.SP] = MEMORY_SIZE - WORD.sizeof;
 
         // reset stats
         ticks = 0;
