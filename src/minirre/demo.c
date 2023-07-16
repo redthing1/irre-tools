@@ -6,6 +6,10 @@
 IrreState vm_state;
 IRRE_UBYTE vm_memory[IRRE_DEMO_MEMORY_SIZE];
 
+typedef enum {
+  DEMO_DEVICE_PING = 0x00001000,
+} DemoDevice;
+
 uint8_t *read_file(char *filename, size_t *size);
 
 void handle_irre_interrupt(IRRE_UWORD code) {
@@ -17,10 +21,22 @@ void handle_irre_error(IrreError err) {
   printf("[%s] error: $%02x\n", __func__, err);
 }
 
-void handle_irre_device(IRRE_UWORD device_id, IRRE_UWORD device_command,
+IRRE_UWORD handle_irre_device(IRRE_UWORD device_id, IRRE_UWORD device_command,
                         IRRE_UWORD device_data) {
-  printf("[%s] device message: (id: %d, command: %d, data: %d)\n", __func__,
-         device_id, device_command, device_data);
+  printf("[%s] device message: (id=$%08x, command=$%08x, data=$%08x)\n",
+         __func__, device_id, device_command, device_data);
+
+  switch (device_id) {
+  case DEMO_DEVICE_PING:
+    printf("[%s] ping(%d)\n", __func__, device_data);
+    return device_data;
+    break;
+  default:
+    printf("[%s] unknown device id: $%08x\n", __func__, device_id);
+    break;
+  }
+
+  return 0;
 }
 
 int main(int argc, char **argv) {

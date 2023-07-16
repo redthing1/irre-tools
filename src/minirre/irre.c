@@ -309,9 +309,9 @@ void irre_execute(IrreState *state, IrreInstruction instruction) {
     IRRE_UWORD device_data = state->r[instruction.a3];
 
     if (state->device_handler) {
-      state->device_handler(device_id, device_command, device_data);
+      IRRE_UWORD ret = state->device_handler(device_id, device_command, device_data);
+      state->r[instruction.a3] = ret;
     }
-
     break;
   }
   case OP_HLT: {

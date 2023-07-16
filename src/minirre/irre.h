@@ -113,7 +113,7 @@ typedef struct {
   IRRE_UWORD mem_size;              // memory size
   void (*interrupt_handler)(IRRE_UWORD);
   void (*error_handler)(IrreError);
-  void (*device_handler)(IRRE_UWORD, IRRE_UWORD, IRRE_UWORD);
+  IRRE_UWORD (*device_handler)(IRRE_UWORD, IRRE_UWORD, IRRE_UWORD);
   bool executing;
 } IrreState;
 
