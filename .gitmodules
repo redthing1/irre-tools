@@ -1,3 +1,6 @@
 [submodule "tools/vbcc"]
 	path = tools/vbcc
 	url = https://github.com/redthing1/vbcc-irre.git
+[submodule "lib/infoflow"]
+	path = lib/infoflow
+	url = https://github.com/redthing1/infoflow
