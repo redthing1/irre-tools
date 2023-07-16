@@ -89,6 +89,7 @@ void irre_execute(IrreState *state, IrreInstruction instruction) {
   case OP_XOR: {
     state->r[instruction.a1] =
         state->r[instruction.a2] ^ state->r[instruction.a3];
+    break;
   }
   case OP_NOT: {
     state->r[instruction.a1] = ~state->r[instruction.a2];
@@ -286,7 +287,7 @@ void irre_execute(IrreState *state, IrreInstruction instruction) {
   }
   case OP_SEQ: {
     // set a1 to 1 if a2 == imm, else 0
-    IRRE_BYTE val = instruction.a3;
+    IRRE_UWORD val = instruction.a3;
     if (state->r[instruction.a2] == val) {
       state->r[instruction.a1] = 1;
     } else {
