@@ -21,15 +21,39 @@ jl@ rA v_cmp v_loc : ; jump to v_loc if rA < v_cmp
 ::
 
 get_stk@ rA v_offset :
-    set at v_offset
-    add at sp at
-    ldw rA at
+    ldw rA at v_offset
 ::
 
-put_stk@ v_offset rA :
-    set at v_offset
-    add at sp at
-    stw at rA
+put_stk@ rA v_offset :
+    stw rA at v_offset
+::
+
+psh@ rA :
+    set at #4
+    sub sp sp at
+    stw rA sp #0
+::
+
+pop@ rA :
+    set at #4
+    stw rA sp #0
+    add sp sp at
+::
+
+stk_cal@ rA :
+    set at #16 ; ret addr offset
+    add ad at pc ; calculate [pc + offset]
+    set at #4
+    sub sp sp at
+    stw ad sp #0
+    jmp rA
+::
+
+stk_ret@ :
+    set at #4
+    stw ad sp #0
+    add sp sp at
+    jmp ad
 ::
 
 fib:
@@ -44,7 +68,7 @@ fib:
     psh r1 ; (n-1) (arg1)
     psh r14 ; slot
     set r4 ::fib
-    cal r4
+    stk_cal r4
     pop r3  ; r3 <- result
     pop r1 ; pop (n-1) -> r1
 
@@ -56,7 +80,7 @@ fib:
     psh r1 ; (n-2) (arg1)
     psh r14 ; slot
     set r4 ::fib
-    cal r4
+    stk_cal r4
     pop r4 ; r4 <- result
     pop r1 ; pop (n - 2) -> r1
 
@@ -64,23 +88,23 @@ fib:
     pop r3
 
     add r5 r3 r4 ; r5 = F(n)
-    put_stk $4 r5 ; r5 -> slot
+    put_stk r5 $4 ; r5 -> slot
 
-    ret
+    stk_ret
 
 fib_base_case: ; F(n) := n
-    put_stk $4 r11
-    ret
+    put_stk r11 $4
+    stk_ret
 
 main:
     set r14 $00 ; GLB: default slot value
 
-    set r1 .10 ; n
+    set r1 #6 ; n
     psh r1     ; n (arg1)
     psh r14    ; slot
 
     set r4 ::fib
-    cal r4 ; fib(n)
+    stk_cal r4 ; fib(n)
 
     pop r7 ; pop slot
     pop r1 ; pop arg1
