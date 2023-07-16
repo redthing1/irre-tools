@@ -92,6 +92,7 @@ class VirtualMachine {
 
     /** decode the next instruction */
     public Instruction decode_instruction() {
+        check_address(reg[cast(int) Register.PC]);
         OpCode op = cast(OpCode) mem[reg[cast(int) Register.PC] + 0];
         ARG a1 = cast(ARG) mem[reg[cast(int) Register.PC] + 1];
         ARG a2 = cast(ARG) mem[reg[cast(int) Register.PC] + 2];
