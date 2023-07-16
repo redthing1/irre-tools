@@ -19,7 +19,9 @@ import irre.disassembler.reader;
 import irre.encoding.rega;
 import irre.emulator.vm;
 import irre.emulator.hypervisor;
-import irre.analysis.ift;
+
+import infoflow.analysis.ift;
+import irre.analysis.irre_arch;
 import irre.analysis.minimizer;
 
 bool verbose = false;
@@ -281,7 +283,7 @@ int cmd_runift(ProgramArgs args) {
     import std.zlib;
     auto serialized_trace = cast(const(ubyte)[]) uncompress(std.file.read(input));
     
-    import irre.analysis.commit;
+    import infoflow.models;
     alias CommitTrace = IrreInfoLog.CommitTrace;
 
     // deserialize
@@ -300,7 +302,7 @@ void do_ift_analysis(bool enable_ift, bool ift_quiet, bool ift_parallel, string 
 
     alias IFTAnalyzer = IrreIFTAnalysis.IFTAnalyzer;
 
-    auto ift_analyzer = new IFTAnalyzer(commit_trace);
+    auto ift_analyzer = new IFTAnalyzer(commit_trace, ift_parallel);
     writeln("\ncommit log");
     if (!ift_quiet) {
         ift_analyzer.dump_commits();
@@ -317,7 +319,6 @@ void do_ift_analysis(bool enable_ift, bool ift_quiet, bool ift_parallel, string 
         if (ift_data_types) {
             ift_analyzer.included_data = ift_data_types.to!(IFTAnalyzer.IFTDataType);
         }
-        ift_analyzer.analysis_parallelized = ift_parallel;
         ift_analyzer.analyze();
         if (!ift_quiet) {
             ift_analyzer.dump_analysis();

@@ -4,9 +4,11 @@ public import irre.encoding.instructions;
 import irre.encoding.rega;
 import std.algorithm.mutation;
 import irre.emulator.device;
-import irre.analysis.commit;
 import irre.disassembler.reader;
 import irre.disassembler.dumper;
+import irre.analysis.irre_arch;
+
+import infoflow.models;
 
 enum MEMORY_SIZE = 64 * 1024; // 65K
 
@@ -475,7 +477,23 @@ class VirtualMachine {
     }
 
     public Snapshot snapshot() {
-        return Snapshot.from(reg, mem);
+        import std.algorithm.comparison: min;
+
+        Snapshot snapshot;
+        snapshot.reg = reg.dup[0 .. irre.encoding.instructions.REGISTER_COUNT];
+        auto mem_base = 0x0;
+        snapshot.memory_map ~= MemoryMap(MemoryMap.Type.Memory, mem_base, "mem0");
+        // copy our memory into pages
+        for (auto i = 0; i < mem.length; i += MemoryPageTable.PAGE_SIZE) {
+            auto mem_addr = i;
+            snapshot.tracked_mem.make_page(mem_addr);
+            // copy memory block
+            auto copy_start = mem_addr;
+            auto copy_end = min(mem.length, mem_addr + MemoryPageTable.PAGE_SIZE);
+            auto copy_size = copy_end - copy_start;
+            snapshot.tracked_mem.pages[mem_addr].mem[0..copy_size] = mem[copy_start..copy_end];
+        }
+        return snapshot;
     }
 
     public void commit_snapshot() {
