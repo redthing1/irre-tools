@@ -8,6 +8,7 @@ import std.string;
 import std.conv;
 import std.stdio;
 import std.variant;
+import std.typecons;
 
 struct ValueRef {
     string label;
@@ -48,8 +49,8 @@ struct LabelDef {
 
 struct MacroArg {
     enum Type {
-        REGISTER,
-        VALUE
+        VALUE = 0,
+        REGISTER = 1,
     }
 
     Type type;
@@ -96,7 +97,8 @@ class Parser {
                     } else if (dir.content == "#d") { // data directive
                         expect_token(CharType.PACK_START); // eat pack start
                         // check pack type indicator
-                        immutable auto pack_type_indicator = expect_token(CharType.ALPHA | CharType.QUOT);
+                        immutable auto pack_type_indicator = expect_token(
+                                CharType.ALPHA | CharType.QUOT);
                         auto pack_len = 0uL; // size of packed data
 
                         switch (pack_type_indicator.kind) {
@@ -142,36 +144,28 @@ class Parser {
                         expect_token(CharType.BIND); // eat the bind
                         define_macro(iden.content); // define the macro
                         break;
-                    } else { // instruction
+                    } else {
+                        // instruction
                         immutable auto mnem = iden.content;
-                        immutable auto maybeInfo = InstructionEncoding.get_info(mnem);
-                        auto instr_size = INSTRUCTION_SIZE;
-                        string a1, a2, a3;
-                        if (maybeInfo.isNull) { // didn't match standard instruction names
+                        auto maybe_raw_statement = take_raw_statement(mnem);
+                        if (!maybe_raw_statement.isNull) {
+                            // standard instruction
+                            auto statement = parse_statement(maybe_raw_statement.get());
+                            statements ~= statement; // push statement
+                            offset += INSTRUCTION_SIZE; // update code offset
+                        } else {
+                            // it was not an instruction, perhaps it's a macro
                             auto md = resolve_macro(mnem); // check if a matching macro exists
-                            if (!md.name) { // invalid mnemonic
-                                throw parser_error(format("unrecognized mnemonic: %s", mnem));
+                            if (!md.name) {
+                                // no matching macro was found
+                                // this, we don't recognize this statement
+                                throw parser_error(format("unrecognized macro: %s", mnem));
                             } else {
                                 // expand the macro
-                                auto expanded_statements = expand_macro(md);
+                                // TODO: implementation
                                 break;
                             }
-                        } else { // fill in arguments
-                            auto info = maybeInfo.get();
-                            instr_size = info.size;
-                            if ((info.operands & Operands.K_R1) > 0) {
-                                a1 = expect_token(CharType.IDENTIFIER).content;
-                            }
-                            if ((info.operands & Operands.K_R2) > 0) {
-                                a2 = expect_token(CharType.IDENTIFIER).content;
-                            }
-                            if ((info.operands & Operands.K_R3) > 0) {
-                                a3 = expect_token(CharType.IDENTIFIER).content;
-                            }
                         }
-                        auto statement = read_statement(iden.content, a1, a2, a3); // read statement
-                        statements ~= statement; // push statement
-                        offset += instr_size; // update code offset
                     }
                     break;
                 }
@@ -189,8 +183,7 @@ class Parser {
             // since all instructions increment PC, we subtract
             auto entry_addr = entry_label_def.offset - cast(int) INSTRUCTION_SIZE;
             statements.data[0] = AbstractStatement(OpCode.SET,
-                    cast(ValueArg) ValueImm(Register.PC),
-                    cast(ValueArg) ValueImm(entry_addr));
+                    cast(ValueArg) ValueImm(Register.PC), cast(ValueArg) ValueImm(entry_addr));
         }
         // resolve statements, rewriting them
         auto resolved_statements = resolve_statements(statements);
@@ -213,8 +206,28 @@ class Parser {
         return resolved_statements.data;
     }
 
-    AbstractStatement read_statement(string mnem, string a1, string a2, string a3) {
-        auto maybeInfo = InstructionEncoding.get_info(mnem);
+    Nullable!RawStatement take_raw_statement(string mnem) {
+        immutable auto maybeInfo = InstructionEncoding.get_info(mnem);
+        string a1, a2, a3;
+        if (maybeInfo.isNull) { // didn't match standard instruction names
+            return Nullable!RawStatement.init;
+        } else { // fill in arguments
+            auto info = maybeInfo.get();
+            if ((info.operands & Operands.K_R1) > 0) {
+                a1 = expect_token(CharType.IDENTIFIER).content;
+            }
+            if ((info.operands & Operands.K_R2) > 0) {
+                a2 = expect_token(CharType.IDENTIFIER).content;
+            }
+            if ((info.operands & Operands.K_R3) > 0) {
+                a3 = expect_token(CharType.IDENTIFIER).content;
+            }
+        }
+        return Nullable!RawStatement(RawStatement(mnem, a1, a2));
+    }
+
+    AbstractStatement parse_statement(RawStatement raw_statement) {
+        auto maybeInfo = InstructionEncoding.get_info(raw_statement.mnem);
         auto info = maybeInfo.get();
         auto statement = AbstractStatement(info.op);
 
@@ -267,28 +280,28 @@ class Parser {
 
         // read args
         if ((info.operands & Operands.K_R1) > 0) {
-            statement.a1 = ValueImm(InstructionEncoding.get_register(a1));
+            statement.a1 = ValueImm(InstructionEncoding.get_register(raw_statement.a1));
         }
         if ((info.operands & Operands.K_R2) > 0) {
-            statement.a2 = ValueImm(InstructionEncoding.get_register(a2));
+            statement.a2 = ValueImm(InstructionEncoding.get_register(raw_statement.a2));
         }
         if ((info.operands & Operands.K_R3) > 0) {
-            statement.a3 = ValueImm(InstructionEncoding.get_register(a3));
+            statement.a3 = ValueImm(InstructionEncoding.get_register(raw_statement.a3));
         }
 
         if ((info.operands & Operands.K_I1) > 0) {
-            if (!a1.empty)
-                statement.a1 = ValueImm(parse_numeric(a1));
+            if (!raw_statement.a1.empty)
+                statement.a1 = ValueImm(parse_numeric(raw_statement.a1));
             else
                 statement.a1 = read_value_arg();
         } else if ((info.operands & Operands.K_I2) > 0) {
-            if (!a2.empty)
-                statement.a2 = ValueImm(parse_numeric(a2));
+            if (!raw_statement.a2.empty)
+                statement.a2 = ValueImm(parse_numeric(raw_statement.a2));
             else
                 statement.a2 = read_value_arg();
         } else if ((info.operands & Operands.K_I3) > 0) {
-            if (!a3.empty)
-                statement.a3 = ValueImm(parse_numeric(a3));
+            if (!raw_statement.a3.empty)
+                statement.a3 = ValueImm(parse_numeric(raw_statement.a3));
             else
                 statement.a3 = read_value_arg();
         }
@@ -320,7 +333,61 @@ class Parser {
     }
 
     void define_macro(string name) {
-        // TODO
+        writefln("DEFINE_MACRO %s", name);
+        auto def = new MacroDef(name);
+        while (peek_token().kind != CharType.MARK) { // MARK terminates arg list
+            immutable auto arg_name = expect_token(CharType.IDENTIFIER);
+            MacroArg.Type get_arg_type(char arg_prefix) {
+                switch (arg_prefix) {
+                case 'r':
+                    return MacroArg.Type.REGISTER;
+                case 'v':
+                    return MacroArg.Type.VALUE;
+                default:
+                    throw parser_error(format("unrecognized macro arg prefix %c on argument %d of macro %s",
+                            arg_prefix, def.args.length + 1, def.name));
+                }
+            }
+
+            immutable auto arg_type = get_arg_type(arg_name.content[0]);
+            immutable auto arg = MacroArg(arg_type, arg_name.content);
+            def.args ~= arg;
+        }
+        expect_token(CharType.MARK); // eat the mark
+        // read the macro body
+        auto statements = appender!(AbstractStatement[]);
+        // TODO: implement this
+        // while (true) {
+        //     immutable auto next = peek_token();
+        //     if (next.kind == MARK && streq(next.cont, "::")) {
+        //         expect_token(st, MARK); // end of macro def
+        //         break;
+        //     }
+        //     // otherwise, we should have instruction statements
+        //     // TODO: read statement
+        //     auto iden = expect_token(st, IDENTIFIER);
+        //     const char* mnem = iden.cont;
+        //     InstructionInfo info = get_instruction_info(mnem);
+        //     const char * a1 = NULL,  * a2 = NULL,  * a3 = NULL;
+        //     if (info.type == INSTR_INV) { // not a base instruction
+        //         // we don't support referencing macros within macros
+        //         printf("unrecognized mnemonic: %s\n", mnem);
+        //     } else {
+        //         if ((info.type & (INSTR_K_R1 | INSTR_K_I1)) > 0) {
+        //             a1 = take_token(st).cont;
+        //         }
+        //         if ((info.type & (INSTR_K_R2 | INSTR_K_I2)) > 0) {
+        //             a2 = take_token(st).cont;
+        //         }
+        //         if ((info.type & (INSTR_K_R3 | INSTR_K_I3)) > 0) {
+        //             a3 = take_token(st).cont;
+        //         }
+        //     }
+        //     RawStatement raw_stmt = (RawStatement) {
+        //         .mnem = mnem, .a1 = a1, .a2 = a2, .a3 = a3
+        //     };
+        //     buf_push_RawStatement(&def.statements, raw_stmt);
+        // }
     }
 
     MacroDef resolve_macro(string name) {
