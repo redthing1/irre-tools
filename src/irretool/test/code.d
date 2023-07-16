@@ -10,4 +10,24 @@ module irretool.test.code;
 //     hlt
 // `;
 
-enum PROG_BASIC = import("asm/basic.asm");
+struct TestProgram {
+    string name;
+    string source;
+}
+
+template make_test_prog(string name, string path) {
+    import std.format;
+    const char[] make_test_prog =
+        format(`
+            enum PROG_%s = TestProgram(
+                "%s",
+                import("%s")
+            );
+        `, name, name, path);
+}
+
+// enum PROG_BASIC = import("asm/basic.asm");
+mixin(make_test_prog!("BASIC", "asm/basic.asm"));
+mixin(make_test_prog!("BIGPROG", "asm/big_prog.asm"));
+mixin(make_test_prog!("FUNC", "asm/func.asm"));
+mixin(make_test_prog!("MEM", "asm/mem.asm"));
