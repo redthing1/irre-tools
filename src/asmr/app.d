@@ -18,7 +18,7 @@ bool dump;
 
 int main(string[] args) {
     writefln("[IRRE] assembler v%s", Meta.VERSION);
-    auto help = getopt(args, "verbose|v", &verbose, "dump", &dump);
+    auto help = getopt(args, "verbose|v", &verbose, "dump|d", &dump);
 
     if (help.helpWanted || args.length != 3) {
         defaultGetoptPrinter("./irre-asm [OPTIONS] <input> <output>", help.options);
