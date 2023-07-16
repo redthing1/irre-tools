@@ -332,6 +332,7 @@ class Parser {
             // invalid numeric type (by prefix)
             throw parser_error(format("invalid numeric prefix: '%c'", pfx));
         }
+        // log_put(format("parsed numeric '%s' as %d", num, val));
         return val;
     }
 
