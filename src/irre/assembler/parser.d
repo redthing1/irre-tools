@@ -26,6 +26,7 @@ class Parser {
     private Appender!(MacroDef[]) macros;
     private Appender!(LabelDef[]) labels;
 
+    /** given a lexer result, parse tokens into a program ast */
     public ProgramAst parse(Lexer.Result lexer_result) {
         this.lexed = lexer_result;
 
@@ -136,7 +137,8 @@ class Parser {
         return ast;
     }
 
-    AbstractStatement[] resolve_statements(ref const Appender!(AbstractStatement[]) statements) {
+    /** convert all value references in instructions to immediate values (compute all offsets, replacing symbols) */
+    private AbstractStatement[] resolve_statements(ref const Appender!(AbstractStatement[]) statements) {
         auto resolved_statements = appender!(AbstractStatement[]);
         foreach (unresolved; statements.data) {
             auto statement = AbstractStatement(unresolved.op);
@@ -151,12 +153,12 @@ class Parser {
     }
 
     /** get all the tokens that make up the next register arg */
-    Token[] take_register_arg_tokens() {
+    private Token[] take_register_arg_tokens() {
         return [expect_token(CharType.IDENTIFIER)];
     }
 
     /** get all the tokens that make up the next value arg */
-    Token[] take_value_arg_tokens() {
+    private Token[] take_value_arg_tokens() {
         auto tokens = Token[].init;
         immutable auto next = peek_token();
         switch (next.kind) {
@@ -192,7 +194,7 @@ class Parser {
     }
 
     /** walk through the tokens, parsing statements. could be a single statement or an unrolled macro. */
-    AbstractStatement[] walk_statements() {
+    private AbstractStatement[] walk_statements() {
         auto statements = appender!(AbstractStatement[]);
         auto maybe_raw_statement = take_raw_statement();
         if (!maybe_raw_statement.isNull) {
@@ -210,7 +212,7 @@ class Parser {
         return statements.data;
     }
 
-    Nullable!SourceStatement take_raw_statement() {
+    private Nullable!SourceStatement take_raw_statement() {
         immutable auto mnem_token = peek_token();
         immutable auto maybeInfo = InstructionEncoding.get_info(mnem_token.content);
         string a1, a2, a3;
@@ -247,7 +249,7 @@ class Parser {
     }
 
     /** interpret numeric constant */
-    int parse_numeric(string num) {
+    private int parse_numeric(string num) {
         char pfx = num[0];
         // create a new string without the prefix
         string num_str = num[1 .. $]; // convert base
@@ -271,13 +273,13 @@ class Parser {
     }
 
     /** parse a special register arg from tokens */
-    ValueImm parse_register_arg(Token[] tokens) {
+    private ValueImm parse_register_arg(Token[] tokens) {
         auto register_token = tokens[0];
         return ValueImm(InstructionEncoding.get_register(register_token.content));
     }
 
     /** parse a special value arg from tokens */
-    ValueArg parse_value_arg(Token[] tokens) {
+    private ValueArg parse_value_arg(Token[] tokens) {
         auto pos = 0;
         immutable auto next = tokens[pos];
 
@@ -305,7 +307,8 @@ class Parser {
         }
     }
 
-    AbstractStatement parse_statement(SourceStatement raw_statement) {
+    /** given a source statement containing tokens, parse to an AST statement */
+    private AbstractStatement parse_statement(SourceStatement raw_statement) {
         auto maybeInfo = InstructionEncoding.get_info(raw_statement.mnem);
         auto info = maybeInfo.get();
         auto statement = AbstractStatement(info.op);
@@ -330,7 +333,8 @@ class Parser {
         return statement;
     }
 
-    ValueImm resolve_value_arg(const ValueArg arg) {
+    /** resolve any references in this arg and convert it to an immediate */
+    private ValueImm resolve_value_arg(const ValueArg arg) {
         auto val = 0;
         if (arg.hasValue) {
             val = arg.visit!((ValueImm imm) => imm.val,
@@ -339,11 +343,13 @@ class Parser {
         return ValueImm(val);
     }
 
-    void define_label(string name) {
+    /** define a label */
+    private void define_label(string name) {
         labels ~= LabelDef(name, offset);
     }
 
-    LabelDef resolve_label(string name) {
+    /** resolve a label */
+    private LabelDef resolve_label(string name) {
         // find the label
         foreach (label; labels.data) {
             if (label.name == name) {
@@ -353,7 +359,8 @@ class Parser {
         throw parser_error(format("label could not be resolved: %s", name));
     }
 
-    void define_macro(string name) {
+    /** define a macro */
+    private void define_macro(string name) {
         // writefln("DEFINE_MACRO %s", name);
         auto def = MacroDef(name);
         while (peek_token().kind != CharType.MARK) { // MARK terminates arg list
@@ -402,7 +409,8 @@ class Parser {
         macros ~= def; // append to macro list
     }
 
-    MacroDef resolve_macro(string name) {
+    /** resolve a macro */
+    private MacroDef resolve_macro(string name) {
         // find the macro
         foreach (macro_; macros.data) {
             if (macro_.name == name) {
@@ -412,7 +420,8 @@ class Parser {
         throw parser_error(format("macro could not be resolved: %s", name));
     }
 
-    AbstractStatement[] expand_macro(ref MacroDef def) {
+    /** unroll a macro reference into a series of AST instructions */
+    private AbstractStatement[] expand_macro(ref MacroDef def) {
         auto statements = appender!(AbstractStatement[]);
 
         Token[][string] given_args;
