@@ -18,19 +18,23 @@ struct Commit {
     }
 
     Type type;
-    UWORD reg_id;
-    UWORD reg_value;
+    UWORD[] reg_ids;
+    UWORD[] reg_values;
     UWORD[] mem_addrs;
     BYTE[] mem_values;
     UWORD pc;
     string description;
 
-    static Commit from_reg(UWORD reg_id, UWORD reg_value) {
+    static Commit from_regs(UWORD[] reg_ids, UWORD[] reg_values) {
         Commit c;
         c.type = Type.Register;
-        c.reg_id = reg_id;
-        c.reg_value = reg_value;
+        c.reg_ids = reg_ids;
+        c.reg_values = reg_values;
         return c;
+    }
+
+    static Commit from_reg(UWORD reg_id, UWORD reg_value) {
+        return from_regs([reg_id], [reg_value]);
     }
 
     static Commit from_mem(UWORD[] mem_addrs, BYTE[] mem_values) {
@@ -44,11 +48,11 @@ struct Commit {
     string toString() const {
         import std.string : format;
         import std.conv : to;
-        import std.array: appender, array;
+        import std.array : appender, array;
 
         auto type_str = type == Type.Register ? "reg" : "mem";
         auto sb = appender!string;
-        
+
         // commit type
         sb ~= format("%s", type_str);
         // pc position
@@ -56,8 +60,14 @@ struct Commit {
 
         // commit data
         if (type == Type.Register) {
-            auto reg_id_show = reg_id.to!Register;
-            sb ~= format(" %04s <- %04x", reg_id_show, reg_value);
+            // auto reg_id_show = reg_id.to!Register;
+            // sb ~= format(" %04s <- %04x", reg_id_show, reg_value);
+            for (auto i = 0; i < reg_ids.length; i++) {
+                auto reg_id = reg_ids[i];
+                auto reg_value = reg_values[i];
+                auto reg_id_show = reg_id.to!Register;
+                sb ~= format(" %04s <- %04x", reg_id_show, reg_value);
+            }
         } else {
             for (auto i = 0; i < mem_addrs.length; i++) {
                 auto addr = mem_addrs[i];

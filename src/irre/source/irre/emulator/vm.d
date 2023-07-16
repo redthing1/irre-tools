@@ -347,11 +347,20 @@ class VirtualMachine {
         commit.description = dump_decoded_instruction();
     }
 
-    public void commit_reg(UWORD reg_id, UWORD reg_val) {
+    public void commit_reg(UWORD reg_id, UWORD reg_value) {
         if (!log_commits)
             return;
 
-        auto commit = Commit.from_reg(reg_id, reg_val);
+        auto commit = Commit.from_reg(reg_id, reg_value);
+        commit_set_state(commit);
+        commit_trace.commits ~= commit;
+    }
+
+    public void commit_regs(UWORD[] reg_ids, UWORD[] reg_values) {
+        if (!log_commits)
+            return;
+
+        auto commit = Commit.from_regs(reg_ids, reg_values);
         commit_set_state(commit);
         commit_trace.commits ~= commit;
     }
