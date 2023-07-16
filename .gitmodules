@@ -4,3 +4,6 @@
 [submodule "lib/infoflow"]
 	path = lib/infoflow
 	url = https://github.com/redthing1/infoflow
+[submodule "tools/chcc"]
+	path = tools/chcc
+	url = https://github.com/redthing1/chibicc-irre
