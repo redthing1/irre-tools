@@ -3,7 +3,7 @@
 #entry :main
 
 data:
-    #d \22000000 ; $22 in little endian
+    #d \x 22000000 ; $22 in little endian
 
 main:
     set r2 ::data

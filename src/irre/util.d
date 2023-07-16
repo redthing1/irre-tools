@@ -2,13 +2,12 @@ module irre.util;
 
 import std.array;
 import std.conv;
+import std.range;
+import std.algorithm;
 
-ubyte[] datahex(string hex) {
-    auto buf = appender!(ubyte[]);
-
-    for (auto i = 0; hex[i]; i += 2) {
-        buf ~= to!ubyte(hex[i]);
-    }
-
-    return buf.data;
+// https://stackoverflow.com/a/23741556/13240621
+ubyte[] datahex(string hexstr) {
+    ubyte[] bytes = (hexstr.length % 2 ? "0" ~ hexstr : hexstr).chunks(2)
+        .map!(twoDigits => twoDigits.parse!ubyte(16)).array();
+    return bytes;
 }
