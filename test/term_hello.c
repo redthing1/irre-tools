@@ -28,7 +28,7 @@ void term_write(volatile int* addr, int* data, int count) {
 
 int term_flush() {
     asm("set r0 #1");    // DEV_ID
-    asm("set r1 $b0");   // FLUSH
+    asm("set r1 $10");   // FLUSH
     asm("snd r0 r0 r1"); // term.flush()
 }
 
