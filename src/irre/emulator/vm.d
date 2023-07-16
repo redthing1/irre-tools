@@ -172,7 +172,7 @@ class VirtualMachine {
                 break;
             }
         case OpCode.BIF: {
-                immutable UWORD addr = cast(UWORD) ((ins.a1) | (ins.a2 << 8));
+                immutable UWORD addr = cast(UWORD) (ins.a2);
                 // branch to vB if rA == vC
                 immutable WORD tc = reg[ins.a1]; // reg value
                 immutable byte check = ins.a3; // imm value
