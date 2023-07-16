@@ -21,8 +21,7 @@ class VirtualMachine {
     public bool executing = true;
     public BranchStatus last_branch_status = BranchStatus.NO_BRANCH; // whether the last instruction took a branch
     public ulong ticks;
-    public Device[int] devices;
-    private int device_id_counter = 0;
+    public Device[UWORD] devices;
     public void delegate(UWORD) custom_interrupt_handler;
     public void delegate(UWORD) custom_halt_handler;
     public void delegate(Commit) custom_commit_handler;
@@ -60,9 +59,8 @@ class VirtualMachine {
         ticks = 0;
 
         // initialize all devices
-        device_id_counter = 0;
         foreach (device; devices.byValue()) {
-            device.initialize(this, device_id_counter++);
+            device.initialize(this);
         }
 
         // for commit logging
@@ -71,11 +69,10 @@ class VirtualMachine {
     }
 
     public void attach_device(Device device) {
-        auto dev_id = device_id_counter++;
         // initialize the device
-        device.initialize(this, dev_id);
+        device.initialize(this);
 
-        devices[dev_id] = device;
+        devices[device.id] = device;
     }
 
     public void detach_device(Device device) {

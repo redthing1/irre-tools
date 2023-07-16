@@ -7,6 +7,8 @@ import std.conv;
 import irre.util;
 
 class TerminalDevice : MappedDevice {
+    override @property UWORD id() { return 0x70001000; }
+
     enum Command : WORD {
         FLUSH = 0x10,
         READCHAR = 0x11,
@@ -22,8 +24,8 @@ class TerminalDevice : MappedDevice {
         super(256);
     }
 
-    override void initialize(VirtualMachine vm, int id) {
-        super.initialize(vm, id);
+    override void initialize(VirtualMachine vm) {
+        super.initialize(vm);
         log_put(format("[TERM] device initialized."));
     }
 

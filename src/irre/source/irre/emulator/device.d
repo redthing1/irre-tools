@@ -6,11 +6,10 @@ import irre.util;
 /** represents a device for the IRRE VM machine */
 abstract class Device {
     protected VirtualMachine vm;
-    public int id;
+    abstract @property UWORD id();
 
-    public void initialize(VirtualMachine vm, int id) {
+    public void initialize(VirtualMachine vm) {
         this.vm = vm;
-        this.id = id;
     }
 
     public abstract WORD recieve(WORD command, WORD data);

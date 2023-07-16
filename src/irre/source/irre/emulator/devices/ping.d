@@ -6,6 +6,8 @@ import std.stdio;
 import irre.util;
 
 class PingDevice : Device {
+    override @property UWORD id() { return 0x00001000; }
+
     enum Command : WORD {
         ECHO = 0x00,
         PING = 0x01,
