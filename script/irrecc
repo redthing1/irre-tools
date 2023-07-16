@@ -20,7 +20,6 @@ app = typer.Typer(
     context_settings=CONTEXT_SETTINGS,
 )
 
-vbcc = sh.Command("./tools/vbcc/bin/vbccirre")
 chcc = sh.Command("./tools/chcc/chibicc")
 irretool = sh.Command("./src/irretool/irretool")
 
@@ -31,19 +30,6 @@ def cli(
     verbose: bool = typer.Option(False, "-v", help="Verbose output"),
     debug: bool = typer.Option(False, "-g", "--debug", help="Debug output"),
 ):
-    # # use vbccirre to compile c to asm
-    # cc_args = [
-    #     "-c99",
-    #     "-default-main",
-    # ]
-    # if debug:
-    #     cc_args.append("-debug=1")
-    # asm_output_file = f"{output}.ire"
-    # cc_command = vbcc.bake(*cc_args, *input, f"-o={asm_output_file}")
-    # if verbose:
-    #     print(cc_command)
-    # cc_command(_fg=True)
-
     if not output and len(input) == 1:
         input0_noext = os.path.splitext(input[0])[0]
         output = f"{input0_noext}.bin"
