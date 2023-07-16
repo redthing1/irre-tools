@@ -164,7 +164,7 @@ class InstructionEncoding {
             // case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG, 1);
             // REGULAR_AD instruction set
             case OpCode.HLT: return InstructionInfo(OpCode.HLT, Operands.NONE, 1);
-            case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.REG, 1);
+            case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.IMM, 1);
             // IRRE instruction set
             case OpCode.JMI: return InstructionInfo(OpCode.JMI, Operands.IMM, 1);
             case OpCode.BIF: return InstructionInfo(OpCode.BIF, Operands.REG_IMM_IMM, 1);
