@@ -61,5 +61,5 @@ main:
 	hlt ;.size	main, .Lfunc_end1-main
 
 
-	; .ident	"clang version 3.8.1 (https://github.com/xdrie/clang-leg 43d93776c0f686e0097b8e3c96768b716ccd0a88) (https://github.com/xdrie/llvm-leg e9110cc431fbfe54a0c6e5d8dd476a1382dbbf60)"
+	; .ident	"clang version 3.8.1 (https://github.com/redthing1/clang-leg 43d93776c0f686e0097b8e3c96768b716ccd0a88) (https://github.com/redthing1/llvm-leg e9110cc431fbfe54a0c6e5d8dd476a1382dbbf60)"
 	; .section	".note.GNU-stack","",@progbits
