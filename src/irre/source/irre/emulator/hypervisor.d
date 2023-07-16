@@ -11,6 +11,7 @@ import std.stdio;
 import std.conv;
 import std.string;
 import std.functional : toDelegate;
+import core.stdc.ctype;
 
 enum SIMPLE_REGISTER_COUNT = 6;
 
@@ -20,6 +21,7 @@ class Hypervisor {
     public bool onestep_mode;
     public bool full_regdump = false;
     public bool print_commits = false;
+    public string runto_instruction = null;
     public Reader reader;
     public Dumper dumper;
 
@@ -47,22 +49,19 @@ class Hypervisor {
         case VirtualMachine.DebugInterrupts.BREAK:
             writefln("[int] BREAK");
             dump_registers(full_regdump); // minidump
-            while (onestep_prompt()) {
-            }
+            debug_prompt_loop();
             break;
         case VirtualMachine.DebugInterrupts.MEMORY_FAULT:
             writefln("[int] MEMORY_FAULT");
             dump_registers(true); // full dump
             // dump_stack();
-            while (onestep_prompt()) {
-            }
+            debug_prompt_loop();
             break;
         case VirtualMachine.DebugInterrupts.ILLEGAL_INSTRUCTION:
             writefln("[int] ILLEGAL INSTRUCTION");
             dump_registers(true); // full dump
             // dump_stack();
-            while (onestep_prompt()) {
-            }
+            debug_prompt_loop();
             break;
         default: {
                 writefln("[int] unhandled interrupt %d", code);
@@ -93,6 +92,11 @@ class Hypervisor {
         return true; // loop again
     }
 
+    void debug_prompt_loop() {
+        while (onestep_prompt()) {
+        }
+    }
+
     void run(long until = 0) {
         auto exec_st = true;
         while (exec_st) {
@@ -102,6 +106,17 @@ class Hypervisor {
             if (debug_mode) {
                 auto statement_dump = dumper.format_statement(statement);
                 writefln("[exec] %s", statement_dump);
+            }
+            if (debug_mode) {
+                // check runto instruction
+                if (runto_instruction != null) {
+                    if (statement.op.to!string.toLower == runto_instruction) {
+                        writefln("[dbg] runto hit instruction '%s'", runto_instruction);
+                        runto_instruction = null;
+                        // break
+                        debug_prompt_loop();
+                    }
+                }
             }
             exec_st = vm.step();
             // post-instruction
@@ -120,8 +135,7 @@ class Hypervisor {
                 dump_registers(full_regdump); // minidump
             }
             if (onestep_mode) {
-                while (onestep_prompt()) {
-                }
+                debug_prompt_loop();
             }
 
             // check until condition
@@ -222,6 +236,12 @@ class Hypervisor {
             auto addr = (cmd[1].replace("$", "")).to!UWORD(16);
             auto size = cmd[2].to!UWORD();
             dump_memory_at(addr, size);
+            break;
+        case "rti":
+            runto_instruction = cmd[1];
+            writefln("[cmd] will break on instruction '%s'", runto_instruction);
+            // disable onestep mode
+            onestep_mode = false;
             break;
         default:
             writefln("[cmd] command '%s' not recognized.", command);
