@@ -45,7 +45,8 @@ def cli(
     # cc_command(_fg=True)
 
     if not output and len(input) == 1:
-        output = f"{input[0]}.bin"
+        input0_noext = os.path.splitext(input[0])[0]
+        output = f"{input0_noext}.bin"
 
     # use chcc to compile c to asm
     cc_args = [
