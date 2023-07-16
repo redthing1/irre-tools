@@ -417,5 +417,14 @@ The bits of each component of these instructions are laid out so that the lower 
 | `mov` | 0x0c&nbsp;rA&nbsp;rB          | Copy the value from rB into rA. |
 | `ldw` | 0x0d&nbsp;rA&nbsp;rB&nbsp;v0  | Read a 32-bit word from the memory address referred to by rB, offset by v0, and store the value into rA. If the address is not word-aligned, the result is implementation-defined. |
 | `stw` | 0x0e&nbsp;rA&nbsp;rB&nbsp;v0  | Store the value in rA as a 32-bit value at the memory address referred to by rB, offset by v0. If the address is not word-aligned, the result is implementation-defined. |
+| `hlt` | 0xff         | Halt execution. |
+| `int` | 0x71&nbsp;v0         | Raise an interrupt with the 24-bit unsigned code in v0. |
+| `jmi` | 0x10&nbsp;v0         | Unconditionally branch to the 24-bit unsigned address in v0. |
+| `jmp` | 0x11&nbsp;rA         | Unconditionally branch to the 32-bit unsigned address in rA. |
+| `bve` | 0x14&nbsp;rA&nbsp;rB&nbsp;v0         | Conditionally branch to the 32-bit unsigned address in `rA` if the value in `rB` is equal to the value `v0`. |
+| `bvn` | 0x15&nbsp;rA&nbsp;rB&nbsp;v0         | Conditionally branch to the 32-bit unsigned address in `rA` if the value in `rB` is not equal to the value `v0`. |
+| `cal` | 0x1a&nbsp;rA         | Store the address of the following instruction in `lr` then branch to the 32-bit unsigned address in rA. |
+| `ret` | 0x1b         | Branch to the 32-bit unsigned address in `lr`, then set `lr` to `0`. If `lr` initially contains `0`, the behavior is implementation-defined. |
+| `snd` | 0xfd&nbsp;rA&nbsp;rB&nbsp;rC         | Send command in `rC` to the device identifier in `rB` with argument in `rA`. |
 
 To complement this somewhat limited set, most assemblers implement more complex psuedoinstructions built on top of these base instructions by taking advantage of the special temporary registers.
