@@ -68,6 +68,9 @@ class LegTranslator {
             case "b_to":
                 mnem = "jmi";
                 break;
+            case "brl":
+                mnem = "cal";
+                break;
             case "cmp":
                 mnem = "tcu";
                 // we rewrite CMP rA rB -> TCU ad rA rB
