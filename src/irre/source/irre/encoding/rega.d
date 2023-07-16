@@ -207,6 +207,10 @@ class RegaDecoder {
     Instruction[] read_code(const ubyte[] data) {
         auto instructions = appender!(Instruction[]);
         for (int pos = 0; pos < data.length; pos += INSTRUCTION_SIZE) {
+            // ensure there's enough data left
+            if (pos + INSTRUCTION_SIZE > data.length) {
+                break;
+            }
             auto op = cast(OpCode)(data[pos + 0]);
             auto a1 = cast(ARG)(data[pos + 1]);
             auto a2 = cast(ARG)(data[pos + 2]);
