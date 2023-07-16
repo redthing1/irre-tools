@@ -24,7 +24,7 @@ class Parser {
     private int char_pos;
     private int global_offset;
     private DataBlock[] data_blocks;
-    private Appender!(MacroDef[]) macros;
+    private MacroDef[] macros;
     private Appender!(LabelDef[]) labels;
 
     this() {
@@ -33,8 +33,10 @@ class Parser {
     }
 
     private void define_builtins() {
-        macros ~= BuiltinMacros.MACRO_ADI;
-        macros ~= BuiltinMacros.MACRO_SBI;
+        auto builtins = new BuiltinMacros();
+        macros ~= builtins.MACRO_ADI;
+        macros ~= builtins.MACRO_SBI;
+        macros ~= builtins.MACRO_YEET;
     }
 
     public void load_lex(Lexer.Result lexed) {
@@ -477,9 +479,9 @@ class Parser {
     }
 
     /** resolve a macro */
-    private Nullable!MacroDef resolve_macro(string name) {
+    public Nullable!MacroDef resolve_macro(string name) {
         // find the macro
-        foreach (macro_; macros.data) {
+        foreach (macro_; macros) {
             if (macro_.name == name) {
                 return Nullable!MacroDef(macro_);
             }
