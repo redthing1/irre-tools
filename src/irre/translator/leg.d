@@ -177,9 +177,13 @@ class LegTranslator {
             auto groups = matchFirst(directive, regex(`(?:.size\W)(?P<name>\w+),\W(?P<len>[0-9]+)`));
             auto name = groups["name"];
             auto size_str = groups["len"];
-            auto block_size = to!int(size_str);
-            result = format("%%d \\z %d ; %s", block_size, directive);
-            log_put(format("    inserted data block [%d] for '%s'", block_size, name));
+            try {
+                auto block_size = to!int(size_str);
+                result = format("%%d \\z %d ; %s", block_size, directive);
+                log_put(format("    inserted data block [%d] for '%s'", block_size, name));
+            } catch (ConvException) {
+                log_put(format("   unmatched: %s", directive));
+            }
         }
         return result;
     }
