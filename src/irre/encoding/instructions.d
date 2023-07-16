@@ -45,8 +45,8 @@ enum OpCode : ARG {
     JMI = 0x10, // unconditional jump (imm)
     JMP = 0x11, // unconditional jump (reg)
     BIF = 0x13, // branch if equal (imm)
-    BEQ = 0x14, // branch if equal (reg)
-    BNE = 0x15, // branch if not equal (reg)
+    BVE = 0x14, // branch if value-equal (reg)
+    BVN = 0x15, // branch if value-not-equal (reg)
     CAL = 0x1a, // branch, link in LR
     RET = 0x1b, // jump to LR
 
@@ -178,8 +178,8 @@ class InstructionEncoding {
             case OpCode.JMI: return InstructionInfo(OpCode.JMI, Operands.IMM, 1);
             case OpCode.JMP: return InstructionInfo(OpCode.JMP, Operands.REG, 1);
             case OpCode.BIF: return InstructionInfo(OpCode.BIF, Operands.REG_IMM_IMM, 1);
-            case OpCode.BEQ: return InstructionInfo(OpCode.BEQ, Operands.REG_REG_IMM, 1);
-            case OpCode.BNE: return InstructionInfo(OpCode.BNE, Operands.REG_REG_IMM, 1);
+            case OpCode.BVE: return InstructionInfo(OpCode.BEQ, Operands.REG_REG_IMM, 1);
+            case OpCode.BVN: return InstructionInfo(OpCode.BNE, Operands.REG_REG_IMM, 1);
             case OpCode.CAL: return InstructionInfo(OpCode.CAL, Operands.REG, 1);
             case OpCode.RET: return InstructionInfo(OpCode.RET, Operands.NONE, 1);
             // REGULAR_EXT device api

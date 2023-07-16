@@ -192,7 +192,7 @@ class VirtualMachine {
                 }
                 break;
             }
-        case OpCode.BEQ: {
+        case OpCode.BVE: {
                 immutable UWORD addr = reg[ins.a1];
                 // branch to @rA if rB == vC
                 immutable WORD a = reg[ins.a2];
@@ -203,7 +203,7 @@ class VirtualMachine {
                 }
                 break;
             }
-        case OpCode.BNE: {
+        case OpCode.BVN: {
                 immutable UWORD addr = reg[ins.a1];
                 // branch to @rA if rB != vC
                 immutable WORD a = reg[ins.a2];
