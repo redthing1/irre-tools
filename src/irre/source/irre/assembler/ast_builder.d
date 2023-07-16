@@ -61,6 +61,10 @@ class AstBuilder {
         ast.statements[0] = AbstractStatement(OpCode.JMI, cast(ValueArg) ValueRef(entry_label, 0));
     }
 
+    public void add_export_symbol(string symbol_name) {
+        ast.exported_symbols ~= Symbol(symbol_name);
+    }
+
     private AstBuilderException ast_builder_error(string message) {
         return new AstBuilderException(format("%s", message));
     }

@@ -17,9 +17,11 @@ class AstFreezerException : Exception {
 class AstFreezer {
     private ProgramAst source_ast;
     private ProgramAst frozen_ast;
+    private bool allow_extern;
 
-    this(ProgramAst source_ast) {
+    this(ProgramAst source_ast, bool allow_extern = false) {
         this.source_ast = source_ast;
+        this.allow_extern = allow_extern;
     }
 
     public ProgramAst get_frozen_ast() {

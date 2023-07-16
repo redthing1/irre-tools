@@ -6,6 +6,8 @@ import irre.encoding.instructions;
 import std.array;
 import std.string;
 import std.bitmanip;
+import std.exception;
+import std.string;
 
 /*
     the REGA file format
@@ -18,6 +20,15 @@ struct RegaHeader {
     ushort program_size;
 
     enum OFFSET = 4;
+}
+
+struct RegaSymbol {
+    char[] name;
+    int offset;
+}
+
+struct RegaSymbolTable {
+    RegaSymbol[] symbols;
 }
 
 /** IRRE-REGA binary format encoder */
@@ -46,6 +57,30 @@ class RegaEncoder {
         write_data_section(wr, ast);
 
         return wr.data;
+    }
+
+    private void write_symbol_table(ref Appender!(ubyte[]) wr, ref ProgramAst ast) {
+        import std.conv;
+
+        auto sym_table = RegaSymbolTable();
+
+        foreach (exp; ast.exported_symbols) {
+            // calculate offset of symbol
+            // do this by resolving the label to an offset
+            auto label_def = ast.resolve_label(exp.name);
+            enforce(!label_def.isNull, format("could not resolve symbol by label %s", exp.name));            
+            auto label_offset = label_def.get.offset;
+            auto sym = RegaSymbol(exp.name.to!(char[]), label_offset);
+
+            sym_table.symbols ~= sym;
+        }
+
+        // write binary symbol table
+        wr ~= encode_val(sym_table.symbols.length);
+        foreach (sym; sym_table.symbols) {
+            wr ~= cast(ubyte[]) sym.name;
+            wr ~= encode_val(sym.offset);
+        }
     }
 
     private void write_code_section(ref Appender!(ubyte[]) wr, ref ProgramAst ast) {
@@ -107,13 +142,16 @@ class RegaEncoder {
     private Instruction compile_statement(ref AbstractStatement statement, ref InstructionInfo info) {
         int get_arg_val(ValueArg arg) {
             if (arg.hasValue) {
-                return arg.peek!(ValueImm).val;
+                auto imm_val = arg.peek!(ValueImm);
+                enforce(imm_val, format("expected immediate value for argument %s", arg));
+                return imm_val.val;
             } else {
                 return 0;
             }
         }
 
         auto op = statement.op;
+        log_put(format("compiling statement: %s", statement));
         auto arg1 = get_arg_val(statement.a1);
         auto arg2 = get_arg_val(statement.a2);
         auto arg3 = get_arg_val(statement.a3);
@@ -144,10 +182,15 @@ class RegaEncoder {
         return Instruction(op, a1, a2, a3);
     }
 
+    private ubyte[] encode_val(T)(T val) {
+        return (cast(ubyte[]) nativeToLittleEndian(val)).dup;
+    }
+
     private ubyte[] encode_header(RegaHeader head) {
         auto wr = appender!(ubyte[]);
         wr ~= cast(ubyte[]) REGA_MAGIC; // magic
-        wr ~= cast(ubyte[]) nativeToLittleEndian(head.program_size);
+        // wr ~= cast(ubyte[]) nativeToLittleEndian(head.program_size);
+        wr ~= encode_val(head.program_size);
         return wr.data;
     }
 }
