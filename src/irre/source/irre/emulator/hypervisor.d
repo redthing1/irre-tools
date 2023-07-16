@@ -1,5 +1,6 @@
 module irre.emulator.hypervisor;
 
+import irre.util;
 import irre.emulator.vm;
 import irre.disassembler.reader;
 import irre.disassembler.dumper;
@@ -68,7 +69,7 @@ class Hypervisor {
         return true; // loop again
     }
 
-    void run() {
+    void run(long until = 0) {
         auto exec_st = true;
         while (exec_st) {
             // pre-instruction
@@ -98,13 +99,20 @@ class Hypervisor {
                 while (onestep_prompt()) {
                 }
             }
+
+            // check until condition
+            if (until > 0) {
+                if (vm.ticks >= until) {
+                    break;
+                }
+            }
         }
         // done.
 
         if (debug_mode) {
             dump_registers(true); // full dump
         }
-        writefln("halted after %d cycles with code $%04x.", vm.ticks, vm.reg[Register.R0]);
+        log_put(format("halted after %d cycles with code $%04x.", vm.ticks, vm.reg[Register.R0]));
         // add a final snapshot
         vm.commit_snapshot();
     }
