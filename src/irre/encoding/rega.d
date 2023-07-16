@@ -38,6 +38,8 @@ class RegaEncoder {
         auto data_block = 0;
         log_put(format("writing REGA_EXE with %d instructions, %d data blocks",
                 ast.statements.length, ast.data_blocks.length));
+
+        /** write any pending data blocks that begin at this offset */
         bool write_next_data_blocks() {
             if (data_block < ast.data_blocks.length
                     && global_offset >= ast.data_blocks[data_block].offset) {
