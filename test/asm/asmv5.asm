@@ -37,7 +37,7 @@ func1:
     ret
 
 func2:
-    ; test setting 32-bit immediates
+    ; test setting 32-bit immediates (should be 0xaabbccdd)
     set r9 $ccdd  ; set lower 16 bits
     sup r9 $aabb  ; set upper 16 bits
     ret
