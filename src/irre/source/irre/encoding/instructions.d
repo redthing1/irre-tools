@@ -200,17 +200,6 @@ class InstructionEncoding {
             // case OpCode.LDB: return InstructionInfo(OpCode.LDB, Operands.REG_REG, 1);
             // case OpCode.STB: return InstructionInfo(OpCode.STB, Operands.REG_REG, 1);
             
-            case OpCode.ASI: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
-            case OpCode.SUP: return InstructionInfo(OpCode.SUP, Operands.REG_IMM, 1);
-            case OpCode.SXT: return InstructionInfo(OpCode.SXT, Operands.REG_REG, 1);
-
-            case OpCode.MUL: return InstructionInfo(OpCode.MUL, Operands.REG_REG_REG, 1);
-            case OpCode.DIV: return InstructionInfo(OpCode.DIV, Operands.REG_REG_REG, 1);
-            case OpCode.MOD: return InstructionInfo(OpCode.MOD, Operands.REG_REG_REG, 1);
-
-            // REGULAR_AD instruction set
-            case OpCode.HLT: return InstructionInfo(OpCode.HLT, Operands.NONE, 1);
-            case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.IMM, 1);
             // IRRE instruction set
             case OpCode.JMI: return InstructionInfo(OpCode.JMI, Operands.IMM, 1);
             case OpCode.JMP: return InstructionInfo(OpCode.JMP, Operands.REG, 1);
@@ -219,6 +208,19 @@ class InstructionEncoding {
             case OpCode.BVN: return InstructionInfo(OpCode.BVN, Operands.REG_REG_IMM, 1);
             case OpCode.CAL: return InstructionInfo(OpCode.CAL, Operands.REG, 1);
             case OpCode.RET: return InstructionInfo(OpCode.RET, Operands.NONE, 1);
+            case OpCode.HLT: return InstructionInfo(OpCode.HLT, Operands.NONE, 1);
+            case OpCode.INT: return InstructionInfo(OpCode.INT, Operands.IMM, 1);
+
+            // IRRE utility extensions
+            case OpCode.ASI: return InstructionInfo(OpCode.ASI, Operands.REG_IMM_IMM, 1);
+            case OpCode.SUP: return InstructionInfo(OpCode.SUP, Operands.REG_IMM, 1);
+            case OpCode.SXT: return InstructionInfo(OpCode.SXT, Operands.REG_REG, 1);
+
+            // IRRE math extensions
+            case OpCode.MUL: return InstructionInfo(OpCode.MUL, Operands.REG_REG_REG, 1);
+            case OpCode.DIV: return InstructionInfo(OpCode.DIV, Operands.REG_REG_REG, 1);
+            case OpCode.MOD: return InstructionInfo(OpCode.MOD, Operands.REG_REG_REG, 1);
+
             // REGULAR_EXT device api
             case OpCode.SND: return InstructionInfo(OpCode.SND, Operands.REG_REG_REG, 1);
             // dfmt on
