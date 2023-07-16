@@ -7,6 +7,7 @@ import irre.util;
 
 class PingDevice : Device {
     enum Command : WORD {
+        ECHO = 0x00,
         PING = 0x01,
         COUNT = 0x02,
     }
@@ -17,6 +18,9 @@ class PingDevice : Device {
         log_put(format("[PING] recieved (command: %d, data: %d)", command, data));
 
         switch (command) {
+        case Command.ECHO: {
+                return data;
+            }
         case Command.PING: {
                 ping_count++;
                 return 0; // success
