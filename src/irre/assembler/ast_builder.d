@@ -52,6 +52,27 @@ class AstBuilder {
         ast.statements[0] = AbstractStatement(OpCode.JMI, cast(ValueArg) ValueRef(entry_label, 0));
     }
 
+    /** define a label */
+    public void define_label(SectionId section, string name) {
+        ast.labels ~= LabelDef(section, name, (*get_section_info(section)).length);
+    }
+
+    /** resolve a macro */
+    public Nullable!MacroDef resolve_macro(string name) {
+        // find the macro
+        foreach (macro_; ast.macros) {
+            if (macro_.name == name) {
+                return Nullable!MacroDef(macro_);
+            }
+        }
+        return Nullable!MacroDef.init;
+    }
+
+    private AstBuilderException ast_builder_error(string message) {
+        return new AstBuilderException(format("%s", message));
+    }
+
+    /** convert all value references in instructions to immediate values (compute all offsets, replacing symbols) */
     public void freeze_references() {
         auto unresolved_statements = ast.statements;
         auto resolved_statements = rewrite_statements_resolved(unresolved_statements);
@@ -60,7 +81,6 @@ class AstBuilder {
         ast.statements ~= resolved_statements;
     }
 
-    /** convert all value references in instructions to immediate values (compute all offsets, replacing symbols) */
     private AbstractStatement[] rewrite_statements_resolved(AbstractStatement[] statements) {
         auto resolved_statements = appender!(AbstractStatement[]);
         foreach (unresolved; statements) {
@@ -85,22 +105,6 @@ class AstBuilder {
         return ValueImm(val);
     }
 
-    /** define a label */
-    public void define_label(SectionId section, string name) {
-        ast.labels ~= LabelDef(section, name, (*get_section_info(section)).length);
-    }
-
-    /** resolve a macro */
-    public Nullable!MacroDef resolve_macro(string name) {
-        // find the macro
-        foreach (macro_; ast.macros) {
-            if (macro_.name == name) {
-                return Nullable!MacroDef(macro_);
-            }
-        }
-        return Nullable!MacroDef.init;
-    }
-
     /** resolve a label */
     private LabelDef resolve_label(string name) {
         // find the label
@@ -110,9 +114,5 @@ class AstBuilder {
             }
         }
         throw ast_builder_error(format("label could not be resolved: %s", name));
-    }
-
-    private AstBuilderException ast_builder_error(string message) {
-        return new AstBuilderException(format("%s", message));
     }
 }
