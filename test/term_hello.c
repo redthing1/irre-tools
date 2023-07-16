@@ -1,4 +1,5 @@
-char msg[10];
+#define MSG_SZ 10
+char msg[MSG_SZ];
 
 void load_data() {
     msg[0] = 'h';  // h
@@ -37,7 +38,7 @@ int main()
     load_data();
     volatile char* h_term = term_init();
     int device_id = 1; // terminal device
-    term_write(h_term, msg, 10);
+    term_write(h_term, msg, MSG_SZ);
     term_flush();
 
     return 0;
