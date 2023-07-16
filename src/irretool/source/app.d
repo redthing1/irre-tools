@@ -47,6 +47,7 @@ void main(string[] raw_args) {
                 .add(new Argument("input", "input file"))
                 .add(new Flag("d", "debug", "debug mode"))
                 .add(new Flag("s", "step", "step mode")))
+                .add(new Flag("c", "commitlog", "enable commit log"))
         .parse(raw_args);
 
     verbose = args.flag("verbose");
@@ -186,6 +187,7 @@ int cmd_emu(ProgramArgs args) {
     auto input = args.arg("input");
     auto debug_mode = args.flag("debug");
     auto step_mode = args.flag("step");
+    auto log_commits = args.flag("commitlog");
 
     writefln("[IRRE] emulator v%s", Meta.VERSION);
 
@@ -208,6 +210,11 @@ int cmd_emu(ProgramArgs args) {
     // add basic IO support
     hyp.add_default_devices();
     hyp.add_debug_interrupt_handlers();
+
+    // configure
+    if (log_commits) {
+        hyp.enable_commit_log();
+    }
 
     // start the emulator
     hyp.run();

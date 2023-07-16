@@ -4,6 +4,7 @@ public import irre.encoding.instructions;
 import irre.encoding.rega;
 import std.algorithm.mutation;
 import irre.emulator.device;
+import irre.emulator.commit;
 
 enum REGISTER_COUNT = 37;
 enum MEMORY_SIZE = 64 * 1024; // 65K
@@ -17,6 +18,8 @@ class VirtualMachine {
     public Device[int] devices;
     private int device_id_counter = 0;
     public void delegate(UWORD) custom_interrupt_handler;
+    public bool log_commits;
+    public CommitTrace commit_trace;
 
     enum BranchStatus {
         NO_BRANCH,
@@ -306,5 +309,27 @@ class VirtualMachine {
             auto mem_i = addr + i;
             buffer[i] = mem[mem_i];
         }
+    }
+
+    public Snapshot snapshot() {
+        return Snapshot(reg, mem);
+    }
+
+    public void commit_snapshot() {
+        if (!log_commits) return;
+
+        commit_trace.snapshots ~= snapshot();
+    }
+
+    public void commit_reg(UWORD reg_id, UWORD reg_val) {
+        if (!log_commits) return;
+
+        commit_trace.commits ~= Commit.from_reg(reg_id, reg_val);
+    }
+
+    public void commit_mem(UWORD mem_addr, UWORD mem_val) {
+        if (!log_commits) return;
+
+        commit_trace.commits ~= Commit.from_mem(mem_addr, mem_val);
     }
 }

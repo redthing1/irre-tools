@@ -105,6 +105,8 @@ class Hypervisor {
             dump_registers(true); // full dump
         }
         writefln("halted after %d cycles with code $%04x.", vm.ticks, vm.reg[Register.R0]);
+        // add a final snapshot
+        vm.commit_snapshot();
     }
 
     void dump_registers(bool full) {
@@ -159,5 +161,11 @@ class Hypervisor {
             writefln("[cmd] command '%s' not recognized.", command);
             break;
         }
+    }
+
+    void enable_commit_log() {
+        vm.log_commits = true;
+        // add an initial snapshot
+        vm.commit_snapshot();
     }
 }
