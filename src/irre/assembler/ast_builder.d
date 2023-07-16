@@ -1,4 +1,4 @@
-module irre.assembler.astbuilder;
+module irre.assembler.ast_builder;
 
 import irre.assembler.ast;
 import std.typecons;

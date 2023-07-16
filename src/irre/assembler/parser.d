@@ -3,7 +3,7 @@ module irre.assembler.parser;
 import irre.util;
 import irre.assembler.lexer;
 public import irre.assembler.ast;
-public import irre.assembler.astbuilder;
+public import irre.assembler.ast_builder;
 import irre.assembler.builtins;
 import irre.encoding.instructions;
 import std.array;
