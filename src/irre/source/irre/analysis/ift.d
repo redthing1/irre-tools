@@ -184,8 +184,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
         }
 
         long find_commit_last_touching(InfoNode node, long from_commit) {
-            switch (node.type) {
-            case InfoType.Register:
+            if (node.type & InfoType.Register) {
                 // go back through commits until we find one whose results modify this TRegSet
                 for (auto i = from_commit; i >= 0; i--) {
                     auto commit = &trace.commits[i];
@@ -206,8 +205,7 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                     // so there's no commit from it because it was before initial
                     return -1;
                 }
-                break;
-            case InfoType.Memory:
+            } else if (node.type & InfoType.Memory) {
                 // go back through commits until we find one whose results modify this memory
                 for (auto i = from_commit; i >= 0; i--) {
                     auto commit = &trace.commits[i];
@@ -227,9 +225,8 @@ template IFTAnalysis(TRegWord, TMemWord, TRegSet, int register_count) {
                     // this means the memory was already in place
                     return -1;
                 }
-                break;
-            default:
-                assert(0);
+            } else {
+                assert(0, format("we don't know how to find a last commit touching a node of type %s", node.type));
             }
             assert(0, format("could not find touching commit for node: %s, commit <= #%d", node, from_commit));
         }
