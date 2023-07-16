@@ -54,6 +54,7 @@ enum OpCode : ARG {
     SND = 0xfd,
 }
 
+enum REGISTER_COUNT = 37;
 enum Register : ARG {
     R0 = 0x00,
     R1 = 0x01,
