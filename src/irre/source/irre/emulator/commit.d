@@ -176,6 +176,23 @@ struct Commit {
     }
 }
 
+struct InfoSource {
+    InfoNode node;
+    long commit_id;
+
+    string toString() const {
+        import std.string : format;
+        import std.conv : to;
+        import std.array : appender, array;
+
+        auto sb = appender!string;
+
+        sb ~= format("InfoSource(node: %s, commit_id: %s", node, commit_id);
+
+        return sb.array;
+    }
+}
+
 struct CommitTrace {
     public Snapshot[] snapshots;
     public Commit[] commits;
