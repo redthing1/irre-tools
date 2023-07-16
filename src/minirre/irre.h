@@ -7,12 +7,13 @@
 
 #define IRRE_INSTRUCTION_SIZE 4
 
-#define IRRE_BYTE uint8_t
+#define IRRE_BYTE int8_t
+#define IRRE_UBYTE uint8_t
 #define IRRE_WORD int32_t
 #define IRRE_UWORD uint32_t
 
 #define IRRE_ARG IRRE_BYTE
-#define IRRE_OPCODE IRRE_ARG
+#define IRRE_OPCODE IRRE_UBYTE
 
 /* OPCODE and REG definitions */
 
@@ -120,7 +121,7 @@ typedef struct {
 void irre_init(IrreState *state);
 
 /** load a program into memory */
-void irre_load(IrreState *state, IRRE_BYTE *program, IRRE_UWORD size);
+void irre_load(IrreState *state, IRRE_UBYTE *program, IRRE_UWORD size);
 
 /** fetch the next instruction */
 IRRE_WORD irre_fetch(IrreState *state);

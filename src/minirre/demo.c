@@ -2,16 +2,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define IRRE_DEMO_MEMORY_SIZE (1024 * 16)
+#define IRRE_DEMO_MEMORY_SIZE (1024 * 64) // 64 KB
 IrreState vm_state;
+IRRE_BYTE vm_memory[IRRE_DEMO_MEMORY_SIZE];
 
-uint8_t *read_file(const char *filename, size_t *size);
+uint8_t *read_file(char *filename, size_t *size);
 
 void handle_irre_interrupt(IRRE_UWORD code) {
   printf("[%s] code: %d\n", __func__, code);
 }
 
 void handle_irre_error(IrreError err) {
+  vm_state.executing = false;
   printf("[%s] error: $%02x\n", __func__, err);
 }
 
@@ -22,21 +24,28 @@ void handle_irre_device(IRRE_UWORD device_id, IRRE_UWORD device_command,
 }
 
 int main(int argc, char **argv) {
-  if (argc != 2) {
-    printf("usage: %s <filename>\n", argv[0]);
+  bool debug = false;
+  char *filename = NULL;
+
+  if (argc < 2) {
+    printf("usage: %s <filename> [debug]\n", argv[0]);
     return 1;
+  }
+  filename = argv[1];
+  if (argc > 2 && argv[2][0] == 'd') {
+    debug = true;
   }
 
   // load the binary
   size_t binary_size;
-  uint8_t *binary = read_file(argv[1], &binary_size);
+  uint8_t *binary = read_file(filename, &binary_size);
   if (!binary) {
     return 1;
   }
 
   // check the header
   if (binary[0] != 'r' || binary[1] != 'g') {
-    printf("[%s] file %s is not a valid binary\n", __func__, argv[1]);
+    printf("[%s] file %s is not a valid binary\n", __func__, filename);
     return 1;
   }
 
@@ -45,7 +54,6 @@ int main(int argc, char **argv) {
   uint8_t *program = binary + 4;
 
   // create the vm
-  IRRE_BYTE vm_memory[IRRE_DEMO_MEMORY_SIZE];
   vm_state.m = vm_memory;
   vm_state.mem_size = IRRE_DEMO_MEMORY_SIZE;
   printf("[%s] initializing vm (memory size: %d)\n", __func__,
@@ -61,16 +69,18 @@ int main(int argc, char **argv) {
   printf("[%s] executing\n", __func__);
 
   for (size_t step = 0; vm_state.executing; step++) {
-    // debug: show instruction
-    IRRE_UWORD pc = vm_state.r[REG_PC];
-    IRRE_WORD raw_instruction = irre_fetch(&vm_state);
-    IrreInstruction instruction = irre_decode(raw_instruction);
-    printf("[%s] step %zu:\n", __func__, step);
-    printf("[%s]   pc: $%04x\n", __func__, pc);
-    printf("[%s]   raw instruction: $%08x\n", __func__, raw_instruction);
-    printf("[%s]   instruction: op=$%02x a1=$%02x a2=$%02x a3=$%02x\n", __func__,
-           instruction.opcode, instruction.a1, instruction.a2, instruction.a3);
-
+    if (debug) {
+      // debug: show instruction
+      IRRE_UWORD pc = vm_state.r[REG_PC];
+      IRRE_WORD raw_instruction = irre_fetch(&vm_state);
+      IrreInstruction instruction = irre_decode(raw_instruction);
+      printf("[%s] step %zu:\n", __func__, step);
+      printf("[%s]   pc: $%04x\n", __func__, pc);
+      printf("[%s]   raw instruction: $%08x\n", __func__, raw_instruction);
+      printf("[%s]   instruction: op=$%02x a1=$%02x a2=$%02x a3=$%02x\n",
+             __func__, instruction.opcode, instruction.a1, instruction.a2,
+             instruction.a3);
+    }
     // step
     irre_step(&vm_state);
   }
@@ -84,7 +94,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-uint8_t *read_file(const char *filename, size_t *size) {
+uint8_t *read_file(char *filename, size_t *size) {
   FILE *f = fopen(filename, "rb");
   if (!f) {
     printf("[%s] could not open file %s\n", __func__, filename);

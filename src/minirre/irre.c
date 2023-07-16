@@ -13,7 +13,7 @@ void irre_init(IrreState *state) {
   state->executing = false;
 }
 
-void irre_load(IrreState *state, IRRE_BYTE *program, IRRE_UWORD size) {
+void irre_load(IrreState *state, IRRE_UBYTE *program, IRRE_UWORD size) {
   // copy the program into memory
   memcpy(state->m, program, size);
   // set the program counter
