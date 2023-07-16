@@ -14,7 +14,7 @@ enum CharType {
     NUMERIC = 1 << 1, // 123
     SPACE = 1 << 2, // ' '
     ARGSEP = 1 << 3, // ','
-    NUM_SPECIAL = 1 << 4, // '$'
+    NUM_SPECIAL = 1 << 4, // '$', '#'
     MARK = 1 << 5, // ':'
     QUOT = 1 << 6, // '''
     BIND = 1 << 7, // '@'
@@ -162,7 +162,7 @@ class Lexer {
         }
         // now categories
         auto type = CharType.UNKNOWN;
-        if ((c >= 'a' && c <= 'f')) {
+        if ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
             type |= CharType.NUMERIC_HEX;
         }
         if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {

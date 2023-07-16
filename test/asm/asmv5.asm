@@ -32,14 +32,15 @@ main:
     hlt
 
 func1:
-    set r7 $ff
+    set r7 $ff  ; set to numeric hex constant
+    set r7 $FF   ; make sure we can use capitalized hex letters
     ret
 
 func2:
     ; test setting 32-bit immediates
     ; set instruction only takes 24 bits, so we have to use set then asi
-    set r9 $BBCCDD  ; set lower 24 bits
-    asi r9 $AA #24  ; set upper 8 bits
+    set r9 $bbccdd  ; set lower 24 bits
+    asi r9 $aa #24  ; set upper 8 bits
     ret
 
 ; indicate that items here should be placed in the data section
