@@ -80,11 +80,19 @@ class RegaEncoder {
         return wr.data;
     }
 
+    private int get_arg_val(ValueArg arg) {
+        if (arg.hasValue) {
+            return arg.peek!(ValueImm).val;
+        } else {
+            return 0;
+        }
+    }
+
     Instruction compile(ref AbstractStatement statement, ref InstructionInfo info) {
         auto op = statement.op;
-        auto arg1 = statement.a1.peek!(ValueImm).val;
-        auto arg2 = statement.a2.peek!(ValueImm).val;
-        auto arg3 = statement.a3.peek!(ValueImm).val;
+        auto arg1 = get_arg_val(statement.a1);
+        auto arg2 = get_arg_val(statement.a2);
+        auto arg3 = get_arg_val(statement.a3);
 
         auto a1 = cast(ARG) arg1;
         auto a2 = cast(ARG) arg2;

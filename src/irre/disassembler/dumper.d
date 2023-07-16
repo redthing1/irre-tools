@@ -8,6 +8,7 @@ import std.string;
 import std.uni;
 import std.conv;
 import std.array;
+import std.variant;
 
 class DumperException : Exception {
     this(string msg, string file = __FILE__, size_t line = __LINE__) {
@@ -44,12 +45,27 @@ class Dumper {
         // based on operand type, format each arg
 
         int imm_arg_val(ValueArg arg) {
-            return arg.peek!(ValueImm).val;
+            if (arg.hasValue) {
+                return arg.peek!(ValueImm).val;
+            } else {
+                return 0;
+            }
+        }
+
+        bool imm_arg_has_val(ValueArg arg) {
+            return arg.peek!(ValueImm) !is null;
         }
 
         string format_imm_arg(ValueArg arg) {
-            auto v = imm_arg_val(arg);
-            return format("$%02x", v);
+            string fmt;
+            if (arg.hasValue) {
+                arg.visit!((ValueImm imm) => { fmt = format("$%02x", imm.val); }, (ValueRef ref_) => {
+                    fmt = format("::%s", ref_.label);
+                });
+            } else {
+                fmt = format("$%02x", 0); // no value here
+            }
+            return fmt;
         }
 
         string format_reg_arg(ValueArg arg) {
@@ -117,14 +133,14 @@ class Dumper {
         bool trd_imm = (info.operands & Operands.K_I3) > 0;
         bool big_imm16 = snd_imm && !trd_imm;
         bool big_imm24 = fst_imm && !snd_imm && !trd_imm;
-        if (big_imm24) {
+        if (imm_arg_has_val(node.a1) && big_imm24) {
             auto val = imm_arg_val(node.a1) | imm_arg_val(node.a2) << 8 | imm_arg_val(node.a3) << 16;
             append_arg(format("$%06x", val));
         } else {
             if (fst_imm) {
                 append_arg(a1);
             }
-            if (big_imm16) {
+            if (imm_arg_has_val(node.a2) && big_imm16) {
                 auto val = imm_arg_val(node.a2) | imm_arg_val(node.a3) << 8;
                 append_arg(format("$%04x", val));
             } else {
