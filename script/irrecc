@@ -61,13 +61,21 @@ def cli(
     cc_command = chcc.bake(*cc_args, *input, f"-o", f"{asm_output_file}")
     if verbose:
         print(cc_command)
-    cc_command(_fg=True)
+    try:
+        cc_command(_fg=True)
+    except sh.ErrorReturnCode as e:
+        print(e)
+        sys.exit(1)
 
     # use irretool to compile ire assembly to binary
     irre_command = irretool.bake("asm", f"{output}.ire", f"{output}")
     if verbose:
         print(irre_command)
-    irre_command(_fg=True)
+    try:
+        irre_command(_fg=True)
+    except sh.ErrorReturnCode as e:
+        print(e)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
