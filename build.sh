@@ -1,7 +1,7 @@
 # set -e
 
-# 0. preparations
-git submodule update --init --recursive
+# # 0. preparations
+# git submodule update --init --recursive
 
 # 1. build compiler
 pushd tools/vbcc
