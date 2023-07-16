@@ -113,7 +113,7 @@ class Hypervisor {
             dump_registers(true); // full dump
         }
         log_put(format("halted after %d cycles with code $%04x (#%04d).",
-            vm.ticks, vm.reg[Register.R0], vm.reg[Register.R0]));
+                vm.ticks, vm.reg[Register.R0], vm.reg[Register.R0]));
         // add a final snapshot
         vm.commit_snapshot();
     }
@@ -152,8 +152,28 @@ class Hypervisor {
         writefln("\n=== === ===");
     }
 
+    void dump_memory_at(UWORD addr, UWORD size) {
+        writefln("== memory dump ==");
+        // show this as a per-byte hexdump
+        // 00000000: abcd ef12 3456 789a
+        // etc.
+        for (UWORD i = 0; i < size; i += 16) {
+            writef("%08x: ", addr + i);
+            for (UWORD j = 0; j < 16; j += 2) {
+                immutable BYTE b1 = vm.mem[addr + i + j];
+                immutable BYTE b2 = vm.mem[addr + i + j + 1];
+                writef("%02x%02x ", b1, b2);
+            }
+            writefln("");
+        }
+        writefln("\n=== === ===");
+    }
+
     void run_command(string command) {
-        switch (command) {
+        // split command
+        auto cmd = command.split(" ");
+        auto cmd_name = cmd[0];
+        switch (cmd_name) {
         case "stk":
             dump_stack();
             break;
@@ -168,6 +188,16 @@ class Hypervisor {
         case "s0":
             writefln("[cmd] ONESTEP = 0");
             onestep_mode = false;
+            break;
+        case "mem":
+            // expect: mem <addr> <size>
+            if (cmd.length < 3) {
+                writefln("[cmd] mem <$addr> <size>");
+                break;
+            }
+            auto addr = (cmd[1].replace("$", "")).to!UWORD(16);
+            auto size = cmd[2].to!UWORD();
+            dump_memory_at(addr, size);
             break;
         default:
             writefln("[cmd] command '%s' not recognized.", command);
