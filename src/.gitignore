@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/irre-tools
+irre-tools.so
+irre-tools.dylib
+irre-tools.dll
+irre-tools.a
+irre-tools.lib
+irre-tools-test-*
+*.exe
+*.o
+*.obj
+*.lst
