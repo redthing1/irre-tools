@@ -75,7 +75,9 @@ class Parser {
     private Appender!(MacroDef[]) macros;
     private Appender!(LabelDef[]) labels;
 
-    public ProgramAst parse(Lexer.Result lexed) {
+    public ProgramAst parse(Lexer.Result lexer_result) {
+        this.lexed = lexer_result;
+
         string entry_label;
 
         auto statements = appender!(AbstractStatement[]);
@@ -247,7 +249,7 @@ class Parser {
         auto token = peek_token();
         if ((token.kind & type) > 0) {
             // expected token found
-            return token;
+            return take_token();
         } else {
             throw parser_error(format("expected %s but got %s",
                     to!string(type), to!string(token.kind)));
