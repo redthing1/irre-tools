@@ -46,6 +46,7 @@ class VirtualMachine {
         BREAK = 0xa0,
         MEMORY_FAULT = 0xa1,
         ILLEGAL_INSTRUCTION = 0xa2,
+        UNKNOWN_DEVICE = 0xa3,
     }
 
     public void initialize() {
@@ -500,7 +501,7 @@ class VirtualMachine {
                     reg[ins.a3] = result;
                 } else {
                     // requested a device that was not found
-                    // TODO: UNK_DEVICE interrupt
+                    interrupt(DebugInterrupts.UNKNOWN_DEVICE);
                 }
 
                 // commit

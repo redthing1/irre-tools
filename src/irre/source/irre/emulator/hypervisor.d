@@ -63,6 +63,12 @@ class Hypervisor {
             // dump_stack();
             debug_prompt_loop();
             break;
+        case VirtualMachine.DebugInterrupts.UNKNOWN_DEVICE:
+            writefln("[int] UNKNOWN DEVICE");
+            dump_registers(true); // full dump
+            // dump_stack();
+            debug_prompt_loop();
+            break;
         default: {
                 writefln("[int] unhandled interrupt %d", code);
                 break;
