@@ -228,6 +228,23 @@ class VirtualMachine {
                 commit_mem([pos0, pos1, pos2, pos3], [mem[pos0], mem[pos1], mem[pos2], mem[pos3]], sources);
                 break;
             }
+        case OpCode.ASI: {
+            immutable ubyte val = ins.a2;
+            immutable byte shift = ins.a3;
+
+            if (shift >= 0 && shift < 32) {
+                UWORD shifted = val << shift;
+                reg[ins.a1] = reg[ins.a1] + shifted;
+            }
+
+            auto source_regs = commit_source_regs([ins.a1], [reg[ins.a1]]);
+            auto source_imm = [
+                Commit.Source(InfoType.Immediate, ImmediatePosB, val),
+                Commit.Source(InfoType.Immediate, ImmediatePosC, shift)];
+            auto sources = source_regs ~ source_imm;
+            commit_reg(ins.a1, reg[ins.a1], sources);
+            break;
+        }
         case OpCode.JMI: {
                 immutable UWORD addr = cast(UWORD)((ins.a1) | (ins.a2 << 8) | (ins.a3) << 16);
                 reg[Register.PC] = addr;
