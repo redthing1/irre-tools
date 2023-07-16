@@ -6,6 +6,7 @@ import std.conv;
 import std.algorithm;
 import std.range;
 import std.container.dlist;
+import core.time : MonoTime, Duration;
 
 import irre.util;
 import irre.emulator.commit;
@@ -19,6 +20,10 @@ class IFTAnalyzer {
     Commit clobber;
     InfoSources[Register] clobbered_regs_sources;
     InfoSources[UWORD] clobbered_mem_sources;
+    long log_visited_info_nodes;
+    long log_commits_walked;
+    // Duration log_analysis_time;
+    ulong log_analysis_time;
 
     this(CommitTrace commit_trace) {
         trace = commit_trace;
@@ -33,11 +38,21 @@ class IFTAnalyzer {
      * @return the analysis result
      */
     void analyze() {
+        MonoTime tmr_start = MonoTime.currTime;
+
         snap_init = trace.snapshots[0];
         snap_final = trace.snapshots[1];
 
+        log_visited_info_nodes = 0;
+        log_commits_walked = 0;
+
         analyze_clobber();
         analyze_flows();
+
+        MonoTime tmr_end = MonoTime.currTime;
+        auto elapsed = tmr_end - tmr_start;
+
+        log_analysis_time = elapsed.total!"usecs";
     }
 
     void dump_commits() {
@@ -76,6 +91,7 @@ class IFTAnalyzer {
 
         for (auto i = last_commit_ix; i >= 0; i--) {
             auto commit = trace.commits[i];
+            log_commits_walked++;
 
             // look at sources of this commit
             for (auto j = 0; j < commit.sources.length; j++) {
@@ -111,6 +127,7 @@ class IFTAnalyzer {
     long find_last_commit_at_pc(UWORD pc_val, long from_commit) {
         for (auto i = from_commit; i >= 0; i--) {
             auto commit = &trace.commits[i];
+            log_commits_walked++;
             if (commit.pc == pc_val) {
                 return i;
             }
@@ -125,6 +142,7 @@ class IFTAnalyzer {
             // go back through commits until we find one whose results modify this register
             for (auto i = from_commit; i >= 0; i--) {
                 auto commit = &trace.commits[i];
+                log_commits_walked++;
                 for (auto j = 0; j < commit.reg_ids.length; j++) {
                     if (commit.reg_ids[j] == node.data) {
                         // the register id in the commit results is the same as the reg id in the info node we are searching
@@ -146,6 +164,7 @@ class IFTAnalyzer {
             // go back through commits until we find one whose results modify this memory
             for (auto i = from_commit; i >= 0; i--) {
                 auto commit = &trace.commits[i];
+                log_commits_walked++;
                 for (auto j = 0; j < commit.mem_addrs.length; j++) {
                     if (commit.mem_addrs[j] == node.data) {
                         // the memory address in the commit results is the same as the mem addr in the info node we are searching
@@ -197,6 +216,7 @@ class IFTAnalyzer {
             visited[curr] = true;
 
             log_put(format("  visiting: node: %s, commit pos: %s", curr.node, curr.commit_ix));
+            log_visited_info_nodes += 1;
 
             if (curr.node.type == InfoType.Immediate || curr.node.type == InfoType.Device) {
                 // we found raw source data, no dependencies
@@ -222,7 +242,7 @@ class IFTAnalyzer {
 
             auto touching_commit = trace.commits[touching_commit_ix];
             log_put(format("   found last touching commit (#%s) for node: %s: %s",
-                touching_commit_ix, curr, touching_commit));
+                    touching_commit_ix, curr, touching_commit));
 
             // get all dependencies of this commit
             auto deps = touching_commit.sources.reverse;
@@ -321,11 +341,14 @@ class IFTAnalyzer {
         // dump backtraces
         writefln(" backtraces:");
 
+        long log_found_sources = 0;
+
         // registers
         foreach (reg_id; clobbered_regs_sources.byKey) {
             writefln("  reg %s:", reg_id);
             foreach (source; clobbered_regs_sources[reg_id]) {
                 writefln("   %s", source);
+                log_found_sources++;
             }
         }
 
@@ -334,7 +357,18 @@ class IFTAnalyzer {
             writefln("  mem[%04x]:", mem_addr);
             foreach (source; clobbered_mem_sources[mem_addr]) {
                 writefln("   %s", source);
+                log_found_sources++;
             }
         }
+
+        // summary
+        writefln(" summary:");
+        writefln("  num commits:            %8d", trace.commits.length);
+        writefln("  registers traced:       %8d", clobber.reg_ids.length);
+        writefln("  memory traced:          %8d", clobber.mem_addrs.length);
+        writefln("  found sources:          %8d", log_found_sources);
+        writefln("  walked info:            %8d", log_visited_info_nodes);
+        writefln("  walked commits:         %8d", log_commits_walked);
+        writefln("  analysis time:          %7ss", (cast(double) log_analysis_time / 1_000_000));
     }
 }
