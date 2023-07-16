@@ -19,6 +19,7 @@ class Hypervisor {
     public bool debug_mode;
     public bool onestep_mode;
     public bool full_regdump = false;
+    public bool print_commits = false;
     public Reader reader;
     public Dumper dumper;
 
@@ -36,11 +37,12 @@ class Hypervisor {
     }
 
     void add_debug_interrupt_handlers() {
-        vm.custom_interrupt_handler = &interrupt;
-        vm.custom_halt_handler = &halt;
+        vm.custom_interrupt_handler = &interrupt_handler;
+        vm.custom_halt_handler = &halt_handler;
+        vm.custom_commit_handler = &commit_handler;
     }
 
-    void interrupt(UWORD code) {
+    void interrupt_handler(UWORD code) {
         switch (code) {
         case VirtualMachine.DebugInterrupts.BREAK:
             writefln("[int] BREAK");
@@ -69,8 +71,14 @@ class Hypervisor {
         }
     }
 
-    void halt(UWORD code) {
+    void halt_handler(UWORD code) {
         writefln("[halt] code %d", code);
+    }
+
+    void commit_handler(Commit commit) {
+        if (print_commits) {
+            writefln("[commit] %s", commit);
+        }
     }
 
     bool onestep_prompt() {
