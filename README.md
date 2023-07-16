@@ -27,7 +27,7 @@ install dependencies:
 
 tools you now have:
 + `./src/irretool/irretool` (irre multitool)
-+ `./tools/vbcc/bin/vbccirre` (c->irre cross compiler)
++ `./tools/chcc/chibicc` (c->irre compiler)
 
 ## compile a C program
 
@@ -59,11 +59,11 @@ now build and run:
 
 1. run a compiled program and log commits and snapshots
 
-```
+```sh
 ./src/irretool/irretool -v emu --commit-log --save-commits t1_trace.bin my_prog.bin
 ```
 2. run analyzer
 
-```
+```sh
 ./src/irretool/irretool analyze --ift --pl --pl-threads 4 --ift-graph --ift-graph-analysis --ift-save-graph t1_graph.dot t1_trace.bin
 ```
