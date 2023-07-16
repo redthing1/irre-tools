@@ -9,7 +9,7 @@ toy handwritten assembler, emulator, compiler, toolchain for a lightweight RISC 
 
 documentation and specifications ([arch](doc/arch.md), [asm](doc.asm.md)) are available in [doc](doc/).
 
-## hacking
+## setup
 
 grab submodules:
 ```sh
@@ -17,8 +17,8 @@ git submodule update --init --recursive
 ```
 
 install dependencies:
-+ c compiler
-+ dlang compiler + dub
++ C compiler
++ [D compiler](https://dlang.org/download.html)
 
 ### quickstart build
 ```sh
@@ -30,22 +30,7 @@ tools you now have:
 + `$IRRE/irretool` (irre multitool)
 + `$VBCC/bin/vbccirre` (c->irre cross compiler)
 
-### full build
-build the irre multitool `irretool`
-```sh
-cd src/irretool
-dub build
-```
-
-build the custom vbcc port for IRRE:
-```sh
-export VBCC=$(pwd)/tools/vbcc
-cd tools/vbcc
-mkdir -p bin
-make TARGET=irre all bin/vbccirre # press enter for default answers
-```
-
-### compile a C program
+## compile a C program
 
 ```c
 // my_prog.c
@@ -70,3 +55,14 @@ now build and run:
 # run
 $IRRE/irretool -v emu my_prog.bin
 ```
+
+## run flow tracking
+
+1. run a compiled program and log commits and snapshots
+
+```
+$IRRE/irretool -v emu --commit-log --save-commits t1_trace.bin my_prog.bin
+```
+2. run analyzer
+
+
