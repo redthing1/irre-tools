@@ -6,7 +6,7 @@ license "proprietary"
 dependency "d-graphviz" version="~>0.0.3"
 dependency "irre" path="../irre"
 dependency "commandr" version="~>0.2.0"
-dependency "mir-ion" version="~>1.0.39"
+dependency "mir-ion" version="~>2.3.3"
 dependency "colorize" version="~>1.0.5"
 configuration "app" {
 	targetType "executable"

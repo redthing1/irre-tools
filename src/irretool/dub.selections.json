@@ -6,10 +6,10 @@
 		"d-graphviz": "0.0.3",
 		"infoflow": {"path":"../../lib/infoflow"},
 		"irre": {"path":"../irre"},
-		"mir-algorithm": "3.13.9",
-		"mir-core": "1.1.111",
-		"mir-cpuid": "1.2.7",
-		"mir-ion": "1.0.50",
+		"mir-algorithm": "3.22.3",
+		"mir-core": "1.7.1",
+		"mir-cpuid": "1.2.11",
+		"mir-ion": "2.3.3",
 		"msgpack-d": "1.0.3",
 		"silly": "1.1.1"
 	}
