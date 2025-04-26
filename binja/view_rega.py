@@ -158,5 +158,5 @@ class REGAView(BinaryView):
         return 0x0000  # matches the load_addr used in init()
 
     # optional: add perform_get_address_size if different from arch default
-    # def perform_get_address_size(self) -> int:
-    #     return 4 # irre is 32-bit
+    def perform_get_address_size(self) -> int:
+        return 4 # irre is 32-bit
